@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Request Developer</title>
+    <style>
+        /* ... reuse existing styles ... */
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'customer:dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'customer:browse_developers' %}">Browse Developers</a></li>
+        </ul>
+    </nav>
+    
+    <div class="container">
+        <h2>Request {{ developer.display_name }}</h2>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="project">Select Project:</label>
+                <select name="project" id="project" required>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">Message to Developer:</label>
+                <textarea name="message" id="message" required 
+                    placeholder="Explain your project and why you'd like to work with this developer..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn">Send Request</button>
+        </form>
+    </div>
+</body>
+</html> 

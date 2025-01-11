@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Requests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        nav {
+            background-color: white;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .requests-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .request-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: #fff;
+        }
+
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .customer-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .customer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .accept-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .reject-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .status-pending {
+            background-color: #ffd700;
+            color: #000;
+        }
+
+        .status-accepted {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-rejected {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'dev:dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'dev:profile' %}">Profile</a></li>
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="requests-container">
+        <h2>Project Requests</h2>
+        
+        {% for request in requests %}
+            <div class="request-card">
+                <div class="request-header">
+                    <h3>{{ request.project.title }}</h3>
+                    <span class="status-badge status-{{ request.status }}">{{ request.status|title }}</span>
+                </div>
+
+                <div class="customer-info">
+                    <div class="customer-avatar">
+                        {{ request.project.customer.username|first|upper }}
+                    </div>
+                    <div>
+                        <strong>Customer:</strong> {{ request.project.customer.username }}
+                        <br>
+                        <small>Request received: {{ request.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                </div>
+
+                <p><strong>Project Budget:</strong> ${{ request.project.budget }}</p>
+                <p><strong>Duration:</strong> {{ request.project.duration }} hours</p>
+                <p><strong>Message:</strong> {{ request.message }}</p>
+
+                {% if request.status == 'pending' %}
+                    <div class="request-actions">
+                        <form method="POST" action="{% url 'dev:handle_request' request.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="accept">
+                            <button type="submit" class="btn accept-btn">Accept</button>
+                        </form>
+                        <form method="POST" action="{% url 'dev:handle_request' request.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" class="btn reject-btn">Reject</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>No requests found.</p>
+        {% endfor %}
+    </div>
+</body>
+</html> 

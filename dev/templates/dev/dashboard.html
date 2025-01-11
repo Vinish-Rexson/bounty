@@ -27,19 +27,21 @@
             margin: 0;
             display: flex;
             gap: 20px;
+            flex-wrap: wrap;
         }
 
         nav a {
             text-decoration: none;
             color: #333;
             font-weight: 500;
-            padding: 5px 10px;
+            padding: 8px 16px;
             border-radius: 4px;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
         }
 
         nav a:hover {
-            background-color: #f0f0f0;
+            background-color: #007bff;
+            color: white;
         }
 
         .welcome-section {
@@ -135,13 +137,78 @@
             color: #f1c40f;
             font-weight: bold;
         }
+
+        .dashboard-section {
+            margin-top: 2rem;
+        }
+
+        .dashboard-section h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .project-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .project-item:last-child {
+            border-bottom: none;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .project-header h4 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .project-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .project-info p {
+            margin: 5px 0;
+        }
+
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .empty-message {
+            color: #666;
+            text-align: center;
+            padding: 1rem;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
     <nav>
         <ul>
             <li><a href="{% url 'dev:dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'dev:browse_projects' %}">Browse Projects</a></li>
             <li><a href="{% url 'dev:profile' %}">Profile</a></li>
+            <li><a href="{% url 'dev:browse_projects' %}">Browse Projects</a></li>
             <li><a href="{% url 'logout' %}">Logout</a></li>
         </ul>
     </nav>
@@ -230,6 +297,56 @@
             {% else %}
                 <p>No comments yet.</p>
             {% endif %}
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Project Requests</h2>
+        
+        <!-- Customer-initiated requests -->
+        <div class="dashboard-card">
+            <h3>Requests from Customers</h3>
+            {% for request in customer_requests %}
+                <div class="project-item">
+                    <div class="project-header">
+                        <h4>{{ request.project.title }}</h4>
+                        <span class="status-badge status-pending">Customer Request</span>
+                    </div>
+                    <div class="project-info">
+                        <p><strong>Customer:</strong> {{ request.project.customer.user.username }}</p>
+                        <p><strong>Budget:</strong> ${{ request.project.budget }}</p>
+                        <p><strong>Message:</strong> {{ request.message }}</p>
+                    </div>
+                    <div class="action-buttons">
+                        <form method="post" action="{% url 'dev:handle_customer_request' request.id %}">
+                            {% csrf_token %}
+                            <button type="submit" name="action" value="accept">Accept</button>
+                            <button type="submit" name="action" value="reject">Reject</button>
+                        </form>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="empty-message">No new requests from customers</p>
+            {% endfor %}
+        </div>
+        
+        <!-- Developer-initiated requests -->
+        <div class="dashboard-card">
+            <h3>Your Project Requests</h3>
+            {% for request in pending_requests %}
+                <div class="project-item">
+                    <div class="project-header">
+                        <h4>{{ request.project.title }}</h4>
+                        <span class="status-badge status-pending">Your Request</span>
+                    </div>
+                    <div class="project-info">
+                        <p><strong>Budget:</strong> ${{ request.project.budget }}</p>
+                        <p><strong>Your Message:</strong> {{ request.message }}</p>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="empty-message">No pending requests</p>
+            {% endfor %}
         </div>
     </div>
 </body>

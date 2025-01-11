@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Request Project</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        nav {
+            background-color: white;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        nav a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .request-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .project-details {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .request-form {
+            max-width: 600px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 150px;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .project-info {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .project-info h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'dev:dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'dev:browse_projects' %}">Browse Projects</a></li>
+            <li><a href="{% url 'dev:profile' %}">Profile</a></li>
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="request-container">
+        <div class="project-info">
+            <h3>{{ project.title }}</h3>
+            <p>{{ project.description }}</p>
+            <div class="project-details">
+                <p><strong>Budget:</strong> ${{ project.budget }}</p>
+                <p><strong>Duration:</strong> {{ project.duration }} hours</p>
+            </div>
+        </div>
+
+        <div class="request-form">
+            <h2>Submit Your Request</h2>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="message">Message to Customer:</label>
+                    <textarea name="message" id="message" required 
+                        placeholder="Introduce yourself and explain why you're the best fit for this project..."></textarea>
+                </div>
+                <button type="submit" class="btn">Submit Request</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html> 

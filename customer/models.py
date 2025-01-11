@@ -28,6 +28,40 @@ class Project(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
     assigned_developer = models.ForeignKey(DevProfile, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    interested_developers = models.ManyToManyField(DevProfile, through='ProjectRequest', related_name='interested_projects')
+
     def __str__(self):
         return self.title
+
+class ProjectRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected')
+    ]
+    
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='requests')
+    developer = models.ForeignKey('dev.Profile', on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    message = models.TextField(help_text="Message to the customer")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('project', 'developer')
+
+class DeveloperRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected')
+    ]
+    
+    customer = models.ForeignKey(CustomerProfile, on_delete=models.CASCADE)
+    developer = models.ForeignKey('dev.Profile', on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    message = models.TextField(help_text="Message to the developer")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('project', 'developer', 'customer')
