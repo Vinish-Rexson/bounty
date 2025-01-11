@@ -3,9 +3,10 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
-@login_required
-def home(request):
-    return render(request, 'home.html')
+# @login_required
+# def home(request):
+#     return redirect('dev:dashboard')
+    
 
 def login_view(request):
     if request.method == 'POST':
