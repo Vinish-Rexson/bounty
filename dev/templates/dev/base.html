@@ -146,6 +146,85 @@
             }
         }
 
+        .availability-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .availability-indicator i {
+            font-size: 0.75rem;
+        }
+
+        .availability-indicator.available {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--success-color);
+        }
+
+        .availability-indicator.unavailable {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        @media (max-width: 768px) {
+            .availability-indicator {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: var(--card-background);
+            margin: 15% auto;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-md);
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .availability-form {
+            margin-top: 1.5rem;
+        }
+
+        #availabilityToggle {
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
         {% block extra_styles %}{% endblock %}
     </style>
 </head>
@@ -164,6 +243,17 @@
                 <li><a href="{% url 'dev:my_projects' %}"><i class="fas fa-folder-open"></i> My Projects</a></li>
                 <li><a href="{% url 'dev:projects' %}"><i class="fas fa-tasks"></i> Projects Shared</a></li>
                 <li><a href="{% url 'dev:profile' %}"><i class="fas fa-user"></i> Profile</a></li>
+                <li>
+                    <button id="availabilityToggle" class="availability-indicator {% if request.user.profile.is_currently_available %}available{% else %}unavailable{% endif %}">
+                        <i class="fas fa-circle"></i>
+                        {% if request.user.profile.is_currently_available %}
+                            Available
+                            <span id="availabilityCountdown"></span>
+                        {% else %}
+                            Unavailable
+                        {% endif %}
+                    </button>
+                </li>
                 <li><a href="{% url 'dev:view_requests' %}"><i class="fas fa-bell"></i> Requests</a></li>
                 <li><a href="{% url 'logout' %}" class="btn btn-secondary"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
@@ -175,5 +265,182 @@
     </div>
 
     {% block extra_scripts %}{% endblock %}
+
+    <div id="availabilityModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Set Availability</h2>
+            <div class="availability-form">
+                <div class="form-group">
+                    <label for="duration">Available for (hours):</label>
+                    <input type="number" id="duration" min="1" value="1" class="form-control">
+                </div>
+                <button id="setAvailable" class="btn btn-primary">Set as Available</button>
+                <button id="setUnavailable" class="btn btn-secondary">Set as Unavailable</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('availabilityModal');
+        const btn = document.getElementById('availabilityToggle');
+        const span = document.getElementsByClassName('close')[0];
+        const setAvailableBtn = document.getElementById('setAvailable');
+        const setUnavailableBtn = document.getElementById('setUnavailable');
+
+        // Open modal on button click
+        btn.onclick = function() {
+            modal.style.display = 'block';
+        }
+
+        // Close modal on X click
+        span.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        let endTimeGlobal = null;
+
+        // Function to format time units with leading zeros
+        function padNumber(num) {
+            return num.toString().padStart(2, '0');
+        }
+
+        // Function to calculate and display countdown
+        function displayCountdown() {
+            if (!endTimeGlobal) return;
+
+            const now = new Date();
+            const endTime = new Date(endTimeGlobal);
+            const timeDiff = endTime - now;
+
+            if (timeDiff > 0) {
+                const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+                const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+                const countdownSpan = document.getElementById('availabilityCountdown');
+                if (countdownSpan) {
+                    countdownSpan.textContent = ` (${padNumber(hours)}:${padNumber(minutes)}:${padNumber(seconds)})`;
+                }
+            } else {
+                // Time has expired, update status
+                updateAvailabilityStatus();
+                endTimeGlobal = null;
+            }
+        }
+
+        // Update the updateCountdown function
+        function updateCountdown() {
+            fetch('{% url "dev:check_availability" %}')
+                .then(response => response.json())
+                .then(data => {
+                    updateIndicator(data.available);
+                    
+                    if (data.available && data.ends_at) {
+                        endTimeGlobal = new Date(data.ends_at);
+                        displayCountdown();
+                    } else {
+                        endTimeGlobal = null;
+                    }
+                });
+        }
+
+        // Update the updateIndicator function
+        function updateIndicator(available) {
+            const indicator = document.getElementById('availabilityToggle');
+            if (available) {
+                indicator.classList.remove('unavailable');
+                indicator.classList.add('available');
+                indicator.innerHTML = '<i class="fas fa-circle"></i> Available <span id="availabilityCountdown"></span>';
+            } else {
+                indicator.classList.remove('available');
+                indicator.classList.add('unavailable');
+                indicator.innerHTML = '<i class="fas fa-circle"></i> Unavailable';
+                endTimeGlobal = null;
+            }
+        }
+
+        // Set Available button click handler
+        setAvailableBtn.onclick = function() {
+            const duration = document.getElementById('duration').value;
+            fetch('{% url "dev:toggle_availability" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `duration=${duration}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateIndicator(true);
+                    if (data.ends_at) {
+                        endTimeGlobal = new Date(data.ends_at);
+                    }
+                    modal.style.display = 'none';
+                } else {
+                    alert(data.message || 'Failed to update availability');
+                }
+            });
+        }
+
+        // Update the Set Unavailable button click handler
+        setUnavailableBtn.onclick = function() {
+            fetch('{% url "dev:toggle_availability" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: 'duration=0'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateIndicator(false);
+                    endTimeGlobal = null;
+                    modal.style.display = 'none';
+                } else {
+                    alert(data.message || 'Failed to update availability');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update availability');
+            });
+        }
+
+        // Add the missing updateAvailabilityStatus function
+        function updateAvailabilityStatus() {
+            fetch('{% url "dev:check_availability" %}')
+                .then(response => response.json())
+                .then(data => {
+                    updateIndicator(data.available);
+                    if (data.available && data.ends_at) {
+                        endTimeGlobal = new Date(data.ends_at);
+                    } else {
+                        endTimeGlobal = null;
+                    }
+                });
+        }
+
+        // Update countdown every second
+        setInterval(displayCountdown, 1000);
+
+        // Update availability status every minute
+        setInterval(updateAvailabilityStatus, 60000);
+
+        // Initial updates
+        updateCountdown();
+        updateAvailabilityStatus(); // Add initial status check
+    </script>
 </body>
 </html> 

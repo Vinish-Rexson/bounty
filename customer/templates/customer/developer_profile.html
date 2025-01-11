@@ -212,9 +212,49 @@
             </div>
         </div>
 
-        <a href="{% url 'customer:request_developer' developer.id %}" class="request-button">
-            <i class="fas fa-paper-plane"></i>
-            Request {{ developer.display_name }}
-        </a>
+        {% if developer.is_available %}
+            <div class="meeting-request">
+                <button onclick="showMeetingModal()" class="request-button">
+                    <i class="fas fa-video"></i>
+                    Request Meeting
+                </button>
+            </div>
+
+            <!-- Meeting Request Modal -->
+            <div id="meetingModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h3>Request Meeting with {{ developer.display_name }}</h3>
+                    <form method="post" action="{% url 'customer:request_meeting' developer.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="message">Message:</label>
+                            <textarea name="message" id="message" required 
+                                placeholder="Briefly describe what you'd like to discuss..."></textarea>
+                        </div>
+                        <button type="submit" class="btn">Send Meeting Request</button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
     </div>
+
+    <script>
+    const meetingModal = document.getElementById('meetingModal');
+    const closeBtn = meetingModal.querySelector('.close');
+
+    function showMeetingModal() {
+        meetingModal.style.display = 'block';
+    }
+
+    closeBtn.onclick = function() {
+        meetingModal.style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        if (event.target == meetingModal) {
+            meetingModal.style.display = 'none';
+        }
+    }
+    </script>
 {% endblock %} 

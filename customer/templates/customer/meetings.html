@@ -1,0 +1,11 @@
+{% for meeting in meetings %}
+    {% if meeting.status == 'accepted' %}
+        <div class="meeting-card">
+            <h4>Meeting with {{ meeting.developer.user.get_full_name }}</h4>
+            <p>Status: {{ meeting.status }}</p>
+            <a href="{% url 'dev:join_meeting' meeting.id %}" class="btn join-btn">
+                Join Meeting
+            </a>
+        </div>
+    {% endif %}
+{% endfor %} 

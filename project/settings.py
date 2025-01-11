@@ -207,3 +207,7 @@ if DEBUG:
         middleware for middleware in MIDDLEWARE
         if middleware != 'django.middleware.security.SecurityMiddleware'
     ]
+
+# ZegoCloud Settings
+ZEGO_APP_ID = 1443711733
+ZEGO_SERVER_SECRET = 'b1696a248baceb6499b62d3c6189e5fe'

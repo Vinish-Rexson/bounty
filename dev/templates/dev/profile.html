@@ -367,6 +367,38 @@
             border-radius: 6px;
             border: 1px dashed #dee2e6;
         }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .status-available {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .status-unavailable {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .availability-section {
+            margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .current-status {
+            margin-bottom: 1rem;
+        }
+
+        .manual-override {
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
     </style>
 </head>
 <body>
@@ -467,6 +499,25 @@
                         </div>
                     </div>
                     <p class="help-text" id="availability-help">Set your weekday availability hours</p>
+                </div>
+            </div>
+            
+            <div class="availability-section">
+                <h3>Availability Status</h3>
+                <div class="current-status">
+                    Current Status: 
+                    <span id="availabilityStatus" class="status-badge {% if profile.is_currently_available %}status-available{% else %}status-unavailable{% endif %}">
+                        {% if profile.is_currently_available %}Available{% else %}Unavailable{% endif %}
+                    </span>
+                </div>
+
+                <div class="manual-override">
+                    <h4>Manual Override</h4>
+                    <div class="form-group">
+                        <label for="availabilityDuration">Available for next (hours):</label>
+                        <input type="number" id="availabilityDuration" min="1" class="form-control" value="1">
+                        <button type="button" id="setAvailability" class="btn btn-primary mt-2">Set Available</button>
+                    </div>
                 </div>
             </div>
             
@@ -625,6 +676,31 @@
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = 'Save Project';
+        }
+    });
+
+    document.getElementById('setAvailability').addEventListener('click', async function() {
+        const duration = document.getElementById('availabilityDuration').value;
+        const response = await fetch('{% url "dev:toggle_availability" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: `duration=${duration}`
+        });
+        
+        const data = await response.json();
+        if (data.status === 'success') {
+            const statusBadge = document.getElementById('availabilityStatus');
+            statusBadge.textContent = 'Available';
+            statusBadge.className = 'status-badge status-available';
+            
+            // Optional: Show when availability will end
+            const endsAt = new Date(data.ends_at);
+            alert(`You will be shown as available until ${endsAt.toLocaleString()}`);
+        } else {
+            alert(data.message || 'Failed to update availability');
         }
     });
     </script>

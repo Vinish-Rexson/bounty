@@ -131,6 +131,10 @@
                             <i class="fas fa-dollar-sign"></i>
                             <strong>Hourly Rate:</strong> ${{ developer.hourly_rate }}/hr
                         </p>
+                        <div class="availability-indicator {% if developer.is_currently_available %}available{% else %}unavailable{% endif %}">
+                            <i class="fas fa-circle"></i>
+                            {% if developer.is_currently_available %}Available{% else %}Unavailable{% endif %}
+                        </div>
                     </div>
                     
                     {% if project %}

@@ -66,3 +66,20 @@ class DeveloperRequest(models.Model):
     
     class Meta:
         unique_together = ('project', 'developer', 'customer')
+
+class MeetingRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+        ('completed', 'Completed')
+    ]
+    
+    customer = models.ForeignKey(CustomerProfile, on_delete=models.CASCADE)
+    developer = models.ForeignKey('dev.Profile', on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    message = models.TextField(help_text="Message for the meeting")
+    created_at = models.DateTimeField(auto_now_add=True)
+    scheduled_time = models.DateTimeField(null=True, blank=True)
+    room_id = models.CharField(max_length=100, null=True, blank=True)
+    meeting_url = models.CharField(max_length=255, null=True, blank=True)

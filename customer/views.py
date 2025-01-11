@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from dev.models import Profile
-from .models import CustomerProfile, Project, ProjectRequest, DeveloperRequest
+from .models import CustomerProfile, Project, ProjectRequest, DeveloperRequest, MeetingRequest
 from .forms import CustomerProfileForm, ProjectForm
 from django.conf import settings
 from django.contrib import messages
@@ -135,3 +135,23 @@ def request_developer(request, dev_id, project_id=None):
     except Profile.DoesNotExist:
         messages.error(request, 'Developer profile not found.')
         return redirect('customer:browse_developers')
+
+@login_required
+@customer_required
+def request_meeting(request, dev_id):
+    if request.method == 'POST':
+        developer = get_object_or_404(Profile, id=dev_id)
+        customer = request.user.customerprofile
+        message = request.POST.get('message')
+        
+        if developer.is_currently_available():
+            MeetingRequest.objects.create(
+                customer=customer,
+                developer=developer,
+                message=message
+            )
+            messages.success(request, f'Meeting request sent to {developer.display_name}')
+        else:
+            messages.error(request, 'Developer is no longer available')
+            
+    return redirect('customer:developer_profile', dev_id=dev_id)

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Meeting</title>
+</head>
+<body>
+    <div class="meeting-container">
+        <div id="meeting-area"></div>
+    </div>
+
+    <script src="https://unpkg.com/@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                try {
+                    // Get credentials from Django template
+                    const appID = {{ zego_app_id }};  // Remove quotes, keep as integer
+                    const serverSecret = "{{ zego_server_secret }}";  // Keep quotes for string
+                    const roomID = "{{ room_id }}";
+                    const userID = "{{ user_id }}";
+                    const userName = "{{ user_name }}";
+
+                    console.log("Initializing with:", {
+                        appID,
+                        serverSecret: serverSecret.slice(0, 4) + "...", // Log partial secret for debugging
+                        roomID,
+                        userID,
+                        userName
+                    });
+
+                    const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+                        appID,
+                        serverSecret,
+                        roomID,
+                        userID,
+                        userName
+                    );
+
+                    console.log("Token generated successfully");
+
+                    const zp = ZegoUIKitPrebuilt.create(kitToken);
+                    
+                    console.log("ZegoUIKitPrebuilt created successfully");
+
+                    zp.joinRoom({
+                        container: document.querySelector("#meeting-area"),
+                        scenario: {
+                            mode: ZegoUIKitPrebuilt.OneONoneCall
+                        },
+                        showScreenSharingButton: true,
+                        showTurnOffRemoteCameraButton: true,
+                        showTurnOffRemoteMicrophoneButton: true,
+                        showRemoveUserButton: true
+                    });
+
+                    console.log("Room joined successfully");
+
+                } catch (error) {
+                    console.error('Error initializing ZegoCloud:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        stack: error.stack
+                    });
+                }
+            }, 1000);
+        });
+    </script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+        .meeting-container {
+            width: 100%;
+            height: 100%;
+        }
+        #meeting-area {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</body>
+</html> 

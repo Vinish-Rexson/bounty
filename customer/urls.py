@@ -12,4 +12,5 @@ urlpatterns = [
     path('requests/<int:request_id>/handle/', views.handle_request, name='handle_request'),
     path('request-developer/<int:dev_id>/', views.request_developer, name='request_developer'),
     path('request-developer/<int:dev_id>/<int:project_id>/', views.request_developer, name='request_developer_with_project'),
+    path('request-meeting/<int:dev_id>/', views.request_meeting, name='request_meeting'),
 ] 

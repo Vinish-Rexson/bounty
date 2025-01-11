@@ -22,4 +22,8 @@ urlpatterns = [
     path('projects/list/', views.projects, name='projects'),
     path('projects/<int:project_id>/', views.project_detail, name='project_detail'),
     path('customer-project/<int:project_id>/', views.customer_project_detail, name='customer_project_detail'),
+    path('toggle-availability/', views.toggle_availability, name='toggle_availability'),
+    path('check-availability/', views.check_availability, name='check_availability'),
+    path('meeting/<int:meeting_id>/handle/', views.handle_meeting, name='handle_meeting'),
+    path('meeting/<int:meeting_id>/join/', views.join_meeting, name='join_meeting'),
 ] 

@@ -5,8 +5,15 @@ from .forms import ProfileForm, ProjectForm
 from .models import Profile, Project
 from django.contrib import messages
 from django.conf import settings
-from customer.models import Project as CustomerProject, ProjectRequest, DeveloperRequest
+from customer.models import Project as CustomerProject, ProjectRequest, DeveloperRequest, MeetingRequest
 from django.http import JsonResponse
+from datetime import datetime, timedelta
+import pytz
+import json
+import time
+import hmac
+import base64
+from hashlib import sha256
 
 
 
@@ -59,6 +66,10 @@ def dashboard(request):
         ).select_related('project'),
         'customer_requests': customer_requests,
         'pending_requests': pending_requests,
+        'meeting_requests': MeetingRequest.objects.filter(
+            developer=profile,
+            status='pending'
+        ).select_related('customer')
     }
     return render(request, 'dev/dashboard.html', context)
 
@@ -352,3 +363,119 @@ def customer_project_detail(request, project_id):
     return render(request, 'dev/customer_project_detail.html', {
         'project': project
     })
+
+@login_required
+@developer_required
+def toggle_availability(request):
+    if request.method == 'POST':
+        profile = request.user.profile
+        duration = request.POST.get('duration')
+        
+        try:
+            duration = int(duration)
+            if duration == 0:  # Handle setting to unavailable
+                profile.manual_availability = False
+                profile.manual_availability_end = None
+                profile.save()
+                return JsonResponse({
+                    'status': 'success',
+                    'available': False
+                })
+            
+            if duration < 1:
+                raise ValueError
+                
+            profile.manual_availability = True
+            profile.manual_availability_end = datetime.now(pytz.UTC) + timedelta(hours=duration)
+            profile.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'available': True,
+                'ends_at': profile.manual_availability_end.isoformat()
+            })
+            
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid duration provided'
+            }, status=400)
+            
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+@login_required
+def check_availability(request):
+    profile = request.user.profile
+    is_available = profile.is_currently_available()
+    
+    response_data = {
+        'available': is_available,
+    }
+    
+    # Add end time if manually available
+    if is_available and profile.manual_availability and profile.manual_availability_end:
+        response_data['ends_at'] = profile.manual_availability_end.isoformat()
+    
+    return JsonResponse(response_data)
+
+def generate_zego_token(app_id, server_secret, room_id, user_id):
+    timestamp = int(time.time())
+    expire_time = timestamp + 3600  # Token valid for 1 hour
+
+    payload = {
+        "app_id": app_id,
+        "user_id": str(user_id),
+        "room_id": room_id,
+        "privilege": {
+            "1": 1,  # Login privilege
+            "2": 1   # Publish privilege
+        },
+        "stream_id_list": None,
+        "timestamp": timestamp,
+        "expire_time": expire_time
+    }
+
+    payload_str = json.dumps(payload, separators=(',', ':'))
+    signature = hmac.new(server_secret.encode('utf-8'), payload_str.encode('utf-8'), sha256).digest()
+    token = base64.b64encode(signature + payload_str.encode('utf-8')).decode('utf-8')
+    
+    return token
+
+@login_required
+@developer_required
+def handle_meeting(request, meeting_id):
+    meeting = get_object_or_404(MeetingRequest, id=meeting_id, developer=request.user.profile)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'accept':
+            # Generate a unique room ID
+            room_id = f"meeting_{meeting.id}_{int(time.time())}"
+            meeting.room_id = room_id
+            meeting.status = 'accepted'
+            meeting.save()
+
+            # Generate token and redirect to meeting room
+            return redirect('dev:join_meeting', meeting_id=meeting.id)
+        elif action == 'reject':
+            meeting.status = 'rejected'
+            meeting.save()
+            messages.success(request, 'Meeting request rejected')
+            
+    return redirect('dev:dashboard')
+
+@login_required
+def join_meeting(request, meeting_id):
+    meeting = get_object_or_404(MeetingRequest, id=meeting_id)
+    user = request.user
+    
+    context = {
+        'zego_app_id': settings.ZEGO_APP_ID,
+        'zego_server_secret': settings.ZEGO_SERVER_SECRET,
+        'room_id': meeting.room_id,
+        'user_id': str(user.id),
+        'user_name': user.get_full_name() or user.username,
+    }
+    
+    return render(request, 'dev/meeting_room.html', context)

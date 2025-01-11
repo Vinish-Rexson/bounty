@@ -252,4 +252,33 @@
             {% endfor %}
         </div>
     </div>
+
+    <div class="meeting-requests">
+        <h3>Meeting Requests</h3>
+        {% for request in meeting_requests %}
+            <div class="meeting-request-card">
+                <div class="request-info">
+                    <h4>{{ request.customer.company_name }}</h4>
+                    <p>{{ request.message }}</p>
+                    <p class="timestamp">Requested: {{ request.created_at|timesince }} ago</p>
+                </div>
+                {% if request.status == 'pending' %}
+                    <div class="request-actions">
+                        <form method="post" action="{% url 'dev:handle_meeting' request.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="accept">
+                            <button type="submit" class="btn accept-btn">Accept</button>
+                        </form>
+                        <form method="post" action="{% url 'dev:handle_meeting' request.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" class="btn reject-btn">Reject</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>No pending meeting requests</p>
+        {% endfor %}
+    </div>
 {% endblock %}
