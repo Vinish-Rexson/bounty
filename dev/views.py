@@ -544,18 +544,3 @@ def handle_meeting(request, meeting_id):
         meeting.save()
         
     return redirect('dev:meeting_requests')
-
-@login_required
-@developer_required
-def join_meeting(request, meeting_id):
-    meeting = get_object_or_404(MeetingRequest, 
-                              id=meeting_id, 
-                              developer=request.user.profile,
-                              status='accepted')
-    
-    context = {
-        'room_id': meeting.room_id,
-        'user_name': request.user.get_full_name() or request.user.username,
-    }
-    
-    return render(request, 'dev/meeting_room.html', context)

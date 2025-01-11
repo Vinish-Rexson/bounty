@@ -61,6 +61,36 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'sender_id': self.scope['user'].id
                 }
             )
+        elif message_type == 'meeting_response':
+            # Handle meeting response
+            meeting_id = text_data_json['meeting_id']
+            action = text_data_json['action']
+            
+            if action == 'accept':
+                # Update meeting request and get room ID
+                room_id = await self.accept_meeting_request(meeting_id)
+                
+                # Send acceptance to room group
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'meeting_accepted',
+                        'meeting_id': meeting_id,
+                        'room_id': room_id
+                    }
+                )
+            elif action == 'reject':
+                # Update meeting request
+                await self.decline_meeting_request(meeting_id)
+                
+                # Send rejection to room group
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'meeting_declined',
+                        'meeting_id': meeting_id
+                    }
+                )
 
     async def chat_message(self, event):
         # Send message to WebSocket
@@ -125,3 +155,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             status='pending'
         )
         return meeting.id
+
+    @database_sync_to_async
+    def accept_meeting_request(self, meeting_id):
+        meeting = MeetingRequest.objects.get(id=meeting_id)
+        meeting.status = 'accepted'
+        meeting.save()
+        return meeting.room_id
+
+    @database_sync_to_async
+    def decline_meeting_request(self, meeting_id):
+        meeting = MeetingRequest.objects.get(id=meeting_id)
+        meeting.status = 'declined'
+        meeting.save()

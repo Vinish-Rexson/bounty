@@ -73,9 +73,9 @@
             {% endfor %}
             
             {% if active_meeting %}
-                <div class="meeting-alert">
+                <div class="meeting-alert" id="active-meeting-alert">
                     <p>Active meeting in progress!</p>
-                    <a href="{% url 'dev:join_meeting' active_meeting.id %}" class="join-meeting-btn">
+                    <a href="{% url 'dev:join_meeting' active_meeting.id %}" class="join-meeting-btn" target="_blank">
                         Join Meeting
                     </a>
                 </div>
@@ -157,13 +157,19 @@
                 messagesList.appendChild(messageDiv);
                 messagesList.scrollTop = messagesList.scrollHeight;
             } else if (data.type === 'meeting_accepted') {
+                // Store meeting data
+                localStorage.setItem('activeMeeting', JSON.stringify({
+                    url: data.join_url,
+                    timestamp: new Date().getTime()
+                }));
+                
                 // Create meeting accepted message
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('system-message');
                 messageDiv.innerHTML = `
                     <div class="meeting-accepted">
                         <p>Meeting request accepted!</p>
-                        <a href="${data.join_url}" class="join-meeting-btn">Join Meeting</a>
+                        <a href="${data.join_url}" class="join-meeting-btn" target="_blank">Join Meeting</a>
                     </div>
                 `;
                 messagesList.appendChild(messageDiv);
@@ -250,6 +256,32 @@
             }));
         }
     }
+
+    // Check for active meeting on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const storedMeeting = localStorage.getItem('activeMeeting');
+        if (storedMeeting) {
+            const meetingData = JSON.parse(storedMeeting);
+            const meetingAge = new Date().getTime() - meetingData.timestamp;
+            
+            // Remove meeting if it's older than 2 hours (7200000 ms)
+            if (meetingAge > 7200000) {
+                localStorage.removeItem('activeMeeting');
+            } else if (!document.getElementById('active-meeting-alert')) {
+                // Add meeting alert if it doesn't exist
+                const messagesList = document.querySelector('#chat-messages');
+                const meetingDiv = document.createElement('div');
+                meetingDiv.classList.add('meeting-alert');
+                meetingDiv.id = 'active-meeting-alert';
+                meetingDiv.innerHTML = `
+                    <p>Active meeting in progress!</p>
+                    <a href="${meetingData.url}" class="join-meeting-btn" target="_blank">Join Meeting</a>
+                `;
+                messagesList.appendChild(meetingDiv);
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }
+        }
+    });
 </script>
 
 <style>
