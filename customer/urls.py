@@ -11,4 +11,5 @@ urlpatterns = [
     path('projects/<int:project_id>/requests/', views.project_requests, name='project_requests'),
     path('requests/<int:request_id>/handle/', views.handle_request, name='handle_request'),
     path('request-developer/<int:dev_id>/', views.request_developer, name='request_developer'),
+    path('request-developer/<int:dev_id>/<int:project_id>/', views.request_developer, name='request_developer_with_project'),
 ] 

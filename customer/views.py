@@ -1,6 +1,6 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from dev.models import Profile as DevProfile
+from dev.models import Profile
 from .models import CustomerProfile, Project, ProjectRequest, DeveloperRequest
 from .forms import CustomerProfileForm, ProjectForm
 from django.conf import settings
@@ -23,7 +23,7 @@ def dashboard(request):
 @customer_required
 @login_required
 def browse_developers(request):
-    developers = DevProfile.objects.filter(is_available=True)
+    developers = Profile.objects.filter(is_available=True)
     project_id = request.GET.get('project_id')
     project = None
     
@@ -104,31 +104,34 @@ def handle_request(request, request_id):
 
 @customer_required
 @login_required
-def request_developer(request, dev_id):
-    if request.method == 'POST':
-        developer = DevProfile.objects.get(id=dev_id)
-        project_id = request.POST.get('project')
-        message = request.POST.get('message')
+def request_developer(request, dev_id, project_id=None):
+    try:
+        developer = get_object_or_404(Profile, id=dev_id)
         
-        project = Project.objects.get(id=project_id, customer=request.user.customerprofile)
-        
-        # Create developer request
-        DeveloperRequest.objects.create(
+        if request.method == 'POST':
+            message = request.POST.get('message')
+            project = get_object_or_404(Project, id=project_id, customer=request.user.customerprofile)
+            
+            # Create developer request
+            DeveloperRequest.objects.create(
+                customer=request.user.customerprofile,
+                developer=developer,
+                project=project,
+                message=message
+            )
+            
+            messages.success(request, 'Request sent to developer successfully!')
+            return redirect('customer:browse_developers')
+            
+        projects = Project.objects.filter(
             customer=request.user.customerprofile,
-            developer=developer,
-            project=project,
-            message=message
+            status='open'
         )
+        return render(request, 'customer/request_developer.html', {
+            'developer': developer,
+            'projects': projects
+        })
         
-        messages.success(request, 'Request sent to developer successfully!')
+    except Profile.DoesNotExist:
+        messages.error(request, 'Developer profile not found.')
         return redirect('customer:browse_developers')
-        
-    developer = DevProfile.objects.get(id=dev_id)
-    projects = Project.objects.filter(
-        customer=request.user.customerprofile,
-        status='open'
-    )
-    return render(request, 'customer/request_developer.html', {
-        'developer': developer,
-        'projects': projects
-    })

@@ -17,6 +17,7 @@ class Project(models.Model):
         ('open', 'Open'),
         ('in_progress', 'In Progress'),
         ('completed', 'Completed'),
+        ('cancelled', 'Cancelled')
     ]
     
     customer = models.ForeignKey(CustomerProfile, on_delete=models.CASCADE)

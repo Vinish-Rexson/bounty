@@ -158,7 +158,7 @@
                 
                 {% if project %}
                     <div class="request-action">
-                        <form method="post" action="{% url 'customer:request_developer' project.id developer.id %}">
+                        <form method="post" action="{% url 'customer:request_developer_with_project' developer.id project.id %}">
                             {% csrf_token %}
                             <textarea name="message" placeholder="Add a message to your request..." class="request-message"></textarea>
                             <button type="submit" class="btn btn-primary">Request Developer</button>

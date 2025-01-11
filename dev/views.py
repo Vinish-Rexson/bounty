@@ -1,10 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .forms import ProfileForm, ProjectForm
 from .models import Profile, Project
 from django.contrib import messages
 from django.conf import settings
 from customer.models import Project, ProjectRequest, DeveloperRequest
+from django.http import JsonResponse
 
 def is_developer(user):
     return user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
@@ -14,27 +15,26 @@ developer_required = user_passes_test(is_developer, login_url='login')
 @developer_required
 @login_required
 def dashboard(request):
-    profile = request.user.profile
-    comments = profile.comments.all().order_by('-created_at')
+    # Get or create profile
     profile, created = Profile.objects.get_or_create(user=request.user)
+    comments = profile.comments.all().order_by('-created_at')
     
-    # Get only customer-initiated requests
-    customer_requests = ProjectRequest.objects.filter(
+    # Get customer requests
+    customer_requests = DeveloperRequest.objects.filter(
         developer=profile,
-        status='pending',
-        initiated_by_customer=True  # Only show requests initiated by customers
-    ).select_related('project', 'project__customer', 'project__customer__user')
+        status='pending'
+    ).select_related('project')
     
-    # Get only developer-initiated requests
+    # Get pending requests
     pending_requests = ProjectRequest.objects.filter(
         developer=profile,
-        status='pending',
-        initiated_by_customer=False  # Only show requests initiated by developers
+        status='pending'
     ).select_related('project')
     
     context = {
         'user': request.user,
         'profile': profile,
+        'comments': comments,
         'active_projects': ProjectRequest.objects.filter(
             developer=profile,
             status='accepted'
@@ -42,10 +42,7 @@ def dashboard(request):
         'customer_requests': customer_requests,
         'pending_requests': pending_requests,
     }
-    return render(request, 'dev/dashboard.html', {
-        'profile': profile,
-        'comments': comments
-    }, context)
+    return render(request, 'dev/dashboard.html', context)
 
 @developer_required
 @login_required
@@ -154,3 +151,49 @@ def handle_request(request, request_id):
         messages.success(request, f'Request {action}ed successfully!')
         
     return redirect('dev:view_requests')
+
+@developer_required
+@login_required
+def project_create_api(request):
+    if request.method == 'POST':
+        form = ProjectForm(request.POST)
+        if form.is_valid():
+            project = form.save(commit=False)
+            project.developer = request.user.profile
+            project.save()
+            return JsonResponse({'status': 'success', 'id': project.id})
+        return JsonResponse({'status': 'error', 'errors': form.errors})
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+@developer_required
+@login_required
+def handle_customer_request(request, request_id):
+    developer_request = get_object_or_404(DeveloperRequest, id=request_id, developer=request.user.profile)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'accept':
+            # Update the developer request status
+            developer_request.status = 'accepted'
+            
+            # Update the project status and assign the developer
+            project = developer_request.project
+            project.status = 'in_progress'  # or whatever status you use for active projects
+            project.assigned_developer = request.user.profile
+            project.save()
+            
+            # Reject all other pending requests for this project
+            DeveloperRequest.objects.filter(
+                project=project,
+                status='pending'
+            ).exclude(id=request_id).update(status='rejected')
+            
+            messages.success(request, 'Request accepted successfully!')
+            
+        elif action == 'reject':
+            developer_request.status = 'rejected'
+            messages.success(request, 'Request rejected successfully!')
+        
+        developer_request.save()
+        
+    return redirect('dev:dashboard')
