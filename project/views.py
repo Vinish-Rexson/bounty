@@ -88,6 +88,9 @@ def logout_view(request):
     logout(request)
     return redirect('login') 
 
+
+
+
 @login_required
 def auth_redirect(request):
     """Handle redirects after authentication"""
