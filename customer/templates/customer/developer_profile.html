@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Developer Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        nav {
+            background-color: white;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        nav a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .profile-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .profile-header {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-picture {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .skill-tag {
+            background-color: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'customer:dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'customer:browse_developers' %}">Browse Developers</a></li>
+            <li><a href="{% url 'customer:create_project' %}">Post New Project</a></li>
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            {% if developer.profile_picture %}
+                <img src="{{ developer.profile_picture.url }}" alt="{{ developer.display_name }}" class="profile-picture">
+            {% endif %}
+            <div class="profile-info">
+                <h2>{{ developer.display_name }}</h2>
+                <p>{{ developer.title }}</p>
+                <div>
+                    <strong>Experience:</strong> {{ developer.years_of_experience }} years
+                </div>
+                <div>
+                    <strong>Rate:</strong> ${{ developer.hourly_rate }}/hour
+                </div>
+                <div>
+                    <strong>Timezone:</strong> {{ developer.timezone }}
+                </div>
+                <div>
+                    <strong>Available:</strong> 
+                    {{ developer.available_from|time:"H:i" }} - {{ developer.available_to|time:"H:i" }}
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3>About</h3>
+            <p>{{ developer.bio }}</p>
+        </div>
+
+        <div class="profile-section">
+            <h3>Skills</h3>
+            <div class="skills-list">
+                {% for skill in developer.skills.all %}
+                    <span class="skill-tag">{{ skill.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3>Links</h3>
+            {% if developer.github_url %}
+                <div><strong>GitHub:</strong> <a href="{{ developer.github_url }}" target="_blank">{{ developer.github_url }}</a></div>
+            {% endif %}
+            {% if developer.linkedin_url %}
+                <div><strong>LinkedIn:</strong> <a href="{{ developer.linkedin_url }}" target="_blank">{{ developer.linkedin_url }}</a></div>
+            {% endif %}
+            {% if developer.portfolio_url %}
+                <div><strong>Portfolio:</strong> <a href="{{ developer.portfolio_url }}" target="_blank">{{ developer.portfolio_url }}</a></div>
+            {% endif %}
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <a href="{% url 'customer:create_project' %}" class="btn">Hire {{ developer.display_name }}</a>
+        </div>
+    </div>
+</body>
+</html> 

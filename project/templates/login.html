@@ -10,7 +10,11 @@
         {{ form.as_p }}
         <button type="submit">Login</button>
     </form>
-    <p>Don't have an account? <a href="{% url 'signup' %}">Sign Up</a></p>
+    <p>Don't have an account?</p>
+    <ul>
+        <li><a href="{% url 'dev_signup' %}">Sign Up as Developer</a></li>
+        <li><a href="{% url 'customer_signup' %}">Sign Up as Customer</a></li>
+    </ul>
     <p>Or login with: <a href="{% url 'social:begin' 'google-oauth2' %}">Google</a></p>
 </body>
 </html> 

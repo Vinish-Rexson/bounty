@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'social_django',
     'dev',
+    'customer.apps.CustomerConfig',
 ]
 
 MIDDLEWARE = [
@@ -50,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
+    'project.middleware.NextParameterMiddleware',
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -57,7 +60,11 @@ ROOT_URLCONF = 'project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'project' / 'templates'],
+        'DIRS': [
+            BASE_DIR / 'project' / 'templates',
+            BASE_DIR / 'customer' / 'templates',
+            BASE_DIR / 'dev' / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -134,13 +141,37 @@ AUTHENTICATION_BACKENDS = (
 
 # Social Auth settings
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = 'dev:dashboard'
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/auth-redirect/'
 SOCIAL_AUTH_LOGIN_ERROR_URL = 'login'
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '842002200695-8so8lasrmnep7go3daosnkemi2eti7ea.apps.googleusercontent.com'
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
 
 # Login/Logout URLs
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dev:dashboard'
+LOGIN_REDIRECT_URL = 'choose_role'
 LOGOUT_URL = 'logout'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Add these constants for group names
+DEVELOPER_GROUP = 'Developer'
+CUSTOMER_GROUP = 'Customer'
+
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'social_core.pipeline.user.create_user',
+    'project.pipeline.assign_user_group',
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+)
+
+SOCIAL_AUTH_NEW_USER_REDIRECT_URL = '/auth-redirect/'
+
+# Update social auth settings
+SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {'prompt': 'select_account'}
+SOCIAL_AUTH_STRATEGY = 'social_django.strategy.DjangoStrategy'
+SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
