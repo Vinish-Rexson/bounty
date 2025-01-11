@@ -312,7 +312,7 @@ nav.scrolled {
 }
 
 .hero h1 {
-    font-size: 5.5rem;
+    font-size: 4.5rem;
     line-height: 1.1;
     position: relative;
     display: flex;
@@ -2523,5 +2523,57 @@ section {
         gap: 1.5rem;
     }
 }
-/* game library css from below */
+
+/* Add these styles for the floating logos */
+.floating-logos {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.floating-logo {
+    position: absolute;
+    opacity: 0.1;
+    filter: grayscale(100%);
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    animation: float 20s linear infinite;
+}
+
+.floating-logo:hover {
+    opacity: 0.3;
+    filter: grayscale(0%);
+    transform: scale(1.2);
+}
+
+@keyframes float {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+        transform: translate(10px, 10px) rotate(90deg);
+    }
+    50% {
+        transform: translate(0, 20px) rotate(180deg);
+    }
+    75% {
+        transform: translate(-10px, 10px) rotate(270deg);
+    }
+    100% {
+        transform: translate(0, 0) rotate(360deg);
+    }
+}
+
+/* Update hero section background */
+.hero {
+    background: var(--background-dark);
+    position: relative;
+}
+
+.background-effects {
+    opacity: 0.3;
+}
 

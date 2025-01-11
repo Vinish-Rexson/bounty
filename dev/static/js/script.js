@@ -1,4 +1,64 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Programming language logos with their CDN URLs
+    const logos = [
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/angularjs/angularjs-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg',
+        'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg'
+    ];
+
+    // Create floating logos container
+    const floatingLogos = document.createElement('div');
+    floatingLogos.className = 'floating-logos';
+    document.querySelector('.hero').appendChild(floatingLogos);
+
+    // Create and position logos
+    logos.forEach((logoUrl, index) => {
+        const logo = document.createElement('img');
+        logo.src = logoUrl;
+        logo.className = 'floating-logo';
+        
+        // Random initial position
+        const randomX = Math.random() * 100;
+        const randomY = Math.random() * 100;
+        logo.style.left = `${randomX}%`;
+        logo.style.top = `${randomY}%`;
+        
+        // Random animation duration and delay
+        const duration = 15 + Math.random() * 15;
+        const delay = -Math.random() * 20;
+        logo.style.animationDuration = `${duration}s`;
+        logo.style.animationDelay = `${delay}s`;
+
+        floatingLogos.appendChild(logo);
+    });
+
+    // Add subtle parallax effect
+    document.querySelector('.hero').addEventListener('mousemove', (e) => {
+        const logos = document.querySelectorAll('.floating-logo');
+        const mouseX = e.clientX / window.innerWidth;
+        const mouseY = e.clientY / window.innerHeight;
+
+        logos.forEach(logo => {
+            const speed = parseFloat(logo.getAttribute('data-speed') || Math.random() * 0.2);
+            const x = (window.innerWidth - e.pageX * speed) / 100;
+            const y = (window.innerHeight - e.pageY * speed) / 100;
+            
+            logo.style.transform = `translate(${x}px, ${y}px)`;
+        });
+    });
+
     const carousel = document.querySelector('.carousel-container');
     const cards = document.querySelectorAll('.game-card');
     const prevButton = document.querySelector('.prev');
