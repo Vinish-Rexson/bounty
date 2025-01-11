@@ -1,0 +1,204 @@
+{% extends 'dev/base.html' %}
+
+{% block title %}{{ project.title }} - Project Details{% endblock %}
+
+{% block content %}
+<div class="project-detail-container">
+    <div class="project-header">
+        <div class="header-content">
+            <h1>{{ project.title }}</h1>
+            <div class="client-info">
+                <i class="fas fa-user"></i>
+                <span>{{ project.customer.user.first_name }} {{ project.customer.user.last_name }}</span>
+            </div>
+        </div>
+        <div class="status-badge status-{{ project.status|lower }}">
+            {{ project.get_status_display }}
+        </div>
+    </div>
+
+    <div class="project-info">
+        <div class="info-section">
+            <h2>Project Details</h2>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <strong>Budget</strong>
+                    <span>${{ project.budget }}</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Duration</strong>
+                    <span>{{ project.duration }} days</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Created</strong>
+                    <span>{{ project.created_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Status</strong>
+                    <span class="status-text status-{{ project.status|lower }}">
+                        {{ project.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>Description</h2>
+            <p>{{ project.description }}</p>
+        </div>
+
+        {% if project.required_skills.exists %}
+        <div class="info-section">
+            <h2>Required Skills</h2>
+            <div class="skills-grid">
+                {% for skill in project.required_skills.all %}
+                    <span class="skill-tag">{{ skill.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .project-detail-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .project-header {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        background: var(--card-background);
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+    }
+
+    .header-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .project-header h1 {
+        color: var(--text-primary);
+        font-size: 1.75rem;
+        margin: 0;
+    }
+
+    .client-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: white;
+    }
+
+    .status-text {
+        font-weight: 500;
+    }
+
+    /* Status Colors */
+    .status-pending {
+        background-color: var(--warning-color);
+        color: white;
+    }
+    
+    .status-accepted {
+        background-color: var(--success-color);
+        color: white;
+    }
+    
+    .status-rejected {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    .status-completed {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .status-cancelled {
+        background-color: var(--secondary-color);
+        color: white;
+    }
+
+    .info-section {
+        background: var(--card-background);
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        margin-bottom: 1.5rem;
+    }
+
+    .info-section h2 {
+        color: var(--text-primary);
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .detail-item strong {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .skills-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .skill-tag {
+        background: var(--background-color);
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+        .project-detail-container {
+            padding: 1rem;
+        }
+
+        .project-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .status-badge {
+            align-self: flex-start;
+        }
+    }
+</style>
+{% endblock %} 

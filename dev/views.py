@@ -5,7 +5,7 @@ from .forms import ProfileForm, ProjectForm
 from .models import Profile, Project
 from django.contrib import messages
 from django.conf import settings
-from customer.models import Project, ProjectRequest, DeveloperRequest
+from customer.models import Project as CustomerProject, ProjectRequest, DeveloperRequest
 from django.http import JsonResponse
 
 
@@ -119,7 +119,20 @@ def home(request):
 @developer_required
 @login_required
 def browse_projects(request):
-    projects = Project.objects.filter(status='open')
+    projects = CustomerProject.objects.filter(status='open')
+    
+    # Get all pending requests for the current developer
+    developer_requests = ProjectRequest.objects.filter(
+        developer=request.user.profile
+    ).values_list('project_id', 'status')
+    
+    # Create a dictionary of project_id: request_status
+    request_status_dict = {proj_id: status for proj_id, status in developer_requests}
+    
+    # Add request status to each project
+    for project in projects:
+        project.request_status = request_status_dict.get(project.id)
+    
     return render(request, 'dev/browse_projects.html', {
         'projects': projects
     })
@@ -127,8 +140,9 @@ def browse_projects(request):
 @developer_required
 @login_required
 def request_project(request, project_id):
+    project = get_object_or_404(CustomerProject, id=project_id)
+    
     if request.method == 'POST':
-        project = Project.objects.get(id=project_id)
         message = request.POST.get('message', '')
         
         # Create project request
@@ -140,9 +154,10 @@ def request_project(request, project_id):
         
         messages.success(request, 'Project request sent successfully!')
         return redirect('dev:browse_projects')
-        
-    project = Project.objects.get(id=project_id)
-    return render(request, 'dev/request_project.html', {'project': project})
+    
+    return render(request, 'dev/request_project.html', {
+        'project': project
+    })
 
 @developer_required
 @login_required
@@ -216,7 +231,25 @@ def handle_customer_request(request, request_id):
         
     return redirect('dev:dashboard')
 
+@developer_required
+@login_required
+def projects(request):
+    # Get all projects for the current developer with related customer data
+    projects = CustomerProject.objects.filter(
+        assigned_developer=request.user.profile
+    ).select_related('customer', 'customer__user').order_by('-created_at')
+    
+    return render(request, 'dev/projects.html', {
+        'projects': projects
+    })
 
+@developer_required
+@login_required
+def project_detail(request, project_id):
+    project = get_object_or_404(Project, id=project_id, profile=request.user.profile)
+    return render(request, 'dev/project_detail.html', {
+        'project': project
+    })
 
 
 # X-X-X-X-X-X-X-X-X-X-X-X-this is for dev side projects X-X-X-X-X-X-X-X-X-X-X
@@ -293,3 +326,29 @@ def project_update_api(request, pk):
     return redirect('dev:dev_project_detail', pk=project.pk)
 
 # X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X
+
+@developer_required
+@login_required
+def my_projects(request):
+    # Get all projects associated with the developer's profile
+    projects = Project.objects.filter(profile=request.user.profile).order_by('-created_at')
+    
+    # Get statistics
+    total_projects = projects.count()
+    
+    context = {
+        'projects': projects,
+        'stats': {
+            'total': total_projects,
+            # Remove status-based stats since your Project model doesn't have a status field
+        }
+    }
+    return render(request, 'dev/my_projects.html', context)
+
+@developer_required
+@login_required
+def customer_project_detail(request, project_id):
+    project = get_object_or_404(CustomerProject, id=project_id, assigned_developer=request.user.profile)
+    return render(request, 'dev/customer_project_detail.html', {
+        'project': project
+    })
