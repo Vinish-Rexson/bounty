@@ -19,4 +19,7 @@ urlpatterns = [
     path('dev_project/<int:pk>/edit/', views.ProjectUpdateView.as_view(), name='dev_project_update'),
     path('dev_project/<int:pk>/update/', views.project_update_api, name='project_update_api'),
     path('my-projects/', views.my_projects, name='my_projects'),
+    path('projects/list/', views.projects, name='projects'),
+    path('projects/<int:project_id>/', views.project_detail, name='project_detail'),
+    path('customer-project/<int:project_id>/', views.customer_project_detail, name='customer_project_detail'),
 ] 

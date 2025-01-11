@@ -219,10 +219,10 @@ def handle_customer_request(request, request_id):
 @developer_required
 @login_required
 def projects(request):
-    # Get all projects for the current developer, no status filtering
+    # Get all projects for the current developer with related customer data
     projects = CustomerProject.objects.filter(
         assigned_developer=request.user.profile
-    ).order_by('-created_at')
+    ).select_related('customer', 'customer__user').order_by('-created_at')
     
     return render(request, 'dev/projects.html', {
         'projects': projects
@@ -329,3 +329,11 @@ def my_projects(request):
         }
     }
     return render(request, 'dev/my_projects.html', context)
+
+@developer_required
+@login_required
+def customer_project_detail(request, project_id):
+    project = get_object_or_404(CustomerProject, id=project_id, assigned_developer=request.user.profile)
+    return render(request, 'dev/customer_project_detail.html', {
+        'project': project
+    })
