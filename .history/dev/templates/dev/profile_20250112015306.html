@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        nav {
+            background-color: #f4f4f4;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .profile-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="url"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .skills-section {
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .skill-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        button[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .help-text {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .errorlist {
+            color: #dc3545;
+            padding-left: 20px;
+            margin: 5px 0;
+        }
+
+        .time-range {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .time-field {
+            flex: 1;
+        }
+
+        input[type="time"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .availability-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .time-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 4px;
+        }
+        
+        .time-group h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .time-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .availability-tabs {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .availability-tabs label {
+            cursor: pointer;
+        }
+
+        .availability-tabs input[type="radio"] {
+            margin-right: 8px;
+        }
+
+        .availability-tabs span {
+            font-weight: normal;
+        }
+
+        /* Hide all time inputs by default except weekday */
+        .time-field input[type="time"] {
+            display: none;
+        }
+        
+        .time-field input.weekday-time {
+            display: block;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 20px auto;
+            padding: 25px;
+            border: none;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: relative;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        /* Improved form styling */
+        .modal-form-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .modal-form-group input,
+        .modal-form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .modal-form-group input:focus,
+        .modal-form-group textarea:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .modal-form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Close button */
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        /* Modal buttons */
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-modal {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-cancel {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            color: #333;
+        }
+
+        .btn-save {
+            background-color: #007bff;
+            border: none;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-cancel:hover {
+            background-color: #e9ecef;
+        }
+
+        /* Projects list styling */
+        .projects-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-item {
+            background: #f8f9fa;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .project-item:hover {
+            background: #e9ecef;
+        }
+
+        .project-link {
+            color: #495057;
+            text-decoration: none;
+            display: block;
+        }
+
+        .projects-section {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .projects-list {
+            margin: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .project-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            transition: all 0.2s;
+        }
+
+        .project-item:hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+
+        .project-link {
+            color: #495057;
+            text-decoration: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .project-link:hover {
+            color: #007bff;
+        }
+
+        .project-client {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .no-projects {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+            background: white;
+            border-radius: 6px;
+            border: 1px dashed #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'dev:dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'dev:profile' %}">Profile</a></li>
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <h2>Complete Your Profile</h2>
+    
+    <div class="profile-form">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                {% if field.name != 'weekday_from' and field.name != 'weekday_to' and field.name != 'weekend_from' and field.name != 'weekend_to' and field.name != 'temp_from' and field.name != 'temp_to' and field.name != 'availability_type' %}
+                    <div class="form-group">
+                        {% if field.name == 'skills' %}
+                            <div class="skills-section">
+                                <label>{{ field.label }}</label>
+                                <div class="skills-grid">
+                                    {{ field }}
+                                </div>
+                                {% if field.help_text %}
+                                    <p class="help-text">{{ field.help_text }}</p>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <p class="help-text">{{ field.help_text }}</p>
+                            {% endif %}
+                            {% if field.errors %}
+                                <ul class="errorlist">
+                                    {% for error in field.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            
+            <div class="form-group">
+                <label>Profile Verified</label>
+                <input type="checkbox" disabled {% if profile.is_verified %}checked{% endif %}>
+            </div>
+
+            {% if not profile.is_verified %}
+                <div class="alert alert-warning">
+                    Your profile is not verified. Please complete your profile to get verified.
+                    <a href="{% url 'dev:profile' %}" class="btn btn-primary">Complete Profile</a>
+                </div>
+            {% endif %}
+            
+            <div class="projects-section">
+                <label>Projects</label>
+                <div class="projects-list">
+                    {% for project in projects %}
+                        <div class="project-item">
+                            <a href="{% url 'dev:dev_project_detail' pk=project.id %}" class="project-link">
+                                {{ project.name }}
+                                {% if project.client %}
+                                    <span class="project-client">({{ project.client }})</span>
+                                {% endif %}
+                            </a>
+                        </div>
+                    {% empty %}
+                        <div class="no-projects">No projects yet</div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-primary" onclick="openProjectModal()">Add New Project</button>
+            </div>
+            
+            <div class="availability-section">
+                <h3>Availability</h3>
+                <div class="time-card">
+                    <div class="availability-tabs">
+                        <label>
+                            <input type="radio" name="{{ form.availability_type.name }}" value="weekday" checked>
+                            <span>Weekday</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="{{ form.availability_type.name }}" value="weekend">
+                            <span>Weekend</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="{{ form.availability_type.name }}" value="temporary">
+                            <span>Just for Today</span>
+                        </label>
+                    </div>
+                    
+                    <div class="time-range">
+                        <div class="time-field">
+                            <label>From</label>
+                            {{ form.weekday_from }}
+                            {{ form.weekend_from }}
+                            {{ form.temp_from }}
+                        </div>
+                        <div class="time-field">
+                            <label>To</label>
+                            {{ form.weekday_to }}
+                            {{ form.weekend_to }}
+                            {{ form.temp_to }}
+                        </div>
+                    </div>
+                    <p class="help-text" id="availability-help">Set your weekday availability hours</p>
+                </div>
+            </div>
+            
+            <button type="submit">Save Profile</button>
+        </form>
+    </div>
+
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Add New Project</h3>
+            <form id="projectForm">
+                <div class="modal-form-group">
+                    <label for="projectName">Project Name*</label>
+                    <input type="text" id="projectName" required 
+                           placeholder="Enter project name">
+                </div>
+                <div class="modal-form-group">
+                    <label for="projectReadme">Project Description*</label>
+                    <textarea id="projectReadme" required 
+                             placeholder="Describe your project..."></textarea>
+                </div>
+                <div class="modal-form-group">
+                    <label for="deployedUrl">Deployed URL</label>
+                    <input type="url" id="deployedUrl" 
+                           placeholder="https://...">
+                </div>
+                <div class="modal-form-group">
+                    <label for="githubUrl">GitHub URL*</label>
+                    <input type="url" id="githubUrl" required 
+                           placeholder="https://github.com/...">
+                </div>
+                <div class="modal-form-group">
+                    <label for="projectClient">Client</label>
+                    <input type="text" id="projectClient" 
+                           placeholder="Client name or organization">
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-modal btn-save">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const helpText = document.getElementById('availability-help');
+        const radioButtons = document.querySelectorAll('input[name="{{ form.availability_type.name }}"]');
+        const weekdayInputs = document.querySelectorAll('.weekday-time');
+        const weekendInputs = document.querySelectorAll('.weekend-time');
+        const tempInputs = document.querySelectorAll('.temp-time');
+        
+        function updateDisplay(value) {
+            weekdayInputs.forEach(input => input.style.display = value === 'weekday' ? 'block' : 'none');
+            weekendInputs.forEach(input => input.style.display = value === 'weekend' ? 'block' : 'none');
+            tempInputs.forEach(input => input.style.display = value === 'temporary' ? 'block' : 'none');
+            
+            switch(value) {
+                case 'weekday':
+                    helpText.textContent = 'Set your weekday availability hours';
+                    break;
+                case 'weekend':
+                    helpText.textContent = 'Set your weekend availability hours';
+                    break;
+                case 'temporary':
+                    helpText.textContent = 'Set your availability hours just for today';
+                    break;
+            }
+        }
+        
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                updateDisplay(e.target.value);
+            });
+        });
+    });
+
+    const modal = document.getElementById('projectModal');
+    const closeBtn = document.getElementsByClassName('close')[0];
+
+    function openProjectModal() {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Restore background scrolling
+        document.getElementById('projectForm').reset();
+    }
+
+    closeBtn.onclick = closeModal;
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+
+    // Handle escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modal.style.display === 'block') {
+            closeModal();
+        }
+    });
+
+    // Prevent modal close when clicking modal content
+    document.querySelector('.modal-content').addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+
+    document.getElementById('projectForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Saving...';
+        
+        try {
+            const projectData = {
+                name: document.getElementById('projectName').value.trim(),
+                readme: document.getElementById('projectReadme').value.trim(),
+                deployed_url: document.getElementById('deployedUrl').value.trim(),
+                github_url: document.getElementById('githubUrl').value.trim(),
+                client: document.getElementById('projectClient').value.trim()
+            };
+
+            const response = await fetch('{% url "dev:project_create_api" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(projectData)
+            });
+
+            if (response.ok) {
+                const project = await response.json();
+                const projectsList = document.querySelector('.projects-list');
+                
+                const projectDiv = document.createElement('div');
+                projectDiv.className = 'project-item';
+                projectDiv.innerHTML = `
+                    <a href="/dev/project/${project.id}/" class="project-link">
+                        ${project.name}
+                    </a>
+                `;
+                
+                projectsList.appendChild(projectDiv);
+                closeModal();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to save project. Please try again.');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Save Project';
+        }
+    });
+    </script>
+</body>
+</html> 

@@ -2,12 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ValidationError
 from .forms import ProfileForm, ProjectForm
-from .models import Profile, Project,Comment
+from .models import Profile, Project
 from django.contrib import messages
 from django.conf import settings
 from customer.models import Project as CustomerProject, ProjectRequest, DeveloperRequest
 from django.http import JsonResponse
-from django.contrib.auth.models import User
 
 
 
@@ -35,10 +34,8 @@ developer_required = user_passes_test(is_developer, login_url='login')
 @login_required
 def dashboard(request):
     # Get or create profile
-
     profile, created = Profile.objects.get_or_create(user=request.user)
-    print("Profile retrieved:", profile)
-    comments = Comment.objects.filter(profile=profile).order_by('-created_at')
+    comments = profile.comments.all().order_by('-created_at')
     
     # Get customer requests
     customer_requests = DeveloperRequest.objects.filter(
@@ -51,8 +48,6 @@ def dashboard(request):
         developer=profile,
         status='pending'
     ).select_related('project')
-    
-    print("Comments retrieved:", comments)
     
     context = {
         'user': request.user,
@@ -72,6 +67,7 @@ def dashboard(request):
 def profile(request):
     try:
         profile = request.user.profile
+        # Get projects ordered by creation date
         projects = profile.projects.all().order_by('-created_at')
     except Profile.DoesNotExist:
         profile = Profile.objects.create(user=request.user)
@@ -82,7 +78,7 @@ def profile(request):
         if form.is_valid():
             profile = form.save(commit=False)
             
-            # Check if the profile is complete
+            # Update required fields to match our new field names
             required_fields = [
                 'display_name', 'title', 'years_of_experience', 
                 'hourly_rate', 'github_url', 'timezone'

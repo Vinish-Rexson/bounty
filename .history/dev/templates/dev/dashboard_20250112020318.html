@@ -165,18 +165,6 @@
             width: 100%;
         }
     }
-
-    .author-pfp {
-        width: 40px; /* Adjust size as needed */
-        height: 40px; /* Adjust size as needed */
-        border-radius: 50%; /* Make it circular */
-        margin-right: 10px; /* Space between image and text */
-    }
-
-    .comment-item {
-        border-bottom: 1px solid var(--border-color);
-        padding: 10px 0;
-    }
 {% endblock %}
 
 {% block content %}
@@ -287,11 +275,7 @@
             {% for comment in comments %}
                 <div class="comment-item">
                     <div class="comment-author">
-                        {% if comment.author.profile.profile_picture %}
-                            <img src="{{ comment.author.profile.profile_picture.url }}" alt="{{ comment.author.username }}'s profile picture" class="author-pfp" />
-                        {% else %}
-                            <img src="{% static 'default_profile_picture.png' %}" alt="Default profile picture" class="author-pfp" />
-                        {% endif %}
+                        <img src="{{ comment.author.profile.profile_picture.url }}" alt="{{ comment.author.username }}'s profile picture" class="author-pfp" />
                         <strong>{{ comment.author.username }}</strong>
                     </div>
                     <p>{{ comment.content }}</p>

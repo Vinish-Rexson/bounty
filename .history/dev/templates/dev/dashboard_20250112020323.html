@@ -287,11 +287,7 @@
             {% for comment in comments %}
                 <div class="comment-item">
                     <div class="comment-author">
-                        {% if comment.author.profile.profile_picture %}
-                            <img src="{{ comment.author.profile.profile_picture.url }}" alt="{{ comment.author.username }}'s profile picture" class="author-pfp" />
-                        {% else %}
-                            <img src="{% static 'default_profile_picture.png' %}" alt="Default profile picture" class="author-pfp" />
-                        {% endif %}
+                        <img src="{{ comment.author.profile.profile_picture.url }}" alt="{{ comment.author.username }}'s profile picture" class="author-pfp" />
                         <strong>{{ comment.author.username }}</strong>
                     </div>
                     <p>{{ comment.content }}</p>
