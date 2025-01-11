@@ -46,7 +46,7 @@
 
     <!-- Add your custom JavaScript -->
     <script>
-        const contractAddress ="0x13Ff5A37c73e8362A517841F069991fC06355048"; // Make sure this is your deployed contract address
+        const contractAddress = "0x948DC93C6bf568980eBa0db3349fEC64FF5356B4"; // This should match your contract_address.txt
         const contractABI = [
   {
     "inputs": [
@@ -244,6 +244,7 @@
 
         let web3;
         let contract;
+        let currentTransaction = null; // Store the current transaction details
 
         // Initialize Web3 and connect to Ganache
         async function init() {
@@ -259,12 +260,20 @@
                     
                     // Initialize contract instance
                     contract = new web3.eth.Contract(contractABI, contractAddress);
+                    console.log("Full contract:", contract);
                     
                     // Get connected account
                     const accounts = await web3.eth.getAccounts();
                     console.log("Connected account:", accounts[0]);
                     
                     document.getElementById('status').innerText = "Connected to MetaMask!";
+
+                    // Add this right after your contract initialization
+                    console.log("Contract ABI:", contractABI);
+                    console.log("Available contract methods:", contract.methods);
+
+                    // Add this after contract initialization
+                    console.log("Contract methods:", Object.keys(contract.methods));
                 } catch (error) {
                     console.error("Error initializing Web3:", error);
                     document.getElementById('status').innerText = "Error connecting to MetaMask!";
@@ -306,6 +315,9 @@ async function sendEther() {
         const recipientAddress = document.getElementById("recipientAddress").value;
         const amountToSend = document.getElementById("amountToSend").value;
 
+        console.log("Before sending - checking balances");
+        await checkBalances(recipientAddress);
+
         if (!web3.utils.isAddress(recipientAddress)) {
             alert("Please enter a valid Ethereum address!");
             return;
@@ -320,34 +332,29 @@ async function sendEther() {
         const sender = accounts[0];
         const amountInWei = web3.utils.toWei(amountToSend, "ether");
 
-        console.log("Sending transaction with params:", {
-            from: sender,
-            value: amountInWei,
-            gas: 300000
-        });
+        // Store transaction details BEFORE sending
+        currentTransaction = {
+            sender: sender,
+            recipient: recipientAddress,
+            amount: amountInWei
+        };
 
-        // Deposit Ether to contract
         const result = await contract.methods.depositEther(recipientAddress).send({
             from: sender,
             value: amountInWei,
             gas: 300000
         });
 
-        console.log("Transaction result:", result);
-
+        console.log("Transaction stored:", currentTransaction);
         document.getElementById("transactionStatus").innerText = 
             `Ether deposited successfully! ${amountToSend} ETH pending transfer to ${recipientAddress}`;
         
         document.getElementById("approvalButtons").style.display = "block";
         
-        window.currentTransaction = {
-            sender: sender,
-            recipient: recipientAddress,
-            amount: amountInWei
-        };
-        
-        updatePendingTransfers(sender, recipientAddress);
+        console.log("After sending - checking balances");
+        await checkBalances(recipientAddress);
     } catch (error) {
+        currentTransaction = null; // Clear on error
         console.error("Transaction error:", error);
         document.getElementById("transactionStatus").innerText = 
             `Transaction failed! Error: ${error.message}`;
@@ -381,91 +388,67 @@ async function updatePendingTransfers(sender, recipient) {
 
         // First approval handler
         async function handleFirstApproval() {
-            document.getElementById("approveButton1").disabled = true;
-            document.getElementById("transactionStatus").innerText = 
-                "First approval confirmed. Waiting for second approval...";
+            try {
+                if (!currentTransaction) {
+                    throw new Error("No pending transaction found");
+                }
+
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                
+                console.log("First approval - marking transaction ready for release");
+                document.getElementById("transactionStatus").innerText = 
+                    "First approval successful. Waiting for second approval...";
+                
+            } catch (error) {
+                console.error('First approval failed:', error);
+                document.getElementById("transactionStatus").innerText = 
+                    'First approval failed: ' + error.message;
+            }
         }
 
         // Second approval handler
         async function handleSecondApproval() {
-            if (!window.currentTransaction) {
-                alert("No pending transaction found!");
-                return;
-            }
-
             try {
-                const accounts = await web3.eth.getAccounts();
-                const currentSender = window.currentTransaction.sender;
-                const currentRecipient = window.currentTransaction.recipient;
-                
-                // Create instance of escrow wallet
-                const escrowWallet = web3.eth.accounts.privateKeyToAccount(
-                    "0x65f57b96c62f0adef6408041146d4fb6133443c9910d565a155269703c89ed85"
-                );
-                
-                // Estimate gas first
-                const releaseData = contract.methods.releaseEther(
-                    currentSender,
-                    currentRecipient
-                ).encodeABI();
-                
-                const gasEstimate = await web3.eth.estimateGas({
-                    from: escrowWallet.address,
-                    to: contractAddress,
-                    data: releaseData
-                });
-                
-                // Get current gas price
-                const gasPrice = await web3.eth.getGasPrice();
-                const nonce = await web3.eth.getTransactionCount(escrowWallet.address);
-                
-                console.log("Transaction parameters:", {
-                    gasEstimate,
-                    gasPrice,
-                    nonce,
-                    from: escrowWallet.address,
-                    to: contractAddress
-                });
-                
+                if (!currentTransaction) {
+                    throw new Error("No pending transaction found");
+                }
+
+                console.log("Before release - checking balances");
+                await checkBalances(currentTransaction.recipient);
+
+                const escrowPrivateKey = "e4858162129857366224abf4283f5d85c1bfb43b744b06f89fa7bc7cf28f2e3a";
+                const escrowWallet = web3.eth.accounts.privateKeyToAccount('0x' + escrowPrivateKey);
+                console.log("Current transaction:", currentTransaction);
+
                 const tx = {
                     from: escrowWallet.address,
                     to: contractAddress,
-                    gas: Math.round(gasEstimate * 1.5), // Add 50% buffer to gas estimate
-                    gasPrice: gasPrice,
-                    data: releaseData,
-                    nonce: nonce,
-                    chainId: await web3.eth.getChainId() // Add chainId
+                    gas: 300000,
+                    gasPrice: await web3.eth.getGasPrice(),
+                    data: contract.methods.releaseEther(
+                        currentTransaction.sender,
+                        currentTransaction.recipient
+                    ).encodeABI(),
+                    nonce: await web3.eth.getTransactionCount(escrowWallet.address)
                 };
-                
-                console.log("Sending transaction:", tx);
-                
-                const signedTx = await web3.eth.accounts.signTransaction(tx, escrowWallet.privateKey);
-                console.log("Transaction signed");
-                
-                const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-                console.log("Transaction receipt:", receipt);
 
-                document.getElementById("transactionStatus").innerText = 
-                    "Transfer completed! Funds have been released to the recipient.";
+                const signedTx = await web3.eth.accounts.signTransaction(tx, '0x' + escrowPrivateKey);
+                const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+                console.log('Release successful:', receipt);
                 
-                await updatePendingTransfers(currentSender, currentRecipient);
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 
-                // Reset UI
+                console.log("After release - checking balances");
+                await checkBalances(currentTransaction.recipient);
+
+                document.getElementById("transactionStatus").innerText = "Funds released successfully!";
                 document.getElementById("approvalButtons").style.display = "none";
-                document.getElementById("approveButton1").disabled = false;
-                window.currentTransaction = null;
+                
+                currentTransaction = null;
             } catch (error) {
-                console.error("Release error:", error);
-                document.getElementById("transactionStatus").innerText = 
-                    `Release failed: ${error.message}`;
-                    
-                // Add detailed error logging
-                if (error.receipt) {
-                    console.error("Transaction receipt:", error.receipt);
-                }
-                if (error.reason) {
-                    console.error("Revert reason:", error.reason);
-                }
+                console.error('Release failed:', error);
+                document.getElementById("transactionStatus").innerText = 'Release failed: ' + error.message;
             }
         }
 
@@ -478,6 +461,31 @@ async function updatePendingTransfers(sender, recipient) {
 
         // Initialize on page load
         window.addEventListener('load', init);
+
+        // Add this after sending ETH
+        async function checkContractBalance() {
+            const balance = await web3.eth.getBalance(contractAddress);
+            console.log('Contract balance:', web3.utils.fromWei(balance, 'ether'), 'ETH');
+        }
+
+        // Add this function to check balances
+        async function checkBalances(recipientAddress) {
+            try {
+                // Check contract balance
+                const contractBalance = await web3.eth.getBalance(contractAddress);
+                console.log('Contract balance:', web3.utils.fromWei(contractBalance, 'ether'), 'ETH');
+
+                // Check recipient balance
+                const recipientBalance = await web3.eth.getBalance(recipientAddress);
+                console.log('Recipient balance:', web3.utils.fromWei(recipientBalance, 'ether'), 'ETH');
+
+                // Check escrow balance
+                const escrowBalance = await web3.eth.getBalance('0xb48aa1f29ca8a33b9af77125c27bef3c78f63250');
+                console.log('Escrow balance:', web3.utils.fromWei(escrowBalance, 'ether'), 'ETH');
+            } catch (error) {
+                console.error('Error checking balances:', error);
+            }
+        }
 
       
     </script>

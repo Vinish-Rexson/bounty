@@ -4,39 +4,41 @@ pragma solidity ^0.8.0;
 contract SimpleContract {
     string public message;
     address public owner;
-    address payable public constant ESCROW_WALLET = payable(0x686B10Bc6c6c1ad0FB47BfEF3FB50a63DD8c2994);
-    mapping(address => mapping(address => uint256)) public pendingTransfers;
+    address payable public constant ESCROW_WALLET = payable(0xb48Aa1f29ca8a33B9Af77125c27BEf3C78f63250);
+    
+    struct Transfer {
+        uint256 amount;
+        bool firstApproval;
+        bool secondApproval;
+    }
+    
+    mapping(address => mapping(address => Transfer)) public pendingTransfers;
     
     event EtherDeposited(address sender, address recipient, uint256 amount);
     event EtherReleased(address sender, address recipient, uint256 amount);
 
     constructor(string memory _message) {
         message = _message;
-        owner = ESCROW_WALLET;
-    }
-
-    function setMessage(string memory _newMessage) public {
-        message = _newMessage;
+        owner = msg.sender;
     }
 
     function depositEther(address recipient) public payable {
-        require(msg.value > 0, "You must send some Ether");
-        (bool sent,) = ESCROW_WALLET.call{value: msg.value}("");
-        require(sent, "Failed to send Ether to escrow wallet");
-        
-        pendingTransfers[msg.sender][recipient] += msg.value;
+        require(msg.value > 0, "Must send some ETH");
+        pendingTransfers[msg.sender][recipient] = Transfer({
+            amount: msg.value,
+            firstApproval: false,
+            secondApproval: false
+        });
         emit EtherDeposited(msg.sender, recipient, msg.value);
     }
 
     function releaseEther(address sender, address payable recipient) public {
-        require(msg.sender == ESCROW_WALLET, "Only escrow wallet can release funds");
-        uint256 amount = pendingTransfers[sender][recipient];
-        require(amount > 0, "No pending transfer found");
+        require(msg.sender == ESCROW_WALLET, "Only escrow can release");
+        require(pendingTransfers[sender][recipient].amount > 0, "No pending transfer");
         
-        // Clear the pending transfer before making the external call
-        pendingTransfers[sender][recipient] = 0;
+        uint256 amount = pendingTransfers[sender][recipient].amount;
+        delete pendingTransfers[sender][recipient];
         
-        // Transfer the funds
         (bool success, ) = recipient.call{value: amount}("");
         require(success, "Transfer failed");
         
@@ -44,6 +46,7 @@ contract SimpleContract {
     }
 
     function getPendingTransfer(address sender, address recipient) public view returns (uint256) {
-        return pendingTransfers[sender][recipient];
+        return pendingTransfers[sender][recipient].amount;
     }
 }
+

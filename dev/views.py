@@ -1,11 +1,29 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.exceptions import ValidationError
 from .forms import ProfileForm, ProjectForm
 from .models import Profile, Project
 from django.contrib import messages
 from django.conf import settings
 from customer.models import Project, ProjectRequest, DeveloperRequest
 from django.http import JsonResponse
+
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .forms import ProfileForm, ProjectForm
+from .models import Profile, Project
+from django.contrib import messages
+from django.conf import settings
+from django.views.generic import CreateView, DetailView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+import json
+
 
 def is_developer(user):
     return user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
@@ -198,3 +216,80 @@ def handle_customer_request(request, request_id):
         
     return redirect('dev:dashboard')
 
+
+
+
+# X-X-X-X-X-X-X-X-X-X-X-X-this is for dev side projects X-X-X-X-X-X-X-X-X-X-X
+class ProjectCreateView(LoginRequiredMixin, CreateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = 'dev/project_form.html'
+    success_url = reverse_lazy('dev:profile')
+
+class ProjectDetailView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = 'dev/project_detail.html'
+    context_object_name = 'project'
+
+class ProjectUpdateView(LoginRequiredMixin, UpdateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = 'dev/project_form.html'
+
+
+@require_http_methods(["POST"])
+@login_required
+def project_create_api(request):
+    data = json.loads(request.body)
+    project = Project.objects.create(
+        name=data['name'],
+        readme=data['readme'],
+        deployed_url=data['deployed_url'],
+        github_url=data['github_url'],
+        client=data['client'],
+        profile=request.user.profile
+    )
+    
+    return JsonResponse({
+        'id': project.id,
+        'name': project.name,
+        'client': project.client
+    })
+
+@require_http_methods(["POST"])
+@login_required
+def project_update_api(request, pk):
+    project = get_object_or_404(Project, pk=pk, profile=request.user.profile)
+    
+    print("="*50)
+    print("Received POST request for project update")
+    print(f"Project ID: {pk}")
+    
+    try:
+        # Clean up URLs if they don't have http:// or https://
+        post_data = request.POST.copy()  # Make a mutable copy
+        for field in ['deployed_url', 'github_url']:
+            if post_data.get(field) and not post_data[field].startswith(('http://', 'https://')):
+                post_data[field] = 'https://' + post_data[field]
+        
+        form = ProjectForm(post_data, instance=project)
+        print("Form data after URL cleanup:")
+        print(form.data)
+        print("Form is valid:", form.is_valid())
+        
+        if not form.is_valid():
+            print("Form errors:", form.errors)
+            messages.error(request, f'Validation error: {form.errors}')
+        else:
+            project = form.save()
+            print("Project saved successfully:", project)
+            messages.success(request, 'Project updated successfully!')
+            
+    except Exception as e:
+        print("Exception occurred:", str(e))
+        print("Exception type:", type(e))
+        messages.error(request, f'Error updating project: {str(e)}')
+    
+    return redirect('dev:dev_project_detail', pk=project.pk)
+
+# X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X

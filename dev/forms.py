@@ -1,5 +1,7 @@
 from django import forms
 from .models import Profile, Skill, Project
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 class ProjectForm(forms.ModelForm):
     class Meta:
@@ -8,6 +10,27 @@ class ProjectForm(forms.ModelForm):
         widgets = {
             'readme': forms.Textarea(attrs={'rows': 5}),
         }
+
+    def clean_deployed_url(self):
+        url = self.cleaned_data.get('deployed_url')
+        if url:
+            if not url.startswith(('http://', 'https://')):
+                url = 'https://' + url
+            try:
+                URLValidator(schemes=['http', 'https'])(url)
+            except ValidationError:
+                raise ValidationError('Enter a valid URL.')
+        return url
+
+    def clean_github_url(self):
+        url = self.cleaned_data.get('github_url')
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        try:
+            URLValidator(schemes=['http', 'https'])(url)
+        except ValidationError:
+            raise ValidationError('Enter a valid URL.')
+        return url
 
 class ProfileForm(forms.ModelForm):
     display_name = forms.CharField(

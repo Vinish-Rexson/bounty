@@ -1,10 +1,8 @@
-from web3 import Web3
+from solcx import install_solc
 
-# Connect to Ganache
-w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:7545'))
+def main():
+    # Install Solidity compiler version 0.8.0
+    install_solc('0.8.0')
 
-# Check connection
-if w3.is_connected():
-    print("Connected to Ganache!")
-else:
-    print("Failed to connect to Ganache")
+if __name__ == "__main__":
+    main()

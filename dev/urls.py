@@ -14,4 +14,8 @@ urlpatterns = [
     path('requests/<int:request_id>/handle/', views.handle_request, name='handle_request'),
     path('project/create/', views.project_create_api, name='project_create_api'),
     path('handle-customer-request/<int:request_id>/', views.handle_customer_request, name='handle_customer_request'),
+    path('dev_project/new/', views.ProjectCreateView.as_view(), name='dev_project_create'),
+    path('dev_project/<int:pk>/', views.ProjectDetailView.as_view(), name='dev_project_detail'),
+    path('dev_project/<int:pk>/edit/', views.ProjectUpdateView.as_view(), name='dev_project_update'),
+    path('dev_project/<int:pk>/update/', views.project_update_api, name='project_update_api'),
 ] 
