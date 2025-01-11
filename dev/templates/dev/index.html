@@ -1,0 +1,564 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samvidhan - Indian Constitution Portal</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'hi,bn,gu,kn,ml,mr,pa,ta,te,ur', // Indian languages
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <style>
+        /* Dropdown styles */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        @media (max-width: 768px) {
+            .dropdown-content {
+                position: static;
+                box-shadow: none;
+                background-color: transparent;
+            }
+            
+            .dropdown-content a {
+                padding-left: 20px;
+            }
+        }
+
+        /* Style the Google Translate dropdown */
+        .goog-te-combo {
+            padding: 8px;
+            border: 1px solid #8B4513;
+            border-radius: 4px;
+            background: #f4e4bc;
+            color: #4A2511;
+            font-family: 'Poppins', sans-serif;
+            width: 200px;
+            margin: 8px;
+        }
+
+        /* Style the Google Translate widget */
+        .goog-te-banner-frame {
+            display: none;
+        }
+
+        .goog-te-menu-value {
+            color: #4A2511 !important;
+            font-family: 'Poppins', sans-serif !important;
+        }
+
+        /* Hide Google Translate attribution */
+        .goog-logo-link {
+            display: none !important;
+        }
+        .goog-te-gadget {
+            color: transparent !important;
+        }
+
+        /* Style the language dropdown */
+        #google_translate_element .goog-te-gadget-simple {
+            background-color: #f4e4bc;
+            border: 1px solid #8B4513;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Style the selected language */
+        #google_translate_element .goog-te-menu-value {
+            color: #4A2511;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Add animation to the dropdown */
+        .goog-te-menu-frame {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+}
+
+.logo-image {
+    height:200px; /* Adjust based on your logo size */
+    width: auto;
+    
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.logo:hover .logo-image {
+    transform: scale(1.05);
+}
+
+/* Remove the previous .logo::before and .logo::after styles */
+
+/* Adjust footer logo size if needed */
+.footer-about .logo-image {
+    height: 40px; /* Slightly smaller in footer */
+}
+
+@media (max-width: 768px) {
+    .logo-image {
+        height: 40px; /* Smaller on mobile */
+    }
+    
+    .footer-about .logo-image {
+        height: 35px;
+    }
+}
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">
+                <img src="https://via.placeholder.com/200x60?text=QuickDev" alt="QuickDev Logo" class="logo-image">
+            </div>
+            <div class="mobile-menu-btn">
+                <div class="menu-bar"></div>
+                <div class="menu-bar"></div>
+                <div class="menu-bar"></div>
+            </div>
+            <div class="nav-links">
+                <a href="#home">Home</a>
+                <a href="#about">About</a>
+                <div class="dropdown">
+                    <a href="#" style="cursor: pointer;">Developers</a>
+                    <div class="dropdown-content">
+                        <a href="#">Browse Devs</a>
+                        <a href="#">Success Stories</a>
+                    </div>
+                </div>
+                <a href="#">Book Now</a>
+                {% if user.is_authenticated %}
+                    <a href="#" class="contact-btn">{{ user.username }}</a>
+                {% else %}
+                    <a href="#" class="contact-btn">Login Now</a>
+                {% endif %}
+                <div class="dropdown">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-language"></i> Translate
+                    </a>
+                    <div class="dropdown-content" id="google_translate_element"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero" id="home">
+        <div class="background-effects">
+            <div class="gradient-circle" style="left: -20%; top: -20%;"></div>
+            <div class="gradient-circle" style="right: -20%; bottom: -20%;"></div>
+        </div>
+
+        <div class="hero-content">
+            <h1>
+                Connect with
+                <span class="highlight">Expert Developers</span>
+                Now
+            </h1>
+            <p>Book instant video calls with skilled developers. Pay in crypto. Get solutions fast.</p>
+            <div class="cta-buttons">
+                <button class="primary-btn">Find a Developer</button>
+                <button class="secondary-btn">Become a Dev</button>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="chakra-container">
+                <img src="{% static 'images/chakra.png' %}" alt="Ashoka Chakra" class="rotating">
+                <div class="chakra-ring ring-1"></div>
+                <div class="chakra-ring ring-2"></div>
+                <div class="chakra-ring ring-3"></div>
+            </div>
+        </div>
+
+        <div class="floating-elements">
+            <!-- Will be populated by JS -->
+        </div>
+
+        <!-- Mouse scroll indicator -->
+        <div class="mouse-scroll">
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+            <div class="arrows">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="info-section" id="features">
+        <div class="container">
+            <!-- Left Side: Why Learn Constitution -->
+            <div class="info-grid">
+                <div class="about-content">
+                    <h2>Why Choose Quick Dev?</h2>
+                    <div class="about-text">
+                        <p>Get immediate technical guidance through instant video calls with experienced developers, all powered by crypto payments.</p>
+                        
+                        <div class="stats-container">
+                            <div class="stats-row">
+                                <div class="stat-item">
+                                    <span class="stat-number">500+</span>
+                                    <span class="stat-label">Developers</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">24/7</span>
+                                    <span class="stat-label">Availability</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">10k+</span>
+                                    <span class="stat-label">Sessions</span>
+                                </div>
+                            </div>
+                            <div class="stats-text">Global network of verified developers</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Learning Features -->
+                <div class="learning-content">
+                    <div class="cards-container">
+                        <div class="learning-card">
+                            <div class="card-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <h4>Instant Video Calls</h4>
+                            <p>Connect immediately with available developers</p>
+                        </div>
+
+                        <div class="learning-card">
+                            <div class="card-icon">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <h4>Crypto Payments</h4>
+                            <p>Secure and instant transactions</p>
+                        </div>
+
+                        <div class="learning-card">
+                            <div class="card-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <h4>Flexible Booking</h4>
+                            <p>Book by the hour or minute</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="games-section" id="developers">
+        <div class="container">
+            <div class="section-header">
+                <h3>Featured Developers</h3>
+                <p>Browse our top-rated development experts</p>
+            </div>
+            
+            <div class="game-carousel">
+                <div class="carousel-container">
+                    <div class="game-card">
+                        <div class="game-image">
+                            <img src="https://images.unsplash.com/photo-1537432376769-00f5c2f4c8d2?w=800" alt="Developer Profile">
+                        </div>
+                        <div class="game-content">
+                            <span class="game-type">Full Stack Developer</span>
+                            <h3>Alex Chen</h3>
+                            <p>Specialized in MERN stack development with 5+ years of experience in building scalable applications.</p>
+                        </div>
+                        <div class="game-footer">
+                            <div class="difficulty">
+                                <span>Rate:</span>
+                                <span>0.05 ETH/hr</span>
+                            </div>
+                            <a href="#" class="play-btn">Book Now</a>
+                        </div>
+                    </div>
+
+                    <div class="game-card">
+                        <div class="game-image">
+                            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800" alt="Developer Profile">
+                        </div>
+                        <div class="game-content">
+                            <span class="game-type">Blockchain Expert</span>
+                            <h3>Sarah Williams</h3>
+                            <p>Smart contract developer specializing in Solidity and Web3 integration. DeFi expert.</p>
+                        </div>
+                        <div class="game-footer">
+                            <div class="difficulty">
+                                <span>Rate:</span>
+                                <span>0.08 ETH/hr</span>
+                            </div>
+                            <a href="#" class="play-btn">Book Now</a>
+                        </div>
+                    </div>
+
+                    <div class="game-card">
+                        <div class="game-image">
+                            <img src="https://images.unsplash.com/photo-1580894732444-8ecded7900cd?w=800" alt="Developer Profile">
+                        </div>
+                        <div class="game-content">
+                            <span class="game-type">Backend Developer</span>
+                            <h3>Mike Johnson</h3>
+                            <p>Python and Node.js expert. Specialized in building robust APIs and microservices architecture.</p>
+                        </div>
+                        <div class="game-footer">
+                            <div class="difficulty">
+                                <span>Rate:</span>
+                                <span>0.06 ETH/hr</span>
+                            </div>
+                            <a href="#" class="play-btn">Book Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="journey-section">
+        <div class="container">
+            <div class="journey-grid">
+                <!-- Learning Path Timeline -->
+                <div class="learning-timeline">
+                    <div class="timeline-track">
+                        <div class="milestone active">
+                            <div class="milestone-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="milestone-content">
+                                <h3>Find Your Developer</h3>
+                                <p>Browse through verified expert developers</p>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <div class="milestone-badge">
+                                <i class="fas fa-check"></i>
+                            </div>
+                        </div>
+
+                        <div class="milestone active current">
+                            <div class="milestone-icon">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="milestone-content">
+                                <h3>Secure Payment</h3>
+                                <p>Quick crypto transactions for booking</p>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 60%"></div>
+                                </div>
+                            </div>
+                            <div class="milestone-badge">
+                                <span>2/5</span>
+                            </div>
+                        </div>
+
+                        <div class="milestone">
+                            <div class="milestone-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <div class="milestone-content">
+                                <h3>Start Consultation</h3>
+                                <p>Instant video call with your developer</p>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="milestone-badge locked">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                        </div>
+
+                        <div class="milestone">
+                            <div class="milestone-icon">
+                                <i class="fas fa-code"></i>
+                            </div>
+                            <div class="milestone-content">
+                                <h3>Problem Solving</h3>
+                                <p>Get your coding solutions instantly</p>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="milestone-badge locked">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Community Hub -->
+                <div class="community-hub">
+                    <div class="hub-header">
+                        <div class="active-users">
+                            <div class="user-stack">
+                                <img src="https://randomuser.me/api/portraits/men/41.jpg" alt="Developer">
+                                <img src="https://randomuser.me/api/portraits/women/42.jpg" alt="Developer">
+                                <img src="https://randomuser.me/api/portraits/men/43.jpg" alt="Developer">
+                                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Developer">
+                                <span class="more-users">+42</span>
+                            </div>
+                            <span>Online Now</span>
+                        </div>
+                        <div class="hub-stats">
+                            <div class="stat">
+                                <span class="stat-value">500+</span>
+                                <span class="stat-label">Active Devs</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">98%</span>
+                                <span class="stat-label">Success Rate</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="achievement-cards">
+                        <div class="achievement-card">
+                            <div class="achievement-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <h4>Top Rated Devs</h4>
+                            <p>Book highly rated experts</p>
+                            <div class="achievement-progress">
+                                <span>50+ Available</span>
+                                <button class="continue-btn">Browse</button>
+                            </div>
+                        </div>
+                        <div class="achievement-card">
+                            <div class="achievement-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h4>Instant Booking</h4>
+                            <p>Connect in minutes</p>
+                            <div class="achievement-progress">
+                                <span>Available 24/7</span>
+                                <button class="join-btn">Book Now</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="start-journey">
+                        <div class="journey-prompt">
+                            <h3>Need Help?</h3>
+                            <p>Connect with an expert developer now</p>
+                        </div>
+                        <button class="primary-cta">
+                            Start Booking
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-about">
+                    <div class="logo">
+                        <img src="https://via.placeholder.com/200x60?text=QuickDev" alt="QuickDev Logo" class="logo-image">
+                    </div>
+                    <p>Connecting developers and clients through instant video consultations.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#developers">Developers</a></li>
+                        <li><a href="#book">Book Now</a></li>
+                    </ul>
+                </div>
+                <div class="footer-resources">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="#">How It Works</a></li>
+                        <li><a href="#">Developer Guide</a></li>
+                        <li><a href="#">Client Guide</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h3>Stay Updated</h3>
+                    <p>Subscribe to our newsletter for latest updates</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Enter your email">
+                        <button type="submit" class="primary-btn">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 संविधान. All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/script.js' %}" defer></script>
+</body>
+</html>
