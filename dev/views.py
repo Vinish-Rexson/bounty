@@ -5,7 +5,7 @@ from .forms import ProfileForm, ProjectForm
 from .models import Profile, Project
 from django.contrib import messages
 from django.conf import settings
-from customer.models import Project, ProjectRequest, DeveloperRequest
+from customer.models import Project as CustomerProject, ProjectRequest, DeveloperRequest
 from django.http import JsonResponse
 
 
@@ -119,7 +119,7 @@ def home(request):
 @developer_required
 @login_required
 def browse_projects(request):
-    projects = Project.objects.filter(status='open')
+    projects = CustomerProject.objects.filter(status='open')
     return render(request, 'dev/browse_projects.html', {
         'projects': projects
     })
@@ -219,8 +219,8 @@ def handle_customer_request(request, request_id):
 @developer_required
 @login_required
 def projects(request):
-    # Get all projects associated with the developer
-    projects = Project.objects.filter(
+    # Get all projects for the current developer, no status filtering
+    projects = CustomerProject.objects.filter(
         assigned_developer=request.user.profile
     ).order_by('-created_at')
     
@@ -231,7 +231,7 @@ def projects(request):
 @developer_required
 @login_required
 def project_detail(request, project_id):
-    project = get_object_or_404(Project, id=project_id, assigned_developer=request.user.profile)
+    project = get_object_or_404(Project, id=project_id, profile=request.user.profile)
     return render(request, 'dev/project_detail.html', {
         'project': project
     })
@@ -311,3 +311,21 @@ def project_update_api(request, pk):
     return redirect('dev:dev_project_detail', pk=project.pk)
 
 # X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X
+
+@developer_required
+@login_required
+def my_projects(request):
+    # Get all projects associated with the developer's profile
+    projects = Project.objects.filter(profile=request.user.profile).order_by('-created_at')
+    
+    # Get statistics
+    total_projects = projects.count()
+    
+    context = {
+        'projects': projects,
+        'stats': {
+            'total': total_projects,
+            # Remove status-based stats since your Project model doesn't have a status field
+        }
+    }
+    return render(request, 'dev/my_projects.html', context)

@@ -20,4 +20,5 @@ urlpatterns = [
     path('dev_project/<int:pk>/', views.ProjectDetailView.as_view(), name='dev_project_detail'),
     path('dev_project/<int:pk>/edit/', views.ProjectUpdateView.as_view(), name='dev_project_update'),
     path('dev_project/<int:pk>/update/', views.project_update_api, name='project_update_api'),
+    path('my-projects/', views.my_projects, name='my_projects'),
 ] 
