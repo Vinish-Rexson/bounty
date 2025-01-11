@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpleContract Frontend</title>
+</head>
+<body>
+    <h1>Interact with SimpleContract</h1>
+
+    <div>
+        <h3>Send Ether (Escrow):</h3>
+        <input type="text" id="recipientAddress" placeholder="Enter recipient's address">
+        <input type="number" id="amountToSend" placeholder="Enter amount in Ether">
+        <button id="sendEtherButton">Deposit Ether</button>
+    </div>
+    <div>
+        <h3>Pending Transfers:</h3>
+        <p id="pendingTransfers">No pending transfers</p>
+        <!-- Add approval buttons -->
+        <div id="approvalButtons" style="display: none;">
+            <button id="approveButton1">First Approval</button>
+            <button id="approveButton2">Second Approval</button>
+        </div>
+    </div>
+    <p id="transactionStatus"></p>
+    
+    <!-- Display the current message -->
+    <div>
+        <h3>Current Message:</h3>
+        <p id="currentMessage">Loading...</p>
+    </div>
+
+    <!-- Form to update the message -->
+    <div>
+        <h3>Update Message:</h3>
+        <input type="text" id="newMessage" placeholder="Enter new message">
+        <button id="updateButton">Update Message</button>
+    </div>
+
+    <!-- Status -->
+    <p id="status"></p>
+
+   
+   
+
+    <!-- Add your custom JavaScript -->
+    <script>
+        const contractAddress = "0x948DC93C6bf568980eBa0db3349fEC64FF5356B4"; // This should match your contract_address.txt
+        const contractABI = [
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_message",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EtherDeposited",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EtherReleased",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "ESCROW_WALLET",
+    "outputs": [
+      {
+        "internalType": "address payable",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "depositEther",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "getPendingTransfer",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "message",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "pendingTransfers",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address payable",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "releaseEther",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_newMessage",
+        "type": "string"
+      }
+    ],
+    "name": "setMessage",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+];
+
+        let web3;
+        let contract;
+        let currentTransaction = null; // Store the current transaction details
+
+        // Initialize Web3 and connect to Ganache
+        async function init() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    // Request account access
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    web3 = new Web3(window.ethereum);
+                    
+                    // Get the network ID
+                    const networkId = await web3.eth.net.getId();
+                    console.log("Connected to network:", networkId);
+                    
+                    // Initialize contract instance
+                    contract = new web3.eth.Contract(contractABI, contractAddress);
+                    console.log("Full contract:", contract);
+                    
+                    // Get connected account
+                    const accounts = await web3.eth.getAccounts();
+                    console.log("Connected account:", accounts[0]);
+                    
+                    document.getElementById('status').innerText = "Connected to MetaMask!";
+
+                    // Add this right after your contract initialization
+                    console.log("Contract ABI:", contractABI);
+                    console.log("Available contract methods:", contract.methods);
+
+                    // Add this after contract initialization
+                    console.log("Contract methods:", Object.keys(contract.methods));
+                } catch (error) {
+                    console.error("Error initializing Web3:", error);
+                    document.getElementById('status').innerText = "Error connecting to MetaMask!";
+                }
+            } else {
+                console.error("MetaMask is not installed");
+                document.getElementById('status').innerText = "Please install MetaMask!";
+            }
+        }
+
+        // Update the message
+        async function updateMessage() {
+            const newMessage = document.getElementById('newMessage').value;
+            if (!newMessage) {
+                alert("Please enter a new message!");
+                return;
+            }
+
+            try {
+                const accounts = await web3.eth.getAccounts(); // Get user accounts
+                await contract.methods.setMessage(newMessage).send({ from: accounts[0] });
+                document.getElementById('status').innerText = "Message updated successfully!";
+                
+                // Refresh the displayed message
+                const updatedMessage = await contract.methods.message().call();
+                document.getElementById('currentMessage').innerText = updatedMessage;
+            } catch (error) {
+                console.error(error);
+                document.getElementById('status').innerText = "Error updating message.";
+            }
+        }
+
+        // Attach event listeners
+        document.getElementById('updateButton').addEventListener('click', updateMessage);
+        
+ // Function to send Ether
+async function sendEther() {
+    try {
+        const recipientAddress = document.getElementById("recipientAddress").value;
+        const amountToSend = document.getElementById("amountToSend").value;
+
+        console.log("Before sending - checking balances");
+        await checkBalances(recipientAddress);
+
+        if (!web3.utils.isAddress(recipientAddress)) {
+            alert("Please enter a valid Ethereum address!");
+            return;
+        }
+
+        if (!amountToSend || isNaN(amountToSend) || amountToSend <= 0) {
+            alert("Please enter a valid amount of Ether!");
+            return;
+        }
+
+        const accounts = await web3.eth.getAccounts();
+        const sender = accounts[0];
+        const amountInWei = web3.utils.toWei(amountToSend, "ether");
+
+        // Store transaction details BEFORE sending
+        currentTransaction = {
+            sender: sender,
+            recipient: recipientAddress,
+            amount: amountInWei
+        };
+
+        const result = await contract.methods.depositEther(recipientAddress).send({
+            from: sender,
+            value: amountInWei,
+            gas: 300000
+        });
+
+        console.log("Transaction stored:", currentTransaction);
+        document.getElementById("transactionStatus").innerText = 
+            `Ether deposited successfully! ${amountToSend} ETH pending transfer to ${recipientAddress}`;
+        
+        document.getElementById("approvalButtons").style.display = "block";
+        
+        console.log("After sending - checking balances");
+        await checkBalances(recipientAddress);
+    } catch (error) {
+        currentTransaction = null; // Clear on error
+        console.error("Transaction error:", error);
+        document.getElementById("transactionStatus").innerText = 
+            `Transaction failed! Error: ${error.message}`;
+    }
+}
+
+async function updatePendingTransfers(sender, recipient) {
+    if (!sender || !recipient) {
+        document.getElementById("pendingTransfers").innerText = "No pending transfers";
+        return;
+    }
+
+    try {
+        const pendingAmount = await contract.methods
+            .getPendingTransfer(sender, recipient).call();
+        const pendingEther = web3.utils.fromWei(pendingAmount, "ether");
+        
+        if (pendingEther > 0) {
+            document.getElementById("pendingTransfers").innerText = 
+                `Pending: ${pendingEther} ETH to ${recipient}`;
+        } else {
+            document.getElementById("pendingTransfers").innerText = 
+                "No pending transfers";
+        }
+    } catch (error) {
+        console.error("Error checking pending transfers:", error);
+        document.getElementById("pendingTransfers").innerText = 
+            "Error checking pending transfers";
+    }
+}
+
+        // First approval handler
+        async function handleFirstApproval() {
+            try {
+                if (!currentTransaction) {
+                    throw new Error("No pending transaction found");
+                }
+
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                
+                console.log("First approval - marking transaction ready for release");
+                document.getElementById("transactionStatus").innerText = 
+                    "First approval successful. Waiting for second approval...";
+                
+            } catch (error) {
+                console.error('First approval failed:', error);
+                document.getElementById("transactionStatus").innerText = 
+                    'First approval failed: ' + error.message;
+            }
+        }
+
+        // Second approval handler
+        async function handleSecondApproval() {
+            try {
+                if (!currentTransaction) {
+                    throw new Error("No pending transaction found");
+                }
+
+                console.log("Before release - checking balances");
+                await checkBalances(currentTransaction.recipient);
+
+                const escrowPrivateKey = "e4858162129857366224abf4283f5d85c1bfb43b744b06f89fa7bc7cf28f2e3a";
+                const escrowWallet = web3.eth.accounts.privateKeyToAccount('0x' + escrowPrivateKey);
+                console.log("Current transaction:", currentTransaction);
+
+                const tx = {
+                    from: escrowWallet.address,
+                    to: contractAddress,
+                    gas: 300000,
+                    gasPrice: await web3.eth.getGasPrice(),
+                    data: contract.methods.releaseEther(
+                        currentTransaction.sender,
+                        currentTransaction.recipient
+                    ).encodeABI(),
+                    nonce: await web3.eth.getTransactionCount(escrowWallet.address)
+                };
+
+                const signedTx = await web3.eth.accounts.signTransaction(tx, '0x' + escrowPrivateKey);
+                const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+                console.log('Release successful:', receipt);
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                console.log("After release - checking balances");
+                await checkBalances(currentTransaction.recipient);
+
+                document.getElementById("transactionStatus").innerText = "Funds released successfully!";
+                document.getElementById("approvalButtons").style.display = "none";
+                
+                currentTransaction = null;
+            } catch (error) {
+                console.error('Release failed:', error);
+                document.getElementById("transactionStatus").innerText = 'Release failed: ' + error.message;
+            }
+        }
+
+        // Add event listeners for approval buttons
+        document.getElementById("approveButton1").addEventListener("click", handleFirstApproval);
+        document.getElementById("approveButton2").addEventListener("click", handleSecondApproval);
+
+        // Attach event listener to the Send Ether button
+        document.getElementById("sendEtherButton").addEventListener("click", sendEther);
+
+        // Initialize on page load
+        window.addEventListener('load', init);
+
+        // Add this after sending ETH
+        async function checkContractBalance() {
+            const balance = await web3.eth.getBalance(contractAddress);
+            console.log('Contract balance:', web3.utils.fromWei(balance, 'ether'), 'ETH');
+        }
+
+        // Add this function to check balances
+        async function checkBalances(recipientAddress) {
+            try {
+                // Check contract balance
+                const contractBalance = await web3.eth.getBalance(contractAddress);
+                console.log('Contract balance:', web3.utils.fromWei(contractBalance, 'ether'), 'ETH');
+
+                // Check recipient balance
+                const recipientBalance = await web3.eth.getBalance(recipientAddress);
+                console.log('Recipient balance:', web3.utils.fromWei(recipientBalance, 'ether'), 'ETH');
+
+                // Check escrow balance
+                const escrowBalance = await web3.eth.getBalance('0xb48aa1f29ca8a33b9af77125c27bef3c78f63250');
+                console.log('Escrow balance:', web3.utils.fromWei(escrowBalance, 'ether'), 'ETH');
+            } catch (error) {
+                console.error('Error checking balances:', error);
+            }
+        }
+
+      
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+
+</body>
+</html>
