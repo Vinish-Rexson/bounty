@@ -39,3 +39,6 @@ def profile(request):
         form = ProfileForm(instance=profile)
     
     return render(request, 'dev/profile.html', {'form': form})
+
+def home(request):
+    return render(request, 'dev/index.html')
