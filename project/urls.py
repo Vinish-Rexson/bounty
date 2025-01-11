@@ -17,13 +17,19 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from . import views
+from django.views.generic import RedirectView
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('', views.home, name='home'),
+    path('', RedirectView.as_view(pattern_name='dev:dashboard')),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
-    path('signup/', views.signup_view, name='signup'),
+    path('signup/dev/', views.dev_signup, name='dev_signup'),
+    path('signup/customer/', views.customer_signup, name='customer_signup'),
     path('', include('social_django.urls', namespace='social')),
     path('dev/', include('dev.urls', namespace='dev')),
+    path('choose-role/', views.choose_role, name='choose_role'),
+    path('customer/', include('customer.urls', namespace='customer')),
+    path('auth-redirect/', views.auth_redirect, name='auth_redirect'),
 ]

@@ -1,13 +1,21 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from .forms import ProfileForm
 from .models import Profile
 from django.contrib import messages
+from django.conf import settings
 
+def is_developer(user):
+    return user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
+
+developer_required = user_passes_test(is_developer, login_url='login')
+
+@developer_required
 @login_required
 def dashboard(request):
     return render(request, 'dev/dashboard.html')
 
+@developer_required
 @login_required
 def profile(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
