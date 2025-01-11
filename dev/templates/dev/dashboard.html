@@ -165,6 +165,18 @@
             width: 100%;
         }
     }
+
+    .author-pfp {
+        width: 40px; /* Adjust size as needed */
+        height: 40px; /* Adjust size as needed */
+        border-radius: 50%; /* Make it circular */
+        margin-right: 10px; /* Space between image and text */
+    }
+
+    .comment-item {
+        border-bottom: 1px solid var(--border-color);
+        padding: 10px 0;
+    }
 {% endblock %}
 
 {% block content %}
@@ -201,6 +213,22 @@
                     <span>Hourly Rate</span>
                     <span>${{ user.profile.hourly_rate|default:"0" }}/hr</span>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Profile Status</h2>
+        <div class="dashboard-card">
+            <h3>Verification Status</h3>
+            <div class="stat-item">
+                <span>Profile Verified:</span>
+                {% if user.profile.is_verified %}
+                    <span style="color: green;">✔️ Verified</span>
+                {% else %}
+                    <span style="color: red;">❌ Unverified</span>
+                    <a href="{% url 'dev:profile' %}" class="btn btn-primary">Complete Profile</a>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -280,5 +308,27 @@
         {% empty %}
             <p>No pending meeting requests</p>
         {% endfor %}
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Your Comments</h2>
+        <div class="dashboard-card">
+            {% for comment in comments %}
+                <div class="comment-item">
+                    <div class="comment-author">
+                        {% if comment.author.profile.profile_picture %}
+                            <img src="{{ comment.author.profile.profile_picture.url }}" alt="{{ comment.author.username }}'s profile picture" class="author-pfp" />
+                        {% else %}
+                            <img src="{% static 'default_profile_picture.png' %}" alt="Default profile picture" class="author-pfp" />
+                        {% endif %}
+                        <strong>{{ comment.author.username }}</strong>
+                    </div>
+                    <p>{{ comment.content }}</p>
+                    <small>{{ comment.created_at|date:"F j, Y, g:i a" }}</small>
+                </div>
+            {% empty %}
+                <p class="empty-message">No comments available.</p>
+            {% endfor %}
+        </div>
     </div>
 {% endblock %}

@@ -1,141 +1,456 @@
-{% extends 'dev/base.html' %}
-
-{% block title %}Project Details{% endblock %}
-
-{% block content %}
-<div class="project-detail-container">
-    <div class="project-header">
-        <h1>{{ project.name }}</h1>
-    </div>
-
-    <div class="project-info">
-        <div class="info-section">
-            <h2>Project Details</h2>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <strong>Client</strong>
-                    <span>{{ project.client }}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Created</strong>
-                    <span>{{ project.created_at|date:"M d, Y" }}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="info-section">
-            <h2>Description</h2>
-            <p>{{ project.readme }}</p>
-        </div>
-
-        <div class="info-section">
-            <h2>Links</h2>
-            <div class="links-grid">
-                {% if project.deployed_url %}
-                <div class="link-item">
-                    <strong>Live Site</strong>
-                    <a href="{{ project.deployed_url }}" target="_blank" class="link-btn">
-                        <i class="fas fa-external-link-alt"></i> Visit Site
-                    </a>
-                </div>
-                {% endif %}
-                {% if project.github_url %}
-                <div class="link-item">
-                    <strong>GitHub Repository</strong>
-                    <a href="{{ project.github_url }}" target="_blank" class="link-btn">
-                        <i class="fab fa-github"></i> View Code
-                    </a>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_styles %}
-<style>
-    .project-detail-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-
-    .project-header {
-        margin-bottom: 2rem;
-    }
-
-    .project-header h1 {
-        color: var(--text-primary);
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .info-section {
-        background: var(--card-background);
-        padding: 1.5rem;
-        border-radius: 8px;
-        box-shadow: var(--shadow);
-        margin-bottom: 1.5rem;
-    }
-
-    .info-section h2 {
-        color: var(--text-primary);
-        font-size: 1.25rem;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .detail-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-    }
-
-    .detail-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .detail-item strong {
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-    }
-
-    .links-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-    }
-
-    .link-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .link-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        background: var(--background-color);
-        color: var(--text-primary);
-        text-decoration: none;
-        border-radius: 4px;
-        transition: all 0.2s;
-    }
-
-    .link-btn:hover {
-        background: var(--border-color);
-    }
-
-    @media (max-width: 768px) {
-        .project-detail-container {
-            padding: 1rem;
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ project.name }} - Project Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
-    }
-</style>
-{% endblock %}
+
+        .project-detail {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 0.5rem;
+        }
+
+        .project-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .project-info {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 4px;
+        }
+
+        .project-info p {
+            margin: 0 0 1rem 0;
+        }
+
+        .readme {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            margin-top: 1rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #6c757d;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: #343a40;
+        }
+
+        .client-info {
+            background-color: #e9ecef;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .project-meta {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .project-preview {
+            margin-top: 2rem;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .preview-header {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .preview-frame {
+            width: 100%;
+            height: 600px;
+            border: none;
+            background: #fff;
+        }
+
+        .preview-error {
+            padding: 2rem;
+            text-align: center;
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .preview-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .preview-btn {
+            padding: 4px 8px;
+            font-size: 0.9em;
+            background: #e9ecef;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #495057;
+        }
+
+        .preview-btn:hover {
+            background: #dee2e6;
+        }
+
+        .project-preview-card {
+            margin-top: 1.5rem;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            max-width: 300px;
+        }
+
+        .preview-thumbnail {
+            width: 100%;
+            height: 180px;
+            border: none;
+            background: #f8f9fa;
+            pointer-events: none; /* Prevents interaction with iframe */
+        }
+
+        .preview-footer {
+            padding: 12px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+        }
+
+        .preview-title {
+            font-size: 0.9em;
+            color: #495057;
+            margin: 0;
+        }
+
+        .open-site-btn {
+            padding: 6px 12px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.85em;
+            transition: background-color 0.2s;
+        }
+
+        .open-site-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .preview-error {
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 0.9em;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .preview-placeholder {
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .preview-placeholder img {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+        }
+
+        .site-url {
+            color: #6c757d;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+
+        .edit-controls {
+            margin-bottom: 1rem;
+        }
+
+        .btn-edit {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-edit:hover {
+            background-color: #218838;
+        }
+
+        .btn-cancel {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background-color: #c82333;
+        }
+
+        .edit-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .form-actions button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <a href="javascript:history.back()" class="back-link">← Back to Profile</a>
+    
+    <div class="project-detail">
+        <h2>{{ project.name }}</h2>
+        
+        <!-- Add edit button if user owns the project -->
+        {% if project.profile.user == request.user %}
+        <div class="edit-controls">
+            <button id="editProjectBtn" class="btn btn-edit">Edit Project</button>
+        </div>
+        {% endif %}
+        
+        <!-- Add edit form (initially hidden) -->
+        <div id="editProjectForm" class="edit-form" style="display: none;">
+            <form method="POST" action="{% url 'dev:project_update_api' project.pk %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="editName">Project Name</label>
+                    <input type="text" id="editName" name="name" value="{{ project.name }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editReadme">README</label>
+                    <textarea id="editReadme" name="readme" rows="5" required>{{ project.readme }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editDeployedUrl">Deployed URL</label>
+                    <input type="url" id="editDeployedUrl" name="deployed_url" value="{{ project.deployed_url|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="editGithubUrl">GitHub URL</label>
+                    <input type="url" id="editGithubUrl" name="github_url" value="{{ project.github_url }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editClient">Client</label>
+                    <input type="text" id="editClient" name="client" value="{{ project.client|default:'' }}">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save Changes</button>
+                    <button type="button" class="btn btn-cancel" onclick="toggleEditForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="project-links">
+            {% if project.deployed_url %}
+            <a href="{{ project.deployed_url }}" target="_blank" class="btn">View Live</a>
+            {% endif %}
+            <a href="{{ project.github_url }}" target="_blank" class="btn">View on GitHub</a>
+        </div>
+
+        <div class="project-info">
+            {% if project.client %}
+            <div class="client-info">
+                <p><strong>Client:</strong> {{ project.client }}</p>
+            </div>
+            {% endif %}
+            
+            <div class="readme">
+                {{ project.readme|linebreaks }}
+            </div>
+
+            {% if project.deployed_url %}
+            <div class="project-preview-card">
+                <div class="preview-thumbnail">
+                    <div class="preview-placeholder">
+                        <img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url={{ project.deployed_url }}&size=128" 
+                             alt="Site Icon"
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzZjNzU3ZCI+V2Vic2l0ZTwvdGV4dD48L3N2Zz4='">
+                        <div class="site-url">{{ project.deployed_url|truncatechars:30 }}</div>
+                    </div>
+                </div>
+                <div class="preview-footer">
+                    <span class="preview-title">Live Preview</span>
+                    <a href="{{ project.deployed_url }}" target="_blank" class="open-site-btn">Open Site</a>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="project-meta">
+                <p>Created: {{ project.created_at|date:"F j, Y" }}</p>
+                <p>Last updated: {{ project.updated_at|date:"F j, Y" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Frame handling functions
+            function handleFrameLoad() {
+                const frame = document.getElementById('previewFrame');
+                if (frame) {
+                    frame.style.display = 'block';
+                    const errorDiv = frame.nextElementSibling;
+                    if (errorDiv && errorDiv.className === 'preview-error') {
+                        errorDiv.remove();
+                    }
+                }
+            }
+
+            function handleFrameError() {
+                const frame = document.getElementById('previewFrame');
+                if (frame) {
+                    frame.style.display = 'none';
+                    
+                    if (!frame.nextElementSibling || !frame.nextElementSibling.classList.contains('preview-error')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'preview-error';
+                        errorDiv.innerHTML = 'Preview not available';
+                        frame.parentNode.insertBefore(errorDiv, frame.nextSibling);
+                    }
+                }
+            }
+
+            // Add frame error handler if frame exists
+            const previewFrame = document.getElementById('previewFrame');
+            if (previewFrame) {
+                previewFrame.addEventListener('error', handleFrameError);
+            }
+
+            // Edit form handling
+            const editBtn = document.getElementById('editProjectBtn');
+            const editForm = document.getElementById('editProjectForm');
+            const projectInfo = document.querySelector('.project-info');
+
+            function toggleEditForm() {
+                if (editForm && projectInfo) {
+                    if (editForm.style.display === 'none') {
+                        editForm.style.display = 'block';
+                        projectInfo.style.display = 'none';
+                    } else {
+                        editForm.style.display = 'none';
+                        projectInfo.style.display = 'block';
+                    }
+                }
+            }
+
+            // Add edit button click handler
+            if (editBtn && editForm && projectInfo) {
+                editBtn.addEventListener('click', toggleEditForm);
+            }
+
+            // Form submission handling
+            const form = document.querySelector('.edit-form form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Saving...';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
