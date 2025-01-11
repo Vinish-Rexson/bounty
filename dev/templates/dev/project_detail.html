@@ -48,89 +48,75 @@
             </div>
         </div>
     </div>
-</div>
 
-<style>
-    .project-detail-container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 0 1rem;
-    }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Frame handling functions
+            function handleFrameLoad() {
+                const frame = document.getElementById('previewFrame');
+                if (frame) {
+                    frame.style.display = 'block';
+                    const errorDiv = frame.nextElementSibling;
+                    if (errorDiv && errorDiv.className === 'preview-error') {
+                        errorDiv.remove();
+                    }
+                }
+            }
 
-    .project-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-    }
+            function handleFrameError() {
+                const frame = document.getElementById('previewFrame');
+                if (frame) {
+                    frame.style.display = 'none';
+                    
+                    if (!frame.nextElementSibling || !frame.nextElementSibling.classList.contains('preview-error')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'preview-error';
+                        errorDiv.innerHTML = 'Preview not available';
+                        frame.parentNode.insertBefore(errorDiv, frame.nextSibling);
+                    }
+                }
+            }
 
-    .project-header h1 {
-        font-size: 2rem;
-        color: var(--text-primary);
-    }
+            // Add frame error handler if frame exists
+            const previewFrame = document.getElementById('previewFrame');
+            if (previewFrame) {
+                previewFrame.addEventListener('error', handleFrameError);
+            }
 
-    .info-section {
-        background: var(--card-background);
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: var(--shadow);
-    }
+            // Edit form handling
+            const editBtn = document.getElementById('editProjectBtn');
+            const editForm = document.getElementById('editProjectForm');
+            const projectInfo = document.querySelector('.project-info');
 
-    .info-section h2 {
-        font-size: 1.25rem;
-        color: var(--text-primary);
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid var(--border-color);
-    }
+            function toggleEditForm() {
+                if (editForm && projectInfo) {
+                    if (editForm.style.display === 'none') {
+                        editForm.style.display = 'block';
+                        projectInfo.style.display = 'none';
+                    } else {
+                        editForm.style.display = 'none';
+                        projectInfo.style.display = 'block';
+                    }
+                }
+            }
 
-    .detail-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-    }
+            // Add edit button click handler
+            if (editBtn && editForm && projectInfo) {
+                editBtn.addEventListener('click', toggleEditForm);
+            }
 
-    .detail-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .detail-item strong {
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-    }
-
-    .detail-item span {
-        color: var(--text-primary);
-        font-size: 1rem;
-    }
-
-    .skills-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .skill-tag {
-        background: var(--primary-color);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.875rem;
-    }
-
-    .status-badge {
-        padding: 0.5rem 1rem;
-        border-radius: 9999px;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .status-open { background: var(--success-color); color: white; }
-    .status-in_progress { background: var(--warning-color); color: white; }
-    .status-completed { background: var(--primary-color); color: white; }
-    .status-cancelled { background: var(--danger-color); color: white; }
-</style>
-{% endblock %}
+            // Form submission handling
+            const form = document.querySelector('.edit-form form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Saving...';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

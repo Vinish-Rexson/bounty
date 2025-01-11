@@ -53,7 +53,7 @@
                 <div class="projects-list">
                     {% for project in projects %}
                         <div class="project-item">
-                            <a href="{% url 'dev:project_detail' pk=project.id %}" class="project-link">
+                            <a href="{% url 'dev:dev_project_detail' pk=project.id %}" class="project-link">
                                 {{ project.name }}
                                 {% if project.client %}
                                     <span class="project-client">({{ project.client }})</span>
