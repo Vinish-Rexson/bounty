@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="chat-list">
+    <div class="chat-header">
+        <h2>Your Conversations</h2>
+        {% if request.user.customerprofile %}
+            <button class="btn create-chat" onclick="showDeveloperList()">Start New Chat with Developer</button>
+        {% endif %}
+    </div>
+
+    <!-- Developer selection modal -->
+    <div id="developerModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeDeveloperList()">&times;</span>
+            <h3>Select a Developer</h3>
+            <div class="developer-list">
+                {% for dev in available_developers %}
+                    <div class="developer-item">
+                        <span>{{ dev.user.get_full_name|default:dev.user.username }}</span>
+                        <form method="post" action="{% url 'chat:create_room' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="developer_id" value="{{ dev.user.id }}">
+                            <button type="submit" class="btn">Start Chat</button>
+                        </form>
+                    </div>
+                {% empty %}
+                    <p>No developers available at the moment.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Existing chat rooms -->
+    {% for room in chat_rooms %}
+        <div class="chat-room-item">
+            {% if request.user == room.customer %}
+                <h3>Chat with {{ room.developer.get_full_name|default:room.developer.username }}</h3>
+            {% else %}
+                <h3>Chat with {{ room.customer.get_full_name|default:room.customer.username }}</h3>
+            {% endif %}
+            <a href="{% url 'chat:room' room.id %}" class="btn">Open Chat</a>
+        </div>
+    {% empty %}
+        <p>No conversations yet.</p>
+    {% endfor %}
+</div>
+
+<style>
+    .chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: var(--card-background);
+        margin: 15% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 500px;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .developer-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .developer-item:last-child {
+        border-bottom: none;
+    }
+</style>
+
+<script>
+    function showDeveloperList() {
+        document.getElementById('developerModal').style.display = 'block';
+    }
+
+    function closeDeveloperList() {
+        document.getElementById('developerModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('developerModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -42,6 +43,8 @@ INSTALLED_APPS = [
     'social_django',
     'dev',
     'customer.apps.CustomerConfig',
+    'channels',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -65,6 +68,7 @@ TEMPLATES = [
             BASE_DIR / 'project' / 'templates',
             BASE_DIR / 'customer' / 'templates',
             BASE_DIR / 'dev' / 'templates',
+            BASE_DIR / 'chat' / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -211,3 +215,24 @@ if DEBUG:
 # ZegoCloud Settings
 ZEGO_APP_ID = 1443711733
 ZEGO_SERVER_SECRET = 'b1696a248baceb6499b62d3c6189e5fe'
+
+# Channels configuration
+ASGI_APPLICATION = 'project.routing.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
+# Add these settings if not already present
+ASGI_APPLICATION = "project.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
+
+# Add these for WebSocket security
+ALLOWED_HOSTS = ['*']  # In production, replace with your actual domains
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000', 'http://localhost:8000']  # Add your domains

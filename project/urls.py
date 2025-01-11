@@ -21,6 +21,8 @@ from django.views.generic import RedirectView
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.conf.urls.static import static
+from channels.routing import ProtocolTypeRouter, URLRouter
+from chat.routing import websocket_urlpatterns
 
 
 urlpatterns = [
@@ -34,6 +36,7 @@ urlpatterns = [
     path('dev/', include('dev.urls', namespace='dev')),
     path('choose-role/', views.choose_role, name='choose_role'),
     path('customer/', include('customer.urls', namespace='customer')),
+    path('chat/', include('chat.urls', namespace='chat')),
     path('auth-redirect/', views.auth_redirect, name='auth_redirect'),
     path('general_login/', views.general_login, name='general_login'),
 ]
