@@ -156,7 +156,7 @@
         </div>
 
         <div style="margin-top: 2rem;">
-            <a href="{% url 'customer:create_project' %}" class="btn">Hire {{ developer.display_name }}</a>
+            <a href="{% url 'customer:request_developer' developer.id %}" class="btn">Request {{ developer.display_name }}</a>
         </div>
     </div>
 </body>

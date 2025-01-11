@@ -110,6 +110,18 @@
             background-color: #6c757d;
             color: white;
         }
+
+        .welcome-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .welcome-actions .btn {
+            flex: 1;
+            text-align: center;
+            max-width: 200px;
+        }
     </style>
 </head>
 <body>
@@ -125,7 +137,10 @@
     <div class="welcome-section">
         <h2>Welcome to your Customer Dashboard! 👋</h2>
         <p>Manage your projects and find talented developers here.</p>
-        <a href="{% url 'customer:create_project' %}" class="btn">Post a New Project</a>
+        <div class="welcome-actions">
+            <a href="{% url 'customer:create_project' %}" class="btn">Post a New Project</a>
+            <a href="{% url 'customer:browse_developers' %}" class="btn">Find Developers</a>
+        </div>
     </div>
 
     <div class="project-list">
@@ -153,6 +168,9 @@
                             {{ project.assigned_developer.user.username }}
                         </div>
                     {% endif %}
+                    <div style="margin-top: 1rem;">
+                        <a href="{% url 'customer:project_requests' project.id %}" class="btn">View Requests</a>
+                    </div>
                 </div>
             {% endfor %}
         {% else %}

@@ -4,6 +4,7 @@ from .forms import ProfileForm
 from .models import Profile
 from django.contrib import messages
 from django.conf import settings
+from customer.models import Project, ProjectRequest, DeveloperRequest
 
 def is_developer(user):
     return user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
@@ -58,3 +59,57 @@ def profile(request):
 
 def home(request):
     return render(request, 'dev/index.html')
+
+@developer_required
+@login_required
+def browse_projects(request):
+    projects = Project.objects.filter(status='open')
+    return render(request, 'dev/browse_projects.html', {
+        'projects': projects
+    })
+
+@developer_required
+@login_required
+def request_project(request, project_id):
+    if request.method == 'POST':
+        project = Project.objects.get(id=project_id)
+        message = request.POST.get('message', '')
+        
+        # Create project request
+        ProjectRequest.objects.create(
+            project=project,
+            developer=request.user.profile,
+            message=message
+        )
+        
+        messages.success(request, 'Project request sent successfully!')
+        return redirect('dev:browse_projects')
+        
+    project = Project.objects.get(id=project_id)
+    return render(request, 'dev/request_project.html', {'project': project})
+
+@developer_required
+@login_required
+def view_requests(request):
+    requests = DeveloperRequest.objects.filter(developer=request.user.profile)
+    return render(request, 'dev/view_requests.html', {'requests': requests})
+
+@developer_required
+@login_required
+def handle_request(request, request_id):
+    if request.method == 'POST':
+        dev_request = DeveloperRequest.objects.get(id=request_id)
+        action = request.POST.get('action')
+        
+        if action == 'accept':
+            dev_request.status = 'accepted'
+            dev_request.project.status = 'in_progress'
+            dev_request.project.assigned_developer = request.user.profile
+            dev_request.project.save()
+        elif action == 'reject':
+            dev_request.status = 'rejected'
+            
+        dev_request.save()
+        messages.success(request, f'Request {action}ed successfully!')
+        
+    return redirect('dev:view_requests')
