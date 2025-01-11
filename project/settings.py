@@ -178,3 +178,23 @@ SOCIAL_AUTH_NEW_USER_REDIRECT_URL = '/auth-redirect/'
 SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {'prompt': 'select_account'}
 SOCIAL_AUTH_STRATEGY = 'social_django.strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
+
+# Add these settings for iframe support
+X_FRAME_OPTIONS = 'SAMEORIGIN'  # This allows iframes from the same domain
+SECURE_REFERRER_POLICY = 'same-origin'
+XS_SHARING_ALLOWED_ORIGINS = '*'
+XS_SHARING_ALLOWED_METHODS = ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE']
+
+# If you need to allow specific external domains to be loaded in iframes, use:
+CSRF_TRUSTED_ORIGINS = [
+    'https://github.com',
+    # Add other trusted domains here
+]
+
+# For development, you might want to disable CSP (Content Security Policy)
+# Only do this in development, not in production!
+if DEBUG:
+    MIDDLEWARE = [
+        middleware for middleware in MIDDLEWARE
+        if middleware != 'django.middleware.security.SecurityMiddleware'
+    ]

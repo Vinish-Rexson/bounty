@@ -1,5 +1,13 @@
 from django import forms
-from .models import Profile, Skill
+from .models import Profile, Skill, Project
+
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ['name', 'readme', 'deployed_url', 'github_url', 'client']
+        widgets = {
+            'readme': forms.Textarea(attrs={'rows': 5}),
+        }
 
 class ProfileForm(forms.ModelForm):
     display_name = forms.CharField(
@@ -71,8 +79,7 @@ class ProfileForm(forms.ModelForm):
             'years_of_experience', 'hourly_rate', 'crypto_wallet_address',
             'skills', 'github_url', 'linkedin_url', 'portfolio_url',
             'is_available', 'timezone', 'preferred_contact_method', 
-            'min_project_duration', 'preferred_project_size', 
-            'certifications', 'education',
+            'min_project_duration', 'preferred_project_size',
             'weekday_from', 'weekday_to',
             'weekend_from', 'weekend_to',
             'temp_from', 'temp_to',

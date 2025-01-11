@@ -1,9 +1,15 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .forms import ProfileForm
-from .models import Profile
+from .forms import ProfileForm, ProjectForm
+from .models import Profile, Project
 from django.contrib import messages
 from django.conf import settings
+from django.views.generic import CreateView, DetailView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+import json
 
 def is_developer(user):
     return user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
@@ -18,7 +24,13 @@ def dashboard(request):
 @developer_required
 @login_required
 def profile(request):
-    profile, created = Profile.objects.get_or_create(user=request.user)
+    try:
+        profile = request.user.profile
+        # Get projects ordered by creation date
+        projects = profile.projects.all().order_by('-created_at')
+    except Profile.DoesNotExist:
+        profile = Profile.objects.create(user=request.user)
+        projects = []
     
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
@@ -54,7 +66,46 @@ def profile(request):
     else:
         form = ProfileForm(instance=profile)
     
-    return render(request, 'dev/profile.html', {'form': form})
+    return render(request, 'dev/profile.html', {
+        'form': form,
+        'profile': profile,
+        'projects': projects
+    })
 
 def home(request):
     return render(request, 'dev/index.html')
+
+class ProjectCreateView(LoginRequiredMixin, CreateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = 'dev/project_form.html'
+    success_url = reverse_lazy('dev:profile')
+
+class ProjectDetailView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = 'dev/project_detail.html'
+    context_object_name = 'project'
+
+class ProjectUpdateView(LoginRequiredMixin, UpdateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = 'dev/project_form.html'
+
+@require_http_methods(["POST"])
+@login_required
+def project_create_api(request):
+    data = json.loads(request.body)
+    project = Project.objects.create(
+        name=data['name'],
+        readme=data['readme'],
+        deployed_url=data['deployed_url'],
+        github_url=data['github_url'],
+        client=data['client'],
+        profile=request.user.profile
+    )
+    
+    return JsonResponse({
+        'id': project.id,
+        'name': project.name,
+        'client': project.client
+    })
