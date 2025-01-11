@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'social_django',
+    'dev',
 ]
 
 MIDDLEWARE = [
@@ -140,6 +141,6 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
 
 # Login/Logout URLs
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'dev:dashboard'
 LOGOUT_URL = 'logout'
 LOGOUT_REDIRECT_URL = 'login'
