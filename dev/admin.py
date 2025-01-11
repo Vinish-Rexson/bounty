@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Profile, Skill, Project
+from .models import Profile, Skill, Project, Comment
 
 @admin.register(Skill)
 class SkillAdmin(admin.ModelAdmin):
@@ -106,3 +106,9 @@ class ProfileAdmin(admin.ModelAdmin):
             )
         })
     )
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('profile', 'author', 'created_at')
+    search_fields = ('content', 'author__username', 'profile__user__username')
+    ordering = ('-created_at',)

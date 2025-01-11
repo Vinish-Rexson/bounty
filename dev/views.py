@@ -19,7 +19,12 @@ developer_required = user_passes_test(is_developer, login_url='login')
 @developer_required
 @login_required
 def dashboard(request):
-    return render(request, 'dev/dashboard.html')
+    profile = request.user.profile
+    comments = profile.comments.all().order_by('-created_at')
+    return render(request, 'dev/dashboard.html', {
+        'profile': profile,
+        'comments': comments
+    })
 
 @developer_required
 @login_required

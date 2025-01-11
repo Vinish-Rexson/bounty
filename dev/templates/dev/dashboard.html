@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -205,6 +206,30 @@
                 <span>Hourly Rate</span>
                 <span>${{ user.profile.hourly_rate|default:"0" }}/hr</span>
             </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Comments</h3>
+            {% if comments %}
+                <ul>
+                    {% for comment in comments %}
+                        <li style="display: flex; align-items: center; margin-bottom: 1rem;">
+                            {% if comment.author.profile.profile_picture %}
+                                <img src="{{ comment.author.profile.profile_picture.url }}" alt="Profile Picture" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
+                            {% else %}
+                                <img src="{% static 'default-profile.png' %}" alt="Default Profile Picture" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
+                            {% endif %}
+                            <div>
+                                <strong>{{ comment.author.username }}</strong>: {{ comment.content }}
+                                <br>
+                                <small>{{ comment.created_at|date:"F j, Y, g:i a" }}</small>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No comments yet.</p>
+            {% endif %}
         </div>
     </div>
 </body>
