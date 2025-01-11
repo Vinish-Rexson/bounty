@@ -227,6 +227,74 @@
             font-size: 0.9em;
             word-break: break-all;
         }
+
+        .edit-controls {
+            margin-bottom: 1rem;
+        }
+
+        .btn-edit {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-edit:hover {
+            background-color: #218838;
+        }
+
+        .btn-cancel {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background-color: #c82333;
+        }
+
+        .edit-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .form-actions button {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -235,6 +303,44 @@
     <div class="project-detail">
         <h2>{{ project.name }}</h2>
         
+        <!-- Add edit button if user owns the project -->
+        {% if project.profile.user == request.user %}
+        <div class="edit-controls">
+            <button id="editProjectBtn" class="btn btn-edit">Edit Project</button>
+        </div>
+        {% endif %}
+        
+        <!-- Add edit form (initially hidden) -->
+        <div id="editProjectForm" class="edit-form" style="display: none;">
+            <form method="POST" action="{% url 'dev:project_update_api' project.pk %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="editName">Project Name</label>
+                    <input type="text" id="editName" name="name" value="{{ project.name }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editReadme">README</label>
+                    <textarea id="editReadme" name="readme" rows="5" required>{{ project.readme }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editDeployedUrl">Deployed URL</label>
+                    <input type="url" id="editDeployedUrl" name="deployed_url" value="{{ project.deployed_url|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="editGithubUrl">GitHub URL</label>
+                    <input type="url" id="editGithubUrl" name="github_url" value="{{ project.github_url }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editClient">Client</label>
+                    <input type="text" id="editClient" name="client" value="{{ project.client|default:'' }}">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save Changes</button>
+                    <button type="button" class="btn btn-cancel" onclick="toggleEditForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
         <div class="project-links">
             {% if project.deployed_url %}
             <a href="{{ project.deployed_url }}" target="_blank" class="btn">View Live</a>
@@ -278,29 +384,73 @@
     </div>
 
     <script>
-        function handleFrameLoad() {
-            const frame = document.getElementById('previewFrame');
-            frame.style.display = 'block';
-            const errorDiv = frame.nextElementSibling;
-            if (errorDiv && errorDiv.className === 'preview-error') {
-                errorDiv.remove();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Frame handling functions
+            function handleFrameLoad() {
+                const frame = document.getElementById('previewFrame');
+                if (frame) {
+                    frame.style.display = 'block';
+                    const errorDiv = frame.nextElementSibling;
+                    if (errorDiv && errorDiv.className === 'preview-error') {
+                        errorDiv.remove();
+                    }
+                }
             }
-        }
 
-        function handleFrameError() {
-            const frame = document.getElementById('previewFrame');
-            frame.style.display = 'none';
-            
-            if (!frame.nextElementSibling || !frame.nextElementSibling.classList.contains('preview-error')) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'preview-error';
-                errorDiv.innerHTML = 'Preview not available';
-                frame.parentNode.insertBefore(errorDiv, frame.nextSibling);
+            function handleFrameError() {
+                const frame = document.getElementById('previewFrame');
+                if (frame) {
+                    frame.style.display = 'none';
+                    
+                    if (!frame.nextElementSibling || !frame.nextElementSibling.classList.contains('preview-error')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'preview-error';
+                        errorDiv.innerHTML = 'Preview not available';
+                        frame.parentNode.insertBefore(errorDiv, frame.nextSibling);
+                    }
+                }
             }
-        }
 
-        // Handle frame load errors
-        document.getElementById('previewFrame').addEventListener('error', handleFrameError);
+            // Add frame error handler if frame exists
+            const previewFrame = document.getElementById('previewFrame');
+            if (previewFrame) {
+                previewFrame.addEventListener('error', handleFrameError);
+            }
+
+            // Edit form handling
+            const editBtn = document.getElementById('editProjectBtn');
+            const editForm = document.getElementById('editProjectForm');
+            const projectInfo = document.querySelector('.project-info');
+
+            function toggleEditForm() {
+                if (editForm && projectInfo) {
+                    if (editForm.style.display === 'none') {
+                        editForm.style.display = 'block';
+                        projectInfo.style.display = 'none';
+                    } else {
+                        editForm.style.display = 'none';
+                        projectInfo.style.display = 'block';
+                    }
+                }
+            }
+
+            // Add edit button click handler
+            if (editBtn && editForm && projectInfo) {
+                editBtn.addEventListener('click', toggleEditForm);
+            }
+
+            // Form submission handling
+            const form = document.querySelector('.edit-form form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Saving...';
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>

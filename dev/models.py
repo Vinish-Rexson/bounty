@@ -199,12 +199,12 @@ class Review(models.Model):
 class Project(models.Model):
     name = models.CharField(max_length=200)
     readme = models.TextField()
-    deployed_url = models.URLField(blank=True)
-    github_url = models.URLField()
+    deployed_url = models.URLField(blank=True, max_length=500)
+    github_url = models.URLField(max_length=500)
     client = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    profile = models.ForeignKey('Profile', on_delete=models.CASCADE, related_name='projects', default=1)
+    profile = models.ForeignKey('Profile', on_delete=models.CASCADE, related_name='projects')
 
     def __str__(self):
         return self.name
@@ -215,6 +215,25 @@ class Project(models.Model):
     def get_absolute_url(self):
         return reverse('dev:project_detail', kwargs={'pk': self.pk})
     
+    def clean(self):
+        # More lenient URL validation
+        if self.deployed_url:
+            try:
+                URLValidator(schemes=['http', 'https'])(self.deployed_url)
+            except ValidationError:
+                if not self.deployed_url.startswith(('http://', 'https://')):
+                    self.deployed_url = 'https://' + self.deployed_url
+
+        if self.github_url:
+            try:
+                URLValidator(schemes=['http', 'https'])(self.github_url)
+            except ValidationError:
+                if not self.github_url.startswith(('http://', 'https://')):
+                    self.github_url = 'https://' + self.github_url
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 class Comment(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='comments')
