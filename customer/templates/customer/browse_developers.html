@@ -90,6 +90,42 @@
             border-radius: 4px;
             font-size: 0.875rem;
         }
+
+        .developers-list {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .developer-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .project-context {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .request-message {
+            width: 100%;
+            min-height: 80px;
+            margin: 10px 0;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .request-action {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
@@ -102,33 +138,36 @@
         </ul>
     </nav>
 
-    <h2>Available Developers</h2>
+    <div class="developers-list">
+        <h2>Browse Developers</h2>
+        {% if project %}
+            <div class="project-context">
+                <p>Requesting developers for: <strong>{{ project.title }}</strong></p>
+            </div>
+        {% endif %}
 
-    <div class="developer-grid">
         {% for developer in developers %}
             <div class="developer-card">
-                {% if developer.profile_picture %}
-                    <img src="{{ developer.profile_picture.url }}" alt="{{ developer.display_name }}">
-                {% endif %}
-                <h3>{{ developer.display_name }}</h3>
-                <p>{{ developer.title }}</p>
-                <div>
-                    <strong>Experience:</strong> {{ developer.years_of_experience }} years
+                <div class="developer-info">
+                    <h3>{{ developer.display_name }}</h3>
+                    <p><strong>Title:</strong> {{ developer.title }}</p>
+                    <p><strong>Experience:</strong> {{ developer.years_of_experience }} years</p>
+                    <p><strong>Rating:</strong> {{ developer.rating }}/5 ⭐</p>
+                    <p><strong>Hourly Rate:</strong> ${{ developer.hourly_rate }}/hr</p>
                 </div>
-                <div>
-                    <strong>Rate:</strong> ${{ developer.hourly_rate }}/hour
-                </div>
-                <div class="skills-list">
-                    {% for skill in developer.skills.all %}
-                        <span class="skill-tag">{{ skill.name }}</span>
-                    {% endfor %}
-                </div>
-                <div style="margin-top: 1rem;">
+                
+                {% if project %}
+                    <div class="request-action">
+                        <form method="post" action="{% url 'customer:request_developer' project.id developer.id %}">
+                            {% csrf_token %}
+                            <textarea name="message" placeholder="Add a message to your request..." class="request-message"></textarea>
+                            <button type="submit" class="btn btn-primary">Request Developer</button>
+                        </form>
+                    </div>
+                {% else %}
                     <a href="{% url 'customer:developer_profile' developer.id %}" class="btn">View Profile</a>
-                </div>
+                {% endif %}
             </div>
-        {% empty %}
-            <p>No developers available at the moment.</p>
         {% endfor %}
     </div>
 </body>

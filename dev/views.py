@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .forms import ProfileForm
-from .models import Profile
+from .forms import ProfileForm, ProjectForm
+from .models import Profile, Project
 from django.contrib import messages
 from django.conf import settings
 from customer.models import Project, ProjectRequest, DeveloperRequest
@@ -14,12 +14,49 @@ developer_required = user_passes_test(is_developer, login_url='login')
 @developer_required
 @login_required
 def dashboard(request):
-    return render(request, 'dev/dashboard.html')
+    profile = request.user.profile
+    comments = profile.comments.all().order_by('-created_at')
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    
+    # Get only customer-initiated requests
+    customer_requests = ProjectRequest.objects.filter(
+        developer=profile,
+        status='pending',
+        initiated_by_customer=True  # Only show requests initiated by customers
+    ).select_related('project', 'project__customer', 'project__customer__user')
+    
+    # Get only developer-initiated requests
+    pending_requests = ProjectRequest.objects.filter(
+        developer=profile,
+        status='pending',
+        initiated_by_customer=False  # Only show requests initiated by developers
+    ).select_related('project')
+    
+    context = {
+        'user': request.user,
+        'profile': profile,
+        'active_projects': ProjectRequest.objects.filter(
+            developer=profile,
+            status='accepted'
+        ).select_related('project'),
+        'customer_requests': customer_requests,
+        'pending_requests': pending_requests,
+    }
+    return render(request, 'dev/dashboard.html', {
+        'profile': profile,
+        'comments': comments
+    }, context)
 
 @developer_required
 @login_required
 def profile(request):
-    profile, created = Profile.objects.get_or_create(user=request.user)
+    try:
+        profile = request.user.profile
+        # Get projects ordered by creation date
+        projects = profile.projects.all().order_by('-created_at')
+    except Profile.DoesNotExist:
+        profile = Profile.objects.create(user=request.user)
+        projects = []
     
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
@@ -55,7 +92,11 @@ def profile(request):
     else:
         form = ProfileForm(instance=profile)
     
-    return render(request, 'dev/profile.html', {'form': form})
+    return render(request, 'dev/profile.html', {
+        'form': form,
+        'profile': profile,
+        'projects': projects
+    })
 
 def home(request):
     return render(request, 'dev/index.html')

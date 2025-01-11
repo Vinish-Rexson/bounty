@@ -148,24 +148,22 @@
         {% if projects %}
             {% for project in projects %}
                 <div class="project-card">
-                    <h4>{{ project.title }}</h4>
-                    <p>{{ project.description|truncatewords:30 }}</p>
-                    <div>
-                        <strong>Budget:</strong> ${{ project.budget }}
+                    <h3>{{ project.title }}</h3>
+                    <div class="project-details">
+                        <p><strong>Budget:</strong> ${{ project.budget }}</p>
+                        <p><strong>Status:</strong> {{ project.status }}</p>
                     </div>
-                    <div>
-                        <strong>Duration:</strong> {{ project.duration }} hours
-                    </div>
-                    <div>
-                        <strong>Status:</strong> 
-                        <span class="status-badge status-{{ project.status }}">
-                            {{ project.status|title }}
-                        </span>
-                    </div>
-                    {% if project.assigned_developer %}
-                        <div>
-                            <strong>Assigned Developer:</strong> 
-                            {{ project.assigned_developer.user.username }}
+                    
+                    {% if project.status == 'open' %}
+                        <div class="action-buttons">
+                            <a href="{% url 'customer:browse_developers' %}?project_id={{ project.id }}" class="btn">
+                                Find Developers
+                            </a>
+                            {% with dev_requests=project.projectrequest_set.filter initiated_by_customer=False %}
+                                <a href="{% url 'customer:project_requests' project.id %}" class="btn">
+                                    View Requests ({{ dev_requests.count }})
+                                </a>
+                            {% endwith %}
                         </div>
                     {% endif %}
                     <div style="margin-top: 1rem;">

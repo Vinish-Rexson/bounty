@@ -23,9 +23,27 @@ def dashboard(request):
 @customer_required
 @login_required
 def browse_developers(request):
-    developers = DevProfile.objects.filter(is_verified=True, is_available=True)
+    developers = DevProfile.objects.filter(is_available=True)
+    project_id = request.GET.get('project_id')
+    project = None
+    
+    if project_id:
+        project = Project.objects.get(id=project_id)
+        
+        # Get existing requests for each developer
+        for developer in developers:
+            try:
+                request_status = ProjectRequest.objects.get(
+                    project=project,
+                    developer=developer
+                ).status
+            except ProjectRequest.DoesNotExist:
+                request_status = None
+            developer.request_status = request_status
+    
     return render(request, 'customer/browse_developers.html', {
-        'developers': developers
+        'developers': developers,
+        'project': project
     })
 
 @login_required

@@ -28,7 +28,8 @@ class Project(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
     assigned_developer = models.ForeignKey(DevProfile, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    interested_developers = models.ManyToManyField(DevProfile, through='ProjectRequest', related_name='interested_projects')
+
     def __str__(self):
         return self.title
 
