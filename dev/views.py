@@ -120,6 +120,19 @@ def home(request):
 @login_required
 def browse_projects(request):
     projects = CustomerProject.objects.filter(status='open')
+    
+    # Get all pending requests for the current developer
+    developer_requests = ProjectRequest.objects.filter(
+        developer=request.user.profile
+    ).values_list('project_id', 'status')
+    
+    # Create a dictionary of project_id: request_status
+    request_status_dict = {proj_id: status for proj_id, status in developer_requests}
+    
+    # Add request status to each project
+    for project in projects:
+        project.request_status = request_status_dict.get(project.id)
+    
     return render(request, 'dev/browse_projects.html', {
         'projects': projects
     })
@@ -127,8 +140,9 @@ def browse_projects(request):
 @developer_required
 @login_required
 def request_project(request, project_id):
+    project = get_object_or_404(CustomerProject, id=project_id)
+    
     if request.method == 'POST':
-        project = Project.objects.get(id=project_id)
         message = request.POST.get('message', '')
         
         # Create project request
@@ -140,9 +154,10 @@ def request_project(request, project_id):
         
         messages.success(request, 'Project request sent successfully!')
         return redirect('dev:browse_projects')
-        
-    project = Project.objects.get(id=project_id)
-    return render(request, 'dev/request_project.html', {'project': project})
+    
+    return render(request, 'dev/request_project.html', {
+        'project': project
+    })
 
 @developer_required
 @login_required

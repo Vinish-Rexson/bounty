@@ -2,38 +2,123 @@
 
 {% block title %}Request Project{% endblock %}
 
-{% block extra_styles %}
-    .request-container {
-        background-color: white;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    // ... (rest of the existing styles)
-{% endblock %}
-
 {% block content %}
-    <div class="request-container">
-        <div class="project-info">
+<div class="request-container">
+    <div class="project-info">
+        <h2>Request to Work on Project</h2>
+        
+        <div class="project-details">
             <h3>{{ project.title }}</h3>
-            <p>{{ project.description }}</p>
-            <div class="project-details">
-                <p><strong>Budget:</strong> ${{ project.budget }}</p>
-                <p><strong>Duration:</strong> {{ project.duration }} hours</p>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <strong>Client:</strong>
+                    <span>{{ project.customer.user.first_name }} {{ project.customer.user.last_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Budget:</strong>
+                    <span>${{ project.budget }}</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Duration:</strong>
+                    <span>{{ project.duration }} days</span>
+                </div>
             </div>
         </div>
 
-        <div class="request-form">
-            <h2>Submit Your Request</h2>
-            <form method="POST">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="message">Message to Customer:</label>
-                    <textarea name="message" id="message" required 
-                        placeholder="Introduce yourself and explain why you're the best fit for this project..."></textarea>
-                </div>
-                <button type="submit" class="btn">Submit Request</button>
-            </form>
-        </div>
+        <form method="POST" class="request-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="message">Message to Client:</label>
+                <textarea 
+                    id="message" 
+                    name="message" 
+                    rows="4" 
+                    required 
+                    placeholder="Introduce yourself and explain why you're a good fit for this project..."
+                ></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Send Request</button>
+                <a href="{% url 'dev:browse_projects' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
     </div>
+</div>
+
+<style>
+    .request-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: var(--card-background);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+    }
+
+    .project-info {
+        margin-bottom: 2rem;
+    }
+
+    .project-details {
+        background: var(--background-color);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1rem 0 2rem;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .detail-item strong {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .request-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-group label {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .form-group textarea {
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .request-container {
+            margin: 1rem;
+            padding: 1rem;
+        }
+    }
+</style>
 {% endblock %}

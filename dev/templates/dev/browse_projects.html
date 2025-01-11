@@ -2,49 +2,6 @@
 
 {% block title %}Browse Projects{% endblock %}
 
-{% block extra_styles %}
-    .projects-container {
-        padding: 20px;
-    }
-
-    .project-card {
-        background-color: white;
-        padding: 20px;
-        margin-bottom: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .project-card h3 {
-        margin-top: 0;
-        color: #2c3e50;
-    }
-
-    .project-details {
-        display: flex;
-        gap: 20px;
-        margin: 10px 0;
-    }
-
-    .project-details span {
-        background-color: #f8f9fa;
-        padding: 5px 10px;
-        border-radius: 4px;
-    }
-
-    .required-skills {
-        margin: 15px 0;
-    }
-
-    .skill-tag {
-        background-color: #e9ecef;
-        padding: 5px 10px;
-        border-radius: 15px;
-        margin-right: 10px;
-        font-size: 0.9em;
-    }
-{% endblock %}
-
 {% block content %}
     <div class="projects-container">
         <h2>Available Projects</h2>
@@ -66,10 +23,71 @@
                     {% endfor %}
                 </div>
                 
-                <a href="{% url 'dev:request_project' project.id %}" class="btn">Request to Work</a>
+                <div class="project-actions">
+                    {% if project.request_status == 'pending' %}
+                        <button class="btn btn-secondary" disabled>Request Pending</button>
+                    {% elif project.request_status == 'accepted' %}
+                        <button class="btn btn-success" disabled>Request Accepted</button>
+                    {% elif project.request_status == 'rejected' %}
+                        <button class="btn btn-danger" disabled>Request Rejected</button>
+                    {% else %}
+                        <a href="{% url 'dev:request_project' project.id %}" class="btn btn-primary">Request to Work</a>
+                    {% endif %}
+                </div>
             </div>
         {% empty %}
             <p>No projects available at the moment.</p>
         {% endfor %}
     </div>
+
+<style>
+    .projects-container {
+        padding: 20px;
+    }
+
+    .project-card {
+        background-color: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .project-actions {
+        margin-top: 1rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: var(--secondary-color);
+        color: white;
+    }
+
+    .btn-success {
+        background-color: var(--success-color);
+        color: white;
+    }
+
+    .btn-danger {
+        background-color: var(--danger-color);
+        color: white;
+    }
+
+    .btn[disabled] {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+</style>
 {% endblock %}
