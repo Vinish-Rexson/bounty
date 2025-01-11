@@ -1,16 +1,113 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Sign Up</title>
-</head>
-<body>
-    <h2>Sign Up</h2>
-    <form method="post">
+{% extends 'base_auth.html' %}
+
+{% block title %}Sign Up - DevMatch{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-header">
+        <div class="logo-container">
+            <i class="fas fa-code-branch"></i>
+        </div>
+        <h2>Join DevMatch</h2>
+        <p>Connect with developers and customers worldwide</p>
+    </div>
+
+    <form method="post" class="signup-form">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Sign Up</button>
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">
+                    <i class="fas fa-{% if field.name == 'username' %}user{% elif field.name == 'email' %}envelope{% elif field.name == 'password' %}lock{% else %}pencil{% endif %}"></i>
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ field.errors|join:", " }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-gradient">
+            <i class="fas fa-user-plus"></i> Create Account
+        </button>
     </form>
-    <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
-    <p>Or login with: <a href="{% url 'social:begin' 'google-oauth2' %}">Google</a></p>
-</body>
-</html> 
+
+    <div class="social-auth">
+        <span class="divider">or</span>
+        <a href="{% url 'social:begin' 'google-oauth2' %}" class="btn btn-google">
+            <i class="fab fa-google"></i> Continue with Google
+        </a>
+    </div>
+
+    <div class="auth-links">
+        <p>Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
+    </div>
+</div>
+
+<style>
+    .logo-container {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+    }
+
+    .signup-form .form-group {
+        position: relative;
+    }
+
+    .signup-form .form-group label i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+    }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+
+    .social-auth {
+        position: relative;
+        margin: 2rem 0;
+        text-align: center;
+    }
+
+    .divider {
+        display: inline-block;
+        padding: 0 1rem;
+        background: var(--card-background);
+        position: relative;
+        z-index: 1;
+        color: var(--text-secondary);
+    }
+
+    .divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -50%;
+        right: -50%;
+        height: 1px;
+        background: var(--border-color);
+        z-index: -1;
+    }
+
+    .btn-google {
+        background: white;
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-google:hover {
+        background: var(--background-color);
+    }
+</style>
+{% endblock %} 

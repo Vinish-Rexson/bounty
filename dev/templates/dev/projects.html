@@ -1,0 +1,136 @@
+{% extends 'dev/base.html' %}
+
+{% block title %}My Projects{% endblock %}
+
+{% block content %}
+<div class="projects-section">
+    <div class="section-header">
+        <h1>My Projects</h1>
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-status="all">All</button>
+            <button class="filter-btn" data-status="open">Open</button>
+            <button class="filter-btn" data-status="in_progress">In Progress</button>
+            <button class="filter-btn" data-status="completed">Completed</button>
+            <button class="filter-btn" data-status="cancelled">Cancelled</button>
+        </div>
+    </div>
+
+    <div class="projects-grid">
+        {% if projects %}
+            {% for project in projects|dictsortreversed:"created_at" %}
+                <div class="project-card" data-status="{{ project.status }}">
+                    <div class="project-header">
+                        <h3>{{ project.title }}</h3>
+                        <span class="status-badge status-{{ project.status }}">
+                            {{ project.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="project-details">
+                        <div class="project-detail-item">
+                            <strong>Client:</strong>
+                            {{ project.client }}
+                        </div>
+                        <div class="project-detail-item">
+                            <strong>Budget:</strong>
+                            ${{ project.budget }}
+                        </div>
+                        <div class="project-detail-item">
+                            <strong>Duration:</strong>
+                            {{ project.duration }} days
+                        </div>
+                        <div class="project-detail-item">
+                            <strong>Created:</strong>
+                            {{ project.created_at|date:"M d, Y" }}
+                        </div>
+                    </div>
+
+                    <div class="project-actions">
+                        <a href="{% url 'dev:project_detail' project.id %}" class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No projects found.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .projects-section {
+        padding: 2rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--primary-color);
+        background: transparent;
+        color: var(--text-primary);
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .filter-btn.active {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+    }
+
+    .status-open { background: var(--status-open); }
+    .status-in_progress { background: var(--status-in-progress); }
+    .status-completed { background: var(--status-completed); }
+    .status-cancelled { background: var(--status-cancelled); }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const projectCards = document.querySelectorAll('.project-card');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Update active button
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const status = btn.dataset.status;
+
+            // Filter projects
+            projectCards.forEach(card => {
+                if (status === 'all' || card.dataset.status === status) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %} 

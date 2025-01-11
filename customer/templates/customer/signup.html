@@ -1,65 +1,147 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Customer Sign Up</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .signup-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .social-auth {
-            margin-top: 20px;
-            text-align: center;
-            border-top: 1px solid #ddd;
-            padding-top: 20px;
-        }
-        .google-button {
-            display: inline-block;
-            background: #4285f4;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 4px;
-            text-decoration: none;
-            margin-top: 15px;
-        }
-        .google-button:hover {
-            background: #357abd;
-            color: white;
-            text-decoration: none;
-        }
-    </style>
-</head>
-<body>
+{% extends 'customer/base.html' %}
+
+{% block title %}Customer Sign Up{% endblock %}
+
+{% block extra_styles %}
+    .signup-container {
+        background: var(--card-background);
+        padding: 2rem;
+        border-radius: 0.5rem;
+        box-shadow: var(--shadow);
+        max-width: 500px;
+        margin: 2rem auto;
+    }
+
+    .signup-container h2 {
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .social-auth {
+        margin-top: 2rem;
+        text-align: center;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .google-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: #fff;
+        color: var(--text-primary);
+        padding: 0.75rem 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.375rem;
+        text-decoration: none;
+        font-weight: 500;
+        margin-top: 1rem;
+        transition: background-color 0.2s;
+    }
+
+    .google-button:hover {
+        background-color: #f8fafc;
+    }
+
+    .signup-container p {
+        text-align: center;
+        margin-top: 1rem;
+        color: var(--text-secondary);
+    }
+
+    .signup-container p a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .signup-container p a:hover {
+        text-decoration: underline;
+    }
+
+    button[type="submit"] {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    button[type="submit"]:hover {
+        background-color: var(--primary-hover);
+    }
+{% endblock %}
+
+{% block content %}
     <div class="signup-container">
-        <h2>Customer Sign Up</h2>
+        <h2>Join DevMatch as a Customer</h2>
         <form method="post">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Sign Up as Customer</button>
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="help-text">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                        <ul class="errorlist">
+                            {% for error in field.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit">Create Account</button>
         </form>
         
-        <!-- Add Google signup -->
         <div class="social-auth">
             <p>Or sign up with:</p>
             {% with next_url="/signup/customer/" %}
             <a href="{% url 'social:begin' 'google-oauth2' %}?next={{ next_url }}" 
                onclick="sessionStorage.setItem('next', '{{ next_url }}')"
                class="google-button">
-                Sign up with Google
+                <i class="fab fa-google"></i>
+                Continue with Google
             </a>
             {% endwith %}
         </div>
         
-        <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
-        <p>Want to sign up as a developer? <a href="{% url 'dev_signup' %}">Developer Sign Up</a></p>
+        <p>Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
+        <p>Want to join as a developer? <a href="{% url 'dev_signup' %}">Developer Sign Up</a></p>
     </div>
-</body>
-</html> 
+{% endblock %} 

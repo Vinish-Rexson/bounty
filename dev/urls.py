@@ -14,4 +14,6 @@ urlpatterns = [
     path('requests/<int:request_id>/handle/', views.handle_request, name='handle_request'),
     path('project/create/', views.project_create_api, name='project_create_api'),
     path('handle-customer-request/<int:request_id>/', views.handle_customer_request, name='handle_customer_request'),
+    path('projects/list/', views.projects, name='projects'),
+    path('projects/<int:project_id>/', views.project_detail, name='project_detail'),
 ] 

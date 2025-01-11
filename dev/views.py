@@ -197,3 +197,23 @@ def handle_customer_request(request, request_id):
         developer_request.save()
         
     return redirect('dev:dashboard')
+
+@developer_required
+@login_required
+def projects(request):
+    # Get all projects associated with the developer
+    projects = Project.objects.filter(
+        assigned_developer=request.user.profile
+    ).order_by('-created_at')
+    
+    return render(request, 'dev/projects.html', {
+        'projects': projects
+    })
+
+@developer_required
+@login_required
+def project_detail(request, project_id):
+    project = get_object_or_404(Project, id=project_id, assigned_developer=request.user.profile)
+    return render(request, 'dev/project_detail.html', {
+        'project': project
+    })
