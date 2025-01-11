@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ValidationError
 from .forms import ProfileForm, ProjectForm
-from .models import Profile, Project,Comment
+from .models import Profile, Project, Comment
 from django.contrib import messages
 from django.conf import settings
 from customer.models import Project as CustomerProject, ProjectRequest, DeveloperRequest, MeetingRequest
@@ -15,6 +15,8 @@ import hmac
 import base64
 from hashlib import sha256
 from django.contrib.auth.models import User
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 
@@ -448,7 +450,9 @@ def generate_zego_token(app_id, server_secret, room_id, user_id):
 @login_required
 @developer_required
 def handle_meeting(request, meeting_id):
-    meeting = get_object_or_404(MeetingRequest, id=meeting_id, developer=request.user.profile)
+    meeting = get_object_or_404(MeetingRequest, 
+                              id=meeting_id, 
+                              developer=request.user.profile)
     
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -460,14 +464,38 @@ def handle_meeting(request, meeting_id):
             meeting.status = 'accepted'
             meeting.save()
 
-            # Generate token and redirect to meeting room
+            # Send WebSocket message to notify the customer
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'chat_{meeting.chat_room.id}',  # Make sure chat_room is a field in your MeetingRequest model
+                {
+                    'type': 'meeting_accepted',
+                    'meeting_id': meeting.id,
+                    'room_id': room_id,
+                    'join_url': reverse('dev:join_meeting', kwargs={'meeting_id': meeting.id})
+                }
+            )
+
+            messages.success(request, 'Meeting request accepted!')
             return redirect('dev:join_meeting', meeting_id=meeting.id)
-        elif action == 'reject':
-            meeting.status = 'rejected'
-            meeting.save()
-            messages.success(request, 'Meeting request rejected')
             
-    return redirect('dev:dashboard')
+        elif action == 'decline':
+            meeting.status = 'declined'
+            meeting.save()
+            
+            # Notify through WebSocket
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'chat_{meeting.chat_room.id}',
+                {
+                    'type': 'meeting_declined',
+                    'meeting_id': meeting.id
+                }
+            )
+            
+            messages.success(request, 'Meeting request declined!')
+            
+    return redirect('dev:meeting_requests')
 
 @login_required
 def join_meeting(request, meeting_id):
@@ -480,6 +508,54 @@ def join_meeting(request, meeting_id):
         'room_id': meeting.room_id,
         'user_id': str(user.id),
         'user_name': user.get_full_name() or user.username,
+    }
+    
+    return render(request, 'dev/meeting_room.html', context)
+
+@login_required
+@developer_required
+def meeting_requests(request):
+    pending_meetings = MeetingRequest.objects.filter(
+        developer=request.user.profile,
+        status='pending'
+    ).select_related('customer')
+    
+    return render(request, 'dev/meeting_requests.html', {
+        'pending_meetings': pending_meetings
+    })
+
+@login_required
+@developer_required
+def handle_meeting(request, meeting_id):
+    meeting = get_object_or_404(MeetingRequest, 
+                              id=meeting_id, 
+                              developer=request.user.profile)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'accept':
+            meeting.status = 'accepted'
+            messages.success(request, 'Meeting request accepted!')
+        elif action == 'decline':
+            meeting.status = 'declined'
+            messages.success(request, 'Meeting request declined!')
+            
+        meeting.save()
+        
+    return redirect('dev:meeting_requests')
+
+@login_required
+@developer_required
+def join_meeting(request, meeting_id):
+    meeting = get_object_or_404(MeetingRequest, 
+                              id=meeting_id, 
+                              developer=request.user.profile,
+                              status='accepted')
+    
+    context = {
+        'room_id': meeting.room_id,
+        'user_name': request.user.get_full_name() or request.user.username,
     }
     
     return render(request, 'dev/meeting_room.html', context)

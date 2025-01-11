@@ -237,6 +237,15 @@
                 </div>
             </div>
         {% endif %}
+
+        <div class="action-buttons">
+            <form method="POST" action="{% url 'customer:request_meeting' developer.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-video"></i> Request Video Meeting
+                </button>
+            </form>
+        </div>
     </div>
 
     <script>

@@ -47,6 +47,14 @@
 
                     <div class="project-actions">
                         <a href="{% url 'dev:customer_project_detail' project.id %}" class="btn btn-primary">View Details</a>
+                        {% if project.github_url %}
+                            <a href="{{ project.github_url }}" target="_blank" class="link-btn">
+                                <i class="fab fa-github"></i> Code
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'chat:room' project.id %}" class="link-btn">
+                            <i class="fas fa-comments"></i> Chat
+                        </a>
                     </div>
                 </div>
             {% endfor %}
@@ -144,6 +152,33 @@
     .project-header h3 {
         margin: 0;
         color: var(--text-primary);
+    }
+
+    .project-links {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        text-decoration: none;
+        color: var(--text-secondary);
+        background: var(--background-color);
+        transition: all 0.2s ease;
+    }
+
+    .link-btn:hover {
+        background: var(--border-color);
+        transform: translateY(-1px);
+    }
+
+    .link-btn i {
+        font-size: 0.875rem;
     }
 </style>
 

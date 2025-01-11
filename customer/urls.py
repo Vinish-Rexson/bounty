@@ -13,4 +13,5 @@ urlpatterns = [
     path('request-developer/<int:dev_id>/', views.request_developer, name='request_developer'),
     path('request-developer/<int:dev_id>/<int:project_id>/', views.request_developer, name='request_developer_with_project'),
     path('request-meeting/<int:dev_id>/', views.request_meeting, name='request_meeting'),
+    path('meeting/<int:meeting_id>/join/', views.join_meeting, name='join_meeting'),
 ] 

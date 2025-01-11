@@ -1,25 +1,53 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from .models import ChatRoom, Message
-from customer.models import CustomerProfile
+from .models import ChatRoom, ChatMessage
+from customer.models import CustomerProfile, Project, MeetingRequest
 from dev.models import Profile
 from django.contrib.auth.models import User
+from django.db.models import Q
+from django.utils import timezone
 
 @login_required
 def chat_room(request, room_id):
-    chat_room = get_object_or_404(ChatRoom, id=room_id)
-    messages = Message.objects.filter(room=chat_room)
+    # First try to get the project
+    project = get_object_or_404(Project, id=room_id)
     
-    # Mark unread messages as read
-    if request.user == chat_room.customer:
-        messages.filter(sender=chat_room.developer, is_read=False).update(is_read=True)
-    else:
-        messages.filter(sender=chat_room.customer, is_read=False).update(is_read=True)
+    # Try to get existing chat room first
+    chat_room = ChatRoom.objects.filter(
+        Q(customer=project.customer.user, developer=project.assigned_developer.user, project=project) |
+        Q(developer=project.customer.user, customer=project.assigned_developer.user, project=project)
+    ).first()
     
-    return render(request, 'chat/room.html', {
+    # If no chat room exists, create one
+    if not chat_room:
+        chat_room = ChatRoom.objects.create(
+            customer=project.customer.user,
+            developer=project.assigned_developer.user,
+            project=project
+        )
+    
+    # Get messages for this room
+    messages = ChatMessage.objects.filter(room=chat_room).order_by('timestamp')
+    
+    # Determine if the user can request a meeting
+    is_customer = hasattr(request.user, 'customerprofile')
+    can_request_meeting = not is_customer and project and project.status == 'in_progress'
+    
+    active_meeting = MeetingRequest.objects.filter(
+        room_id=chat_room.id,
+        status='accepted',
+        created_at__gte=timezone.now() - timezone.timedelta(hours=24)
+    ).first()
+    
+    context = {
         'room': chat_room,
-        'messages': messages
-    })
+        'messages': messages,
+        'project': project,
+        'can_request_meeting': can_request_meeting,
+        'active_meeting': active_meeting
+    }
+    
+    return render(request, 'chat/room.html', context)
 
 @login_required
 def chat_list(request):

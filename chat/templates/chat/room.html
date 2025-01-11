@@ -1,19 +1,99 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="chat-container">
-    <div class="chat-messages" id="chat-messages">
-        {% for message in messages %}
-            <div class="message {% if message.sender == request.user %}sent{% else %}received{% endif %}">
-                <p>{{ message.content }}</p>
-                <small>{{ message.timestamp|date:"g:i A" }}</small>
+<div class="chat-layout">
+    <!-- Left Side - Project Info -->
+    <div class="project-sidebar">
+        {% if project %}
+        <div class="project-info-banner">
+            <div class="project-info-header">
+                <div class="project-title-status">
+                    <h3>{{ project.title }}</h3>
+                    <span class="status-badge status-{{ project.status|lower }}">
+                        {{ project.get_status_display }}
+                    </span>
+                </div>
             </div>
-        {% endfor %}
+
+            <div class="project-details-grid">
+                <div class="detail-item">
+                    <strong><i class="fas fa-user"></i> Client</strong>
+                    <span>{{ project.customer.user.first_name }} {{ project.customer.user.last_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <strong><i class="fas fa-dollar-sign"></i> Budget</strong>
+                    <span>${{ project.budget }}</span>
+                </div>
+                <div class="detail-item">
+                    <strong><i class="fas fa-calendar"></i> Duration</strong>
+                    <span>{{ project.duration }} days</span>
+                </div>
+                <div class="detail-item">
+                    <strong><i class="fas fa-clock"></i> Created</strong>
+                    <span>{{ project.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+
+            <div class="project-description">
+                <strong><i class="fas fa-info-circle"></i> Description</strong>
+                <p>{{ project.description }}</p>
+            </div>
+
+            {% if project.required_skills.all %}
+            <div class="project-skills">
+                <strong><i class="fas fa-code"></i> Required Skills</strong>
+                <div class="skills-list">
+                    {% for skill in project.required_skills.all %}
+                        <span class="skill-tag">{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if project.github_url %}
+            <div class="project-links">
+                <a href="{{ project.github_url }}" target="_blank" class="link-btn">
+                    <i class="fab fa-github"></i> View Code
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
-    
-    <div class="chat-input">
-        <input type="text" id="chat-message-input" placeholder="Type your message...">
-        <button id="chat-message-submit">Send</button>
+
+    <!-- Right Side - Chat -->
+    <div class="chat-container">
+        <div id="chat-messages" class="messages-container">
+            {% for message in messages %}
+                <div class="message {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                    <span class="sender">{{ message.sender.username }}</span>
+                    <p>{{ message.content }}</p>
+                    <span class="timestamp">{{ message.timestamp|date:"g:i A" }}</span>
+                </div>
+            {% endfor %}
+            
+            {% if active_meeting %}
+                <div class="meeting-alert">
+                    <p>Active meeting in progress!</p>
+                    <a href="{% url 'dev:join_meeting' active_meeting.id %}" class="join-meeting-btn">
+                        Join Meeting
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="chat-message-input" placeholder="Type your message...">
+            <button id="chat-message-submit">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+            {% if request.user.customerprofile %}
+            <button id="meeting-request-btn" class="meeting-btn">
+                <i class="fas fa-video"></i>
+                Request Meeting
+            </button>
+            {% endif %}
+        </div>
     </div>
 </div>
 
@@ -31,8 +111,75 @@
             console.log('WebSocket Connected Successfully');
         };
 
-        chatSocket.onerror = function(error) {
-            console.error('WebSocket Error:', error);
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const messagesList = document.querySelector('#chat-messages');
+            
+            if (data.type === 'chat_message') {
+                // Create message element
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(data.sender_id === senderId ? 'sent' : 'received');
+                
+                const messageContent = document.createElement('div');
+                messageContent.classList.add('message-content');
+                
+                messageContent.innerHTML = `
+                    <p>${data.message}</p>
+                    <small>${new Date().toLocaleTimeString()}</small>
+                `;
+                
+                messageDiv.appendChild(messageContent);
+                messagesList.appendChild(messageDiv);
+                messagesList.scrollTop = messagesList.scrollHeight;
+            } else if (data.type === 'meeting_request') {
+                // Create meeting request message
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('meeting-request-message');
+                
+                messageDiv.innerHTML = `
+                    <div class="meeting-content">
+                        <p><strong>Meeting Request</strong></p>
+                        <p>A meeting has been requested by ${data.sender_id === senderId ? 'you' : 'the other participant'}.</p>
+                        ${data.sender_id !== senderId ? `
+                        <div class="meeting-actions">
+                            <button class="btn btn-success" onclick="handleMeeting('accept', ${data.meeting_id})">
+                                <i class="fas fa-check"></i> Accept
+                            </button>
+                            <button class="btn btn-danger" onclick="handleMeeting('reject', ${data.meeting_id})">
+                                <i class="fas fa-times"></i> Decline
+                            </button>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                messagesList.appendChild(messageDiv);
+                messagesList.scrollTop = messagesList.scrollHeight;
+            } else if (data.type === 'meeting_accepted') {
+                // Create meeting accepted message
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('system-message');
+                messageDiv.innerHTML = `
+                    <div class="meeting-accepted">
+                        <p>Meeting request accepted!</p>
+                        <a href="${data.join_url}" class="join-meeting-btn">Join Meeting</a>
+                    </div>
+                `;
+                messagesList.appendChild(messageDiv);
+                messagesList.scrollTop = messagesList.scrollHeight;
+            } else if (data.type === 'meeting_declined') {
+                // Create meeting declined message
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('system-message');
+                messageDiv.innerHTML = `
+                    <div class="meeting-declined">
+                        <p>Meeting request was declined.</p>
+                    </div>
+                `;
+                messagesList.appendChild(messageDiv);
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }
         };
 
         chatSocket.onclose = function(e) {
@@ -40,108 +187,141 @@
             setTimeout(connectWebSocket, 5000);
         };
 
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            const messagesList = document.querySelector('#chat-messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
-            messageDiv.classList.add(data.sender_id === senderId ? 'sent' : 'received');
-            
-            messageDiv.innerHTML = `
-                <p>${data.message}</p>
-                <small>${new Date().toLocaleTimeString()}</small>
-            `;
-            
-            messagesList.appendChild(messageDiv);
-            messagesList.scrollTop = messagesList.scrollHeight;
-        };
-
-        // Store socket reference
         window.chatSocket = chatSocket;
     }
 
     // Initial connection
     connectWebSocket();
 
-    // Send message function
+    // Send message when clicking the send button
     document.querySelector('#chat-message-submit').onclick = function(e) {
+        sendMessage();
+    };
+
+    // Send message when pressing Enter
+    document.querySelector('#chat-message-input').onkeypress = function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    };
+
+    function sendMessage() {
         const messageInputDom = document.querySelector('#chat-message-input');
-        const message = messageInputDom.value;
+        const message = messageInputDom.value.trim();
         
-        if (message.trim() && window.chatSocket.readyState === WebSocket.OPEN) {
+        if (message && window.chatSocket.readyState === WebSocket.OPEN) {
             window.chatSocket.send(JSON.stringify({
+                'type': 'chat_message',
                 'message': message,
                 'sender_id': senderId
             }));
             
             messageInputDom.value = '';
         }
-    };
+    }
+
+    // Auto-scroll to bottom on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const messagesList = document.querySelector('#chat-messages');
+        messagesList.scrollTop = messagesList.scrollHeight;
+    });
+
+    // Add Meeting Request Handler
+    document.querySelector('#meeting-request-btn')?.addEventListener('click', function() {
+        if (window.chatSocket.readyState === WebSocket.OPEN) {
+            window.chatSocket.send(JSON.stringify({
+                'type': 'meeting_request',
+                'sender_id': senderId
+            }));
+            
+            // Disable button after sending request
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-check"></i> Request Sent';
+        }
+    });
+
+    // Add meeting handling function
+    function handleMeeting(action, meetingId) {
+        if (window.chatSocket.readyState === WebSocket.OPEN) {
+            window.chatSocket.send(JSON.stringify({
+                'type': 'meeting_response',
+                'action': action,
+                'meeting_id': meetingId
+            }));
+        }
+    }
 </script>
 
 <style>
+/* Add these new layout styles at the top */
+.chat-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 1rem;
+    height: calc(100vh - 4rem);
+    max-width: 1600px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.project-sidebar {
+    background: var(--card-background);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    height: 100%;
+}
+
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: 80vh;
-    max-width: 800px;
-    margin: 0 auto;
     background: var(--card-background);
-    border-radius: 8px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
 
-.chat-messages {
+.project-info-banner {
+    padding: 1.5rem;
+}
+
+/* Update existing styles */
+.messages-container {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 1rem;
-}
-
-.message {
-    margin-bottom: 1rem;
-    max-width: 70%;
-}
-
-.message.sent {
-    margin-left: auto;
-    background: var(--primary-color);
-    color: white;
-    border-radius: 1rem 1rem 0 1rem;
-    padding: 0.8rem;
-}
-
-.message.received {
-    margin-right: auto;
-    background: var(--card-background);
-    border: 1px solid var(--border-color);
-    border-radius: 1rem 1rem 1rem 0;
-    padding: 0.8rem;
-}
-
-.chat-input {
+    padding: 1.5rem;
     display: flex;
-    padding: 1rem;
-    background: var(--background-darker);
-    border-top: 1px solid var(--border-color);
+    flex-direction: column;
+    gap: 1rem;
 }
 
-.chat-input input {
-    flex-grow: 1;
-    margin-right: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 2rem;
-    border: 1px solid var(--border-color);
-    background: var(--background-dark);
-    color: var(--text-primary);
+/* Responsive design */
+@media (max-width: 1024px) {
+    .chat-layout {
+        grid-template-columns: 300px 1fr;
+    }
 }
 
-.chat-input button {
-    padding: 0.5rem 2rem;
-    border-radius: 2rem;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    cursor: pointer;
+@media (max-width: 768px) {
+    .chat-layout {
+        grid-template-columns: 1fr;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+
+    .project-sidebar {
+        display: none;
+    }
+
+    .chat-container {
+        border-radius: 0;
+    }
 }
+
+/* Keep your existing styles below */
+.project-info-header { /* ... */ }
+.project-title-status { /* ... */ }
+/* ... rest of your existing styles ... */
 </style>
 {% endblock %}

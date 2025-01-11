@@ -342,6 +342,12 @@
                                     </a>
                                 {% endwith %}
                             </div>
+                        {% elif project.status == 'in_progress' %}
+                            <div class="action-buttons">
+                                <a href="{% url 'chat:room' project.id %}" class="btn">
+                                    <i class="fas fa-comments"></i> Chat with Developer
+                                </a>
+                            </div>
                         {% endif %}
                     </div>
                 {% endfor %}

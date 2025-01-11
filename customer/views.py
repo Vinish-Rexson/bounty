@@ -5,6 +5,7 @@ from .models import CustomerProfile, Project, ProjectRequest, DeveloperRequest, 
 from .forms import CustomerProfileForm, ProjectForm
 from django.conf import settings
 from django.contrib import messages
+import uuid
 
 def is_customer(user):
     return user.groups.filter(name=settings.CUSTOMER_GROUP).exists()
@@ -137,21 +138,35 @@ def request_developer(request, dev_id, project_id=None):
         return redirect('customer:browse_developers')
 
 @login_required
-@customer_required
 def request_meeting(request, dev_id):
+    developer = get_object_or_404(Profile, id=dev_id)
+    
     if request.method == 'POST':
-        developer = get_object_or_404(Profile, id=dev_id)
-        customer = request.user.customerprofile
-        message = request.POST.get('message')
+        # Create a unique room ID
+        room_id = str(uuid.uuid4())
         
-        if developer.is_currently_available():
-            MeetingRequest.objects.create(
-                customer=customer,
-                developer=developer,
-                message=message
-            )
-            messages.success(request, f'Meeting request sent to {developer.display_name}')
-        else:
-            messages.error(request, 'Developer is no longer available')
-            
-    return redirect('customer:developer_profile', dev_id=dev_id)
+        meeting = MeetingRequest.objects.create(
+            customer=request.user,
+            developer=developer,
+            room_id=room_id,
+            status='pending'
+        )
+        
+        messages.success(request, 'Meeting request sent successfully!')
+        return redirect('customer:developer_profile', dev_id=dev_id)
+        
+    return render(request, 'customer/request_meeting.html', {
+        'developer': developer
+    })
+
+@login_required
+def join_meeting(request, meeting_id):
+    meeting = get_object_or_404(MeetingRequest, id=meeting_id, 
+                              customer=request.user, status='accepted')
+    
+    context = {
+        'room_id': meeting.room_id,
+        'user_name': request.user.get_full_name() or request.user.username,
+    }
+    
+    return render(request, 'customer/meeting_room.html', context)

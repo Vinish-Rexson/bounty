@@ -26,4 +26,5 @@ urlpatterns = [
     path('check-availability/', views.check_availability, name='check_availability'),
     path('meeting/<int:meeting_id>/handle/', views.handle_meeting, name='handle_meeting'),
     path('meeting/<int:meeting_id>/join/', views.join_meeting, name='join_meeting'),
+    path('meeting-requests/', views.meeting_requests, name='meeting_requests'),
 ] 
