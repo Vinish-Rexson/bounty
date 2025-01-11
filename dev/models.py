@@ -32,15 +32,45 @@ class Profile(models.Model):
     
     # Availability
     is_available = models.BooleanField(default=False)
-    available_from = models.TimeField(
-        null=True, 
-        blank=True,
-        help_text="Your availability start time (in your timezone)"
+    
+    # Weekday availability
+    weekday_from = models.TimeField(
+        null=True, blank=True,
+        help_text="Your weekday availability start time"
     )
-    available_to = models.TimeField(
-        null=True, 
-        blank=True,
-        help_text="Your availability end time (in your timezone)"
+    weekday_to = models.TimeField(
+        null=True, blank=True,
+        help_text="Your weekday availability end time"
+    )
+    
+    # Weekend availability
+    weekend_from = models.TimeField(
+        null=True, blank=True,
+        help_text="Your weekend availability start time"
+    )
+    weekend_to = models.TimeField(
+        null=True, blank=True,
+        help_text="Your weekend availability end time"
+    )
+    
+    # Temporary availability
+    temp_from = models.TimeField(
+        null=True, blank=True,
+        help_text="Your temporary availability start time"
+    )
+    temp_to = models.TimeField(
+        null=True, blank=True,
+        help_text="Your temporary availability end time"
+    )
+    
+    availability_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('weekday', 'Weekday'),
+            ('weekend', 'Weekend'),
+            ('temporary', 'Just for Today')
+        ],
+        default='weekday'
     )
     timezone = models.CharField(max_length=50, default='UTC')
     
@@ -91,10 +121,29 @@ class Profile(models.Model):
         return f"{self.user.username}'s Profile"
 
     def clean(self):
-        if self.available_from and self.available_to:
-            if self.available_from >= self.available_to:
+        if self.availability_type == 'weekday':
+            from_time = self.weekday_from
+            to_time = self.weekday_to
+        elif self.availability_type == 'weekend':
+            from_time = self.weekend_from
+            to_time = self.weekend_to
+        else:  # temporary
+            from_time = self.temp_from
+            to_time = self.temp_to
+
+        if from_time and to_time:
+            # Convert times to minutes since midnight for easier comparison
+            from_minutes = from_time.hour * 60 + from_time.minute
+            to_minutes = to_time.hour * 60 + to_time.minute
+            
+            # If end time is earlier than start time, assume it's the next day
+            if to_minutes < from_minutes:
+                # This is valid for night shifts
+                return
+                
+            if from_minutes == to_minutes:
                 raise ValidationError({
-                    'available_to': 'End time must be after start time'
+                    'to_time': 'Start and end times cannot be the same'
                 })
 
 class Skill(models.Model):

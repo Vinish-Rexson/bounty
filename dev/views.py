@@ -25,12 +25,20 @@ def profile(request):
         if form.is_valid():
             profile = form.save(commit=False)
             
-            # Check if all required fields are filled (excluding certifications and education)
+            # Update required fields to match our new field names
             required_fields = [
                 'display_name', 'title', 'years_of_experience', 
-                'hourly_rate', 'github_url', 'timezone',
-                'available_from', 'available_to'
+                'hourly_rate', 'github_url', 'timezone'
             ]
+            
+            # Check availability fields based on type
+            availability_type = form.cleaned_data['availability_type']
+            if availability_type == 'weekday':
+                required_fields.extend(['weekday_from', 'weekday_to'])
+            elif availability_type == 'weekend':
+                required_fields.extend(['weekend_from', 'weekend_to'])
+            else:  # temporary
+                required_fields.extend(['temp_from', 'temp_to'])
             
             is_complete = all(getattr(profile, field) for field in required_fields)
             
