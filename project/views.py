@@ -8,28 +8,35 @@ from django.urls import reverse
 
 def login_view(request):
     if request.user.is_authenticated:
-        # Check user groups and redirect accordingly
-        if request.user.groups.filter(name=settings.DEVELOPER_GROUP).exists():
-            return redirect('dev:dashboard')
-        elif request.user.groups.filter(name=settings.CUSTOMER_GROUP).exists():
-            return redirect('customer:dashboard')
-        else:
-            # If no group is assigned, redirect to choose_role
-            return redirect('choose_role')
+        # Check if user belongs to both groups
+        is_developer = request.user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
+        is_customer = request.user.groups.filter(name=settings.CUSTOMER_GROUP).exists()
         
+        # Always show choose_role for users in both groups
+        if is_developer and is_customer:
+            return redirect('choose_role')
+        elif is_developer:
+            return redirect('dev:dashboard')
+        elif is_customer:
+            return redirect('customer:dashboard')
+
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = AuthenticationForm(data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                if user.groups.filter(name=settings.DEVELOPER_GROUP).exists():
-                    return redirect('dev:dashboard')
-                elif user.groups.filter(name=settings.CUSTOMER_GROUP).exists():
-                    return redirect('customer:dashboard')
-                    
+            user = form.get_user()
+            login(request, user)
+            
+            # Check groups after login
+            is_developer = user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
+            is_customer = user.groups.filter(name=settings.CUSTOMER_GROUP).exists()
+            
+            # Always redirect to choose_role if user is in both groups
+            if is_developer and is_customer:
+                return redirect('choose_role')
+            elif is_developer:
+                return redirect('dev:dashboard')
+            elif is_customer:
+                return redirect('customer:dashboard')
     else:
         form = AuthenticationForm()
     return render(request, 'login.html', {'form': form})
@@ -68,12 +75,14 @@ def customer_signup(request):
 
 @login_required
 def choose_role(request):
+    is_developer = request.user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
+    is_customer = request.user.groups.filter(name=settings.CUSTOMER_GROUP).exists()
+    
     # Only show this page if user belongs to both groups
-    if not (request.user.groups.filter(name=settings.DEVELOPER_GROUP).exists() and 
-            request.user.groups.filter(name=settings.CUSTOMER_GROUP).exists()):
-        if request.user.groups.filter(name=settings.DEVELOPER_GROUP).exists():
+    if not (is_developer and is_customer):
+        if is_developer:
             return redirect('dev:dashboard')
-        elif request.user.groups.filter(name=settings.CUSTOMER_GROUP).exists():
+        elif is_customer:
             return redirect('customer:dashboard')
     
     if request.method == 'POST':
@@ -82,14 +91,12 @@ def choose_role(request):
             return redirect('dev:dashboard')
         elif role == 'customer':
             return redirect('customer:dashboard')
+    
     return render(request, 'choose_role.html')
 
 def logout_view(request):
     logout(request)
     return redirect('login') 
-
-
-
 
 @login_required
 def auth_redirect(request):
@@ -102,8 +109,14 @@ def auth_redirect(request):
         return redirect(redirect_url)
     
     # Default redirect based on user groups
-    if request.user.groups.filter(name=settings.DEVELOPER_GROUP).exists():
+    is_developer = request.user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
+    is_customer = request.user.groups.filter(name=settings.CUSTOMER_GROUP).exists()
+    
+    # Always show choose_role for users in both groups
+    if is_developer and is_customer:
+        return redirect('choose_role')
+    elif is_developer:
         return redirect('dev:dashboard')
-    elif request.user.groups.filter(name=settings.CUSTOMER_GROUP).exists():
+    elif is_customer:
         return redirect('customer:dashboard')
-    return redirect('choose_role') 
+    return redirect('home') 

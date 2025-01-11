@@ -11,78 +11,62 @@
             background-color: #f5f5f5;
         }
         
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-        }
-        
         .role-container {
             display: flex;
-            gap: 30px;
+            gap: 20px;
             justify-content: center;
             margin-top: 40px;
         }
         
         .role-card {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
-            cursor: pointer;
-            width: 250px;
-            transition: all 0.3s ease;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex: 1;
+            max-width: 300px;
         }
         
-        .role-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-        
-        form {
-            margin: 0;
-        }
-        
-        button {
-            background: none;
-            border: none;
-            cursor: pointer;
+        .role-card button {
             width: 100%;
-            padding: 0;
+            padding: 20px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            transition: transform 0.2s;
+        }
+        
+        .role-card button:hover {
+            transform: translateY(-2px);
+        }
+        
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
         }
         
         h3 {
+            margin: 0 0 10px 0;
             color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 24px;
         }
         
         p {
-            color: #666;
-            line-height: 1.5;
-        }
-        
-        .welcome-message {
-            text-align: center;
-            margin-bottom: 20px;
+            margin: 0;
             color: #666;
         }
     </style>
 </head>
 <body>
-    <div class="welcome-message">
-        <h2>Welcome, {{ user.username }}!</h2>
-        <p>Please choose how you'd like to proceed</p>
-    </div>
-    
+    <h2>Welcome back, {{ user.username }}! Please choose your role:</h2>
     <div class="role-container">
         <div class="role-card">
             <form method="post">
                 {% csrf_token %}
                 <button type="submit" name="role" value="developer">
-                    <h3>Developer</h3>
-                    <p>I want to offer my services and find projects to work on</p>
+                    <h3>Continue as Developer</h3>
+                    <p>Access your developer dashboard and available projects</p>
                 </button>
             </form>
         </div>
@@ -90,8 +74,8 @@
             <form method="post">
                 {% csrf_token %}
                 <button type="submit" name="role" value="customer">
-                    <h3>Customer</h3>
-                    <p>I want to post projects and hire developers</p>
+                    <h3>Continue as Customer</h3>
+                    <p>Manage your projects and find developers</p>
                 </button>
             </form>
         </div>
