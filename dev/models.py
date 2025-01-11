@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator, URLValidator
 from django.core.exceptions import ValidationError
+from django.urls import reverse
 
 class Profile(models.Model):
     # Basic Info
@@ -108,8 +109,7 @@ class Profile(models.Model):
     )
     
     # Additional Info
-    certifications = models.ManyToManyField('Certification', blank=True)
-    education = models.ManyToManyField('Education', blank=True)
+   
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -192,4 +192,34 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Review for {self.profile.user.username} by {self.reviewer.username}"
+    
+
+class Project(models.Model):
+    name = models.CharField(max_length=200)
+    readme = models.TextField()
+    deployed_url = models.URLField(blank=True)
+    github_url = models.URLField()
+    client = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    profile = models.ForeignKey('Profile', on_delete=models.CASCADE, related_name='projects', default=1)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def get_absolute_url(self):
+        return reverse('dev:project_detail', kwargs={'pk': self.pk})
+    
+
+class Comment(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.author.username} on {self.profile.user.username}'s profile"
     
