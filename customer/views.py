@@ -48,7 +48,7 @@ def browse_developers(request):
 
 @login_required
 def developer_profile(request, dev_id):
-    developer = DevProfile.objects.get(id=dev_id)
+    developer = Profile.objects.get(id=dev_id)
     return render(request, 'customer/developer_profile.html', {
         'developer': developer
     })

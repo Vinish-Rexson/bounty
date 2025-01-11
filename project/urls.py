@@ -19,6 +19,8 @@ from django.urls import path, include
 from . import views
 from django.views.generic import RedirectView
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = [
@@ -34,3 +36,6 @@ urlpatterns = [
     path('customer/', include('customer.urls', namespace='customer')),
     path('auth-redirect/', views.auth_redirect, name='auth_redirect'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

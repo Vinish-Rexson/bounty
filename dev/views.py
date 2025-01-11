@@ -217,7 +217,7 @@ def handle_customer_request(request, request_id):
     return redirect('dev:dashboard')
 
 
-
+# X-X-X-X-X-X-X-X-X-X-X-X-this is for dev side projects X-X-X-X-X-X-X-X-X-X-X
 class ProjectCreateView(LoginRequiredMixin, CreateView):
     model = Project
     form_class = ProjectForm
@@ -289,3 +289,5 @@ def project_update_api(request, pk):
         messages.error(request, f'Error updating project: {str(e)}')
     
     return redirect('dev:dev_project_detail', pk=project.pk)
+
+# X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X-X
