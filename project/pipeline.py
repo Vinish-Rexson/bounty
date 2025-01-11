@@ -11,22 +11,25 @@ def assign_user_group(backend, user, response, *args, **kwargs):
         return
         
     next_path = request.session.get('next', '')
+    current_path = request.path  # Get the current path
     
-    # Assign group based on next parameter
-    if 'signup/dev' in next_path:
+    # Check existing group memberships
+    is_developer = user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
+    is_customer = user.groups.filter(name=settings.CUSTOMER_GROUP).exists()
+    
+    # Assign group based on current path or next parameter
+    if 'signup/dev' in next_path or 'signup/dev' in current_path:
         group = Group.objects.get_or_create(name=settings.DEVELOPER_GROUP)[0]
         user.groups.add(group)
-        # Only set redirect if user isn't already a customer
-        if not user.groups.filter(name=settings.CUSTOMER_GROUP).exists():
-            request.session['redirect_url'] = 'dev:dashboard'
+        if is_customer:  # User is now in both groups
+            request.session['next'] = '/choose-role/'
         else:
-            request.session['redirect_url'] = 'choose_role'
+            request.session['redirect_url'] = 'dev:dashboard'
             
-    elif 'signup/customer' in next_path:
+    elif 'signup/customer' in next_path or 'signup/customer' in current_path:
         group = Group.objects.get_or_create(name=settings.CUSTOMER_GROUP)[0]
         user.groups.add(group)
-        # Only set redirect if user isn't already a developer
-        if not user.groups.filter(name=settings.DEVELOPER_GROUP).exists():
-            request.session['redirect_url'] = 'customer:dashboard'
+        if is_developer:  # User is now in both groups
+            request.session['next'] = '/choose-role/'
         else:
-            request.session['redirect_url'] = 'choose_role' 
+            request.session['redirect_url'] = 'customer:dashboard' 

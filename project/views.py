@@ -48,10 +48,18 @@ def dev_signup(request):
             user = form.save()
             dev_group = Group.objects.get_or_create(name=settings.DEVELOPER_GROUP)[0]
             user.groups.add(dev_group)
+            
+            # Check if user is already a customer
+            is_customer = user.groups.filter(name=settings.CUSTOMER_GROUP).exists()
+            
             user = authenticate(username=user.username,
                               password=form.cleaned_data['password1'],
                               backend='django.contrib.auth.backends.ModelBackend')
             login(request, user)
+            
+            # Redirect to choose_role if user is in both groups
+            if is_customer:
+                return redirect('choose_role')
             return redirect('dev:dashboard')
     else:
         form = UserCreationForm()
@@ -64,10 +72,18 @@ def customer_signup(request):
             user = form.save()
             customer_group = Group.objects.get_or_create(name=settings.CUSTOMER_GROUP)[0]
             user.groups.add(customer_group)
+            
+            # Check if user is already a developer
+            is_developer = user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
+            
             user = authenticate(username=user.username,
                               password=form.cleaned_data['password1'],
                               backend='django.contrib.auth.backends.ModelBackend')
             login(request, user)
+            
+            # Redirect to choose_role if user is in both groups
+            if is_developer:
+                return redirect('choose_role')
             return redirect('customer:dashboard')
     else:
         form = UserCreationForm()
@@ -75,6 +91,8 @@ def customer_signup(request):
 
 @login_required
 def choose_role(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     is_developer = request.user.groups.filter(name=settings.DEVELOPER_GROUP).exists()
     is_customer = request.user.groups.filter(name=settings.CUSTOMER_GROUP).exists()
     
