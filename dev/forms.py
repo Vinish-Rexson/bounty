@@ -21,14 +21,14 @@ class ProfileForm(forms.ModelForm):
         required=True
     )
     weekday_from = forms.TimeField(
-        required=True,
+        required=False,
         widget=forms.TimeInput(
             attrs={'type': 'time', 'class': 'time-input weekday-time'},
             format='%H:%M'
         )
     )
     weekday_to = forms.TimeField(
-        required=True,
+        required=False,
         widget=forms.TimeInput(
             attrs={'type': 'time', 'class': 'time-input weekday-time'},
             format='%H:%M'
