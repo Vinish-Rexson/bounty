@@ -1,11 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from dev.models import Profile
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import DetailView
+from dev.models import Profile, Project as DevProject
 from .models import CustomerProfile, Project, ProjectRequest, DeveloperRequest, MeetingRequest
+from dev.models import Comment
 from .forms import CustomerProfileForm, ProjectForm
 from django.conf import settings
 from django.contrib import messages
 import uuid
+from django.http import JsonResponse
 
 def is_customer(user):
     return user.groups.filter(name=settings.CUSTOMER_GROUP).exists()
@@ -49,9 +53,23 @@ def browse_developers(request):
 
 @login_required
 def developer_profile(request, dev_id):
-    developer = Profile.objects.get(id=dev_id)
+    developer = get_object_or_404(Profile, id=dev_id)
+    comments = Comment.objects.filter(profile=developer).order_by('-created_at')
+    
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        if content:
+            Comment.objects.create(
+                profile=developer,
+                author=request.user,
+                content=content
+            )
+            messages.success(request, 'Comment added successfully!')
+            return redirect('customer:developer_profile', dev_id=dev_id)
+    
     return render(request, 'customer/developer_profile.html', {
-        'developer': developer
+        'developer': developer,
+        'comments': comments
     })
 
 @login_required
@@ -170,3 +188,42 @@ def join_meeting(request, meeting_id):
     }
     
     return render(request, 'customer/meeting_room.html', context)
+
+@login_required
+def check_developer_availability(request, dev_id):
+    try:
+        developer = get_object_or_404(Profile, id=dev_id)
+        is_available = developer.is_currently_available()
+        
+        response_data = {
+            'available': is_available,
+            'status': 'available' if is_available else 'unavailable'
+        }
+        
+        # If manually available, include end time
+        if is_available and developer.manual_availability and developer.manual_availability_end:
+            response_data['ends_at'] = developer.manual_availability_end.isoformat()
+            
+        return JsonResponse(response_data)
+        
+    except Profile.DoesNotExist:
+        return JsonResponse({
+            'error': 'Developer not found'
+        }, status=404)
+
+
+
+class ProjectDetailView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = 'dev/project_detail.html'
+    context_object_name = 'project'
+
+@login_required
+def developer_project_detail(request, dev_id, project_id):
+    developer = get_object_or_404(Profile, id=dev_id)
+    project = get_object_or_404(DevProject, id=project_id, profile=developer)
+    
+    return render(request, 'customer/project_detail.html', {
+        'project': project,
+        'developer': developer
+    })

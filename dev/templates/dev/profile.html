@@ -1,40 +1,41 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Profile</title>
+{% extends 'dev/base.html' %}
+
+{% block title %}Profile{% endblock %}
+{% block extra_styles %}
     <style>
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
-            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
         }
 
-        nav {
-            background-color: #f4f4f4;
-            padding: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        nav ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            gap: 20px;
-        }
-
-        nav a {
-            text-decoration: none;
-            color: #333;
-        }
-
         .profile-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .profile-left,
+        .profile-right {
             background: white;
             padding: 2rem;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .profile-header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .profile-form {
+                grid-template-columns: 1fr;
+            }
         }
 
         .form-group {
@@ -399,73 +400,88 @@
             padding-top: 1rem;
             border-top: 1px solid var(--border-color);
         }
-    </style>
-</head>
-<body>
-    <nav>
-        <ul>
-            <li><a href="{% url 'dev:dashboard' %}">Dashboard</a></li>
-            <li><a href="{% url 'dev:profile' %}">Profile</a></li>
-            <li><a href="{% url 'logout' %}">Logout</a></li>
-        </ul>
-    </nav>
 
-    <h2>Complete Your Profile</h2>
+        .profile-header {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-picture {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .profile-initial {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: var(--primary-color, #007bff);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 3rem;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+    {% endblock %}
+
+{% block content %}
     
-    <div class="profile-form">
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            
+
+    <div class="profile-header">
+        {% if profile.profile_picture %}
+            <img src="{{ profile.profile_picture.url }}" alt="{{ profile.display_name }}" class="profile-picture">
+        {% else %}
+            <div class="profile-initial">
+                {{ profile.user.get_full_name|default:profile.user.username|make_list|first|upper }}
+            </div>
+        {% endif %}
+        <h2>Complete Your Profile</h2>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="profile-form">
+        {% csrf_token %}
+        
+        <div class="profile-left">
+            <!-- Basic Info Fields -->
             {% for field in form %}
-                {% if field.name != 'weekday_from' and field.name != 'weekday_to' and field.name != 'weekend_from' and field.name != 'weekend_to' and field.name != 'temp_from' and field.name != 'temp_to' and field.name != 'availability_type' %}
+                {% if field.name != 'weekday_from' and field.name != 'weekday_to' and field.name != 'weekend_from' and field.name != 'weekend_to' and field.name != 'temp_from' and field.name != 'temp_to' and field.name != 'availability_type' and field.name != 'skills' %}
                     <div class="form-group">
-                        {% if field.name == 'skills' %}
-                            <div class="skills-section">
-                                <label>{{ field.label }}</label>
-                                <div class="skills-grid">
-                                    {{ field }}
-                                </div>
-                                {% if field.help_text %}
-                                    <p class="help-text">{{ field.help_text }}</p>
-                                {% endif %}
-                            </div>
-                        {% else %}
-                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.help_text %}
-                                <p class="help-text">{{ field.help_text }}</p>
-                            {% endif %}
-                            {% if field.errors %}
-                                <ul class="errorlist">
-                                    {% for error in field.errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <p class="help-text">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% if field.errors %}
+                            <ul class="errorlist">
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
                         {% endif %}
                     </div>
                 {% endif %}
             {% endfor %}
-            
-            <div class="projects-section">
-                <label>Projects</label>
-                <div class="projects-list">
-                    {% for project in projects %}
-                        <div class="project-item">
-                            <a href="{% url 'dev:dev_project_detail' pk=project.id %}" class="project-link">
-                                {{ project.name }}
-                                {% if project.client %}
-                                    <span class="project-client">({{ project.client }})</span>
-                                {% endif %}
-                            </a>
-                        </div>
-                    {% empty %}
-                        <div class="no-projects">No projects yet</div>
-                    {% endfor %}
+        </div>
+
+        <div class="profile-right">
+            <!-- Skills Section -->
+            <div class="skills-section">
+                <label>{{ form.skills.label }}</label>
+                <div class="skills-grid">
+                    {{ form.skills }}
                 </div>
-                <button type="button" class="btn btn-primary" onclick="openProjectModal()">Add New Project</button>
             </div>
-            
+
+            <!-- Availability Section -->
             <div class="availability-section">
                 <h3>Availability</h3>
                 <div class="time-card">
@@ -501,29 +517,30 @@
                     <p class="help-text" id="availability-help">Set your weekday availability hours</p>
                 </div>
             </div>
-            
-            <div class="availability-section">
-                <h3>Availability Status</h3>
-                <div class="current-status">
-                    Current Status: 
-                    <span id="availabilityStatus" class="status-badge {% if profile.is_currently_available %}status-available{% else %}status-unavailable{% endif %}">
-                        {% if profile.is_currently_available %}Available{% else %}Unavailable{% endif %}
-                    </span>
-                </div>
 
-                <div class="manual-override">
-                    <h4>Manual Override</h4>
-                    <div class="form-group">
-                        <label for="availabilityDuration">Available for next (hours):</label>
-                        <input type="number" id="availabilityDuration" min="1" class="form-control" value="1">
-                        <button type="button" id="setAvailability" class="btn btn-primary mt-2">Set Available</button>
-                    </div>
+            <!-- Projects Section -->
+            <div class="projects-section">
+                <label>Projects</label>
+                <div class="projects-list">
+                    {% for project in projects %}
+                        <div class="project-item">
+                            <a href="{% url 'dev:dev_project_detail' pk=project.id %}" class="project-link">
+                                {{ project.name }}
+                                {% if project.client %}
+                                    <span class="project-client">({{ project.client }})</span>
+                                {% endif %}
+                            </a>
+                        </div>
+                    {% empty %}
+                        <div class="no-projects">No projects yet</div>
+                    {% endfor %}
                 </div>
+                <button type="button" class="btn btn-primary" onclick="openProjectModal()">Add New Project</button>
             </div>
-            
+
             <button type="submit">Save Profile</button>
-        </form>
-    </div>
+        </div>
+    </form>
 
     <div id="projectModal" class="modal">
         <div class="modal-content">
@@ -704,5 +721,4 @@
         }
     });
     </script>
-</body>
-</html> 
+{% endblock %}
