@@ -182,3 +182,6 @@ def auth_redirect(request):
     else:
         return redirect('general_login')
     # return redirect('home') 
+
+def home(request):
+    return render(request, 'index.html')
