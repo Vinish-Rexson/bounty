@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 contract SimpleContract {
     string public message;
     address public owner;
-    address payable public constant ESCROW_WALLET = payable(0xb48Aa1f29ca8a33B9Af77125c27BEf3C78f63250);
+    address payable public constant ESCROW_WALLET = payable(0x6182E6b60330D64bd74C0aECF13CA966d784701f);
     
     struct Transfer {
         uint256 amount;
