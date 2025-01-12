@@ -71,34 +71,13 @@ class ProfileForm(forms.ModelForm):
             format='%H:%M'
         )
     )
-    temp_from = forms.TimeField(
-        required=False,
-        widget=forms.TimeInput(
-            attrs={'type': 'time', 'class': 'time-input temp-time'},
-            format='%H:%M'
-        )
-    )
-    temp_to = forms.TimeField(
-        required=False,
-        widget=forms.TimeInput(
-            attrs={'type': 'time', 'class': 'time-input temp-time'},
-            format='%H:%M'
-        )
-    )
     availability_type = forms.ChoiceField(
         choices=[
             ('weekday', 'Weekday'),
-            ('weekend', 'Weekend'),
-            ('temporary', 'Just for Today')
+            ('weekend', 'Weekend')
         ],
         widget=forms.RadioSelect,
         initial='weekday'
-    )
-    manual_availability_duration = forms.IntegerField(
-        required=False,
-        min_value=1,
-        help_text="Number of hours to remain available",
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
 
     class Meta:
@@ -111,32 +90,19 @@ class ProfileForm(forms.ModelForm):
             'min_project_duration', 'preferred_project_size',
             'weekday_from', 'weekday_to',
             'weekend_from', 'weekend_to',
-            'temp_from', 'temp_to',
-            'availability_type',
-            'manual_availability',
-            'manual_availability_end'
+            'availability_type'
         ]
 
     def clean(self):
         cleaned_data = super().clean()
         availability_type = cleaned_data.get('availability_type')
-        manual_availability = cleaned_data.get('manual_availability')
-        duration = cleaned_data.get('manual_availability_duration')
-
-        if manual_availability and duration:
-            from datetime import datetime, timedelta
-            import pytz
-            cleaned_data['manual_availability_end'] = datetime.now(pytz.UTC) + timedelta(hours=duration)
 
         if availability_type == 'weekday':
             from_time = cleaned_data.get('weekday_from')
             to_time = cleaned_data.get('weekday_to')
-        elif availability_type == 'weekend':
+        else:  # weekend
             from_time = cleaned_data.get('weekend_from')
             to_time = cleaned_data.get('weekend_to')
-        else:  # temporary
-            from_time = cleaned_data.get('temp_from')
-            to_time = cleaned_data.get('temp_to')
 
         if from_time and to_time:
             # Convert times to minutes since midnight for easier comparison

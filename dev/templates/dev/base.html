@@ -271,12 +271,10 @@
             <span class="close">&times;</span>
             <h2>Set Availability</h2>
             <div class="availability-form">
-                <div class="form-group">
-                    <label for="duration">Available for (hours):</label>
-                    <input type="number" id="duration" min="1" value="1" class="form-control">
+                <div class="btn-group">
+                    <button id="setAvailable" class="btn btn-primary">Set as Available</button>
+                    <button id="setUnavailable" class="btn btn-secondary">Set as Unavailable</button>
                 </div>
-                <button id="setAvailable" class="btn btn-primary">Set as Available</button>
-                <button id="setUnavailable" class="btn btn-secondary">Set as Unavailable</button>
             </div>
         </div>
     </div>
@@ -305,108 +303,33 @@
             }
         }
 
-        let endTimeGlobal = null;
-
-        // Function to format time units with leading zeros
-        function padNumber(num) {
-            return num.toString().padStart(2, '0');
-        }
-
-        // Function to calculate and display countdown
-        function displayCountdown() {
-            if (!endTimeGlobal) return;
-
-            const now = new Date();
-            const endTime = new Date(endTimeGlobal);
-            const timeDiff = endTime - now;
-
-            if (timeDiff > 0) {
-                const hours = Math.floor(timeDiff / (1000 * 60 * 60));
-                const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
-
-                const countdownSpan = document.getElementById('availabilityCountdown');
-                if (countdownSpan) {
-                    countdownSpan.textContent = ` (${padNumber(hours)}:${padNumber(minutes)}:${padNumber(seconds)})`;
-                }
-            } else {
-                // Time has expired, update status
-                updateAvailabilityStatus();
-                endTimeGlobal = null;
-            }
-        }
-
-        // Update the updateCountdown function
-        function updateCountdown() {
-            fetch('{% url "dev:check_availability" %}')
-                .then(response => response.json())
-                .then(data => {
-                    updateIndicator(data.available);
-                    
-                    if (data.available && data.ends_at) {
-                        endTimeGlobal = new Date(data.ends_at);
-                        displayCountdown();
-                    } else {
-                        endTimeGlobal = null;
-                    }
-                });
-        }
-
-        // Update the updateIndicator function
         function updateIndicator(available) {
             const indicator = document.getElementById('availabilityToggle');
             if (available) {
                 indicator.classList.remove('unavailable');
                 indicator.classList.add('available');
-                indicator.innerHTML = '<i class="fas fa-circle"></i> Available <span id="availabilityCountdown"></span>';
+                indicator.innerHTML = '<i class="fas fa-circle"></i> Available';
             } else {
                 indicator.classList.remove('available');
                 indicator.classList.add('unavailable');
                 indicator.innerHTML = '<i class="fas fa-circle"></i> Unavailable';
-                endTimeGlobal = null;
             }
         }
 
         // Set Available button click handler
         setAvailableBtn.onclick = function() {
-            const duration = document.getElementById('duration').value;
             fetch('{% url "dev:toggle_availability" %}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: `duration=${duration}`
+                body: JSON.stringify({ available: true })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
                     updateIndicator(true);
-                    if (data.ends_at) {
-                        endTimeGlobal = new Date(data.ends_at);
-                    }
-                    modal.style.display = 'none';
-                } else {
-                    alert(data.message || 'Failed to update availability');
-                }
-            });
-        }
-
-        // Update the Set Unavailable button click handler
-        setUnavailableBtn.onclick = function() {
-            fetch('{% url "dev:toggle_availability" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: 'duration=0'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    updateIndicator(false);
-                    endTimeGlobal = null;
                     modal.style.display = 'none';
                 } else {
                     alert(data.message || 'Failed to update availability');
@@ -418,29 +341,30 @@
             });
         }
 
-        // Add the missing updateAvailabilityStatus function
-        function updateAvailabilityStatus() {
-            fetch('{% url "dev:check_availability" %}')
-                .then(response => response.json())
-                .then(data => {
-                    updateIndicator(data.available);
-                    if (data.available && data.ends_at) {
-                        endTimeGlobal = new Date(data.ends_at);
-                    } else {
-                        endTimeGlobal = null;
-                    }
-                });
+        // Set Unavailable button click handler
+        setUnavailableBtn.onclick = function() {
+            fetch('{% url "dev:toggle_availability" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ available: false })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateIndicator(false);
+                    modal.style.display = 'none';
+                } else {
+                    alert(data.message || 'Failed to update availability');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update availability');
+            });
         }
-
-        // Update countdown every second
-        setInterval(displayCountdown, 1000);
-
-        // Update availability status every minute
-        setInterval(updateAvailabilityStatus, 60000);
-
-        // Initial updates
-        updateCountdown();
-        updateAvailabilityStatus(); // Add initial status check
     </script>
 </body>
 </html> 

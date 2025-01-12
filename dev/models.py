@@ -119,10 +119,6 @@ class Profile(models.Model):
     # Add this field to your Profile model
     is_profile_completed = models.BooleanField(default=False)
 
-    # Add new field for manual override
-    manual_availability = models.BooleanField(default=False, help_text="Override automatic availability")
-    manual_availability_end = models.DateTimeField(null=True, blank=True, help_text="When manual availability should end")
-
     def __str__(self):
         return f"{self.user.username}'s Profile"
 
@@ -153,48 +149,8 @@ class Profile(models.Model):
                 })
 
     def is_currently_available(self):
-        from datetime import datetime, time
-        import pytz
-        
-        # If manual override is set and hasn't expired
-        if self.manual_availability and self.manual_availability_end:
-            now = datetime.now(pytz.UTC)
-            if now < self.manual_availability_end:
-                return True
-            else:
-                # Reset manual override if expired
-                self.manual_availability = False
-                self.manual_availability_end = None
-                self.save()
-        
-        # Get current time in user's timezone
-        user_tz = pytz.timezone(self.timezone)
-        current_time = datetime.now(user_tz).time()
-        
-        # Check availability based on type
-        if self.availability_type == 'weekday':
-            if self.weekday_from and self.weekday_to:
-                return self._is_time_between(current_time, self.weekday_from, self.weekday_to)
-        elif self.availability_type == 'weekend':
-            if self.weekend_from and self.weekend_to:
-                return self._is_time_between(current_time, self.weekend_from, self.weekend_to)
-        elif self.availability_type == 'temporary':
-            if self.temp_from and self.temp_to:
-                return self._is_time_between(current_time, self.temp_from, self.temp_to)
-        
-        return False
-    
-    def _is_time_between(self, current, start, end):
-        # Convert times to minutes since midnight
-        current_minutes = current.hour * 60 + current.minute
-        start_minutes = start.hour * 60 + start.minute
-        end_minutes = end.hour * 60 + end.minute
-        
-        # Handle overnight shifts
-        if end_minutes < start_minutes:
-            return current_minutes >= start_minutes or current_minutes <= end_minutes
-        
-        return start_minutes <= current_minutes <= end_minutes
+        # Simplified to just return is_available field
+        return self.is_available
 
 class Skill(models.Model):
     name = models.CharField(max_length=100)

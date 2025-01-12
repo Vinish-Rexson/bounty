@@ -375,54 +375,22 @@ def customer_project_detail(request, project_id):
 def toggle_availability(request):
     if request.method == 'POST':
         profile = request.user.profile
-        duration = request.POST.get('duration')
+        profile.is_available = not profile.is_available
+        profile.save()
         
-        try:
-            duration = int(duration)
-            if duration == 0:  # Handle setting to unavailable
-                profile.manual_availability = False
-                profile.manual_availability_end = None
-                profile.save()
-                return JsonResponse({
-                    'status': 'success',
-                    'available': False
-                })
-            
-            if duration < 1:
-                raise ValueError
-                
-            profile.manual_availability = True
-            profile.manual_availability_end = datetime.now(pytz.UTC) + timedelta(hours=duration)
-            profile.save()
-            
-            return JsonResponse({
-                'status': 'success',
-                'available': True,
-                'ends_at': profile.manual_availability_end.isoformat()
-            })
-            
-        except (ValueError, TypeError):
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Invalid duration provided'
-            }, status=400)
+        return JsonResponse({
+            'status': 'success',
+            'available': profile.is_available
+        })
             
     return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
 
 @login_required
 def check_availability(request):
     profile = request.user.profile
-    is_available = profile.is_currently_available()
-    
-    response_data = {
-        'available': is_available,
-    }
-    
-    # Add end time if manually available
-    if is_available and profile.manual_availability and profile.manual_availability_end:
-        response_data['ends_at'] = profile.manual_availability_end.isoformat()
-    
-    return JsonResponse(response_data)
+    return JsonResponse({
+        'available': profile.is_available
+    })
 
 def generate_zego_token(app_id, server_secret, room_id, user_id):
     timestamp = int(time.time())
