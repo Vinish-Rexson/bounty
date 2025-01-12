@@ -15,51 +15,6 @@
                 </div>
             </div>
 
-            <!-- Add the project actions here, right after the header -->
-            {% if project.status == 'in_progress' %}
-                <div class="project-actions">
-                    {% if request.user.customerprofile %}
-                        <div class="status-buttons">
-                            <button class="btn-status complete" onclick="requestProjectStatus('completed')">
-                                <i class="fas fa-check-circle"></i> Mark as Completed
-                            </button>
-                            <button class="btn-status cancel" onclick="requestProjectStatus('cancelled')">
-                                <i class="fas fa-times-circle"></i> Cancel Project
-                            </button>
-                        </div>
-                    {% endif %}
-                    
-                    {% if request.user.profile and project_status_request and request.user == project.assigned_developer.user %}
-                        <div class="status-request-alert">
-                            <p>
-                                <i class="fas fa-bell"></i>
-                                Status Change Request: {{ project_status_request.requested_by.username }} wants to mark this project as 
-                                <strong>{{ project_status_request.requested_status }}</strong>
-                            </p>
-                            <div class="status-request-actions">
-                                <button class="btn-approve" onclick="approveStatusRequest({{ project_status_request.id }})">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                                <button class="btn-reject" onclick="rejectStatusRequest({{ project_status_request.id }})">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    {% if request.user.customerprofile and project_status_request %}
-                        <div class="status-request-pending">
-                            <p>
-                                <i class="fas fa-clock"></i>
-                                Waiting for developer to approve your request to mark this project as 
-                                <strong>{{ project_status_request.requested_status }}</strong>
-                            </p>
-                        </div>
-                    {% endif %}
-                </div>
-            {% endif %}
-
-            <!-- Rest of your project info -->
             <div class="project-details-grid">
                 <div class="detail-item">
                     <strong><i class="fas fa-user"></i> Client</strong>
@@ -814,19 +769,19 @@
 {% if project and project.status == 'in_progress' %}
     <div class="project-actions">
         {% if request.user.customerprofile %}
-            <!-- Only customer can see these buttons -->
             <div class="status-buttons">
                 <button class="btn-status complete" onclick="requestProjectStatus('completed')">
-                    <i class="fas fa-check-circle"></i> Mark as Completed
+                    <i class="fas fa-check-circle"></i>
+                    Mark as Completed
                 </button>
                 <button class="btn-status cancel" onclick="requestProjectStatus('cancelled')">
-                    <i class="fas fa-times-circle"></i> Cancel Project
+                    <i class="fas fa-times-circle"></i>
+                    Cancel Project
                 </button>
             </div>
         {% endif %}
         
-        {% if request.user.profile and project_status_request and request.user == project.assigned_developer.user %}
-            <!-- Only the assigned developer can see these buttons -->
+        {% if request.user.profile and project_status_request %}
             <div class="status-request-alert">
                 <p>
                     <i class="fas fa-bell"></i>
@@ -843,47 +798,87 @@
                 </div>
             </div>
         {% endif %}
-
-        {% if request.user.customerprofile and project_status_request %}
-            <!-- Show pending status to customer -->
-            <div class="status-request-pending">
-                <p>
-                    <i class="fas fa-clock"></i>
-                    Waiting for developer to approve your request to mark this project as 
-                    <strong>{{ project_status_request.requested_status }}</strong>
-                </p>
-            </div>
-        {% endif %}
     </div>
+
+    <style>
+        .project-actions {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .status-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-status {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-status.complete {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-status.cancel {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-status:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-request-alert {
+            background: #fff3e0;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ffe0b2;
+        }
+
+        .status-request-alert p {
+            color: #ed6c02;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-request-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-approve {
+            background: #10b981;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-reject {
+            background: #ef4444;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
 {% endif %}
-
-.status-request-pending {
-    background: #f0f9ff;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #bae6fd;
-    margin-top: 1rem;
-}
-
-.status-request-pending p {
-    color: #0369a1;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.status-request-pending i {
-    font-size: 1.1rem;
-}
 </style>
-
-<!-- Add this temporarily for debugging -->
-<div style="display: none;">
-    Project: {{ project }}<br>
-    Status: {{ project.status }}<br>
-    Is Customer: {{ request.user.customerprofile }}<br>
-    Is Developer: {{ request.user.profile }}<br>
-</div>
 {% endblock %}

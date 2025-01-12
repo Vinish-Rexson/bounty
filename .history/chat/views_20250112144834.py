@@ -6,7 +6,6 @@ from dev.models import Profile
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils import timezone
-from customer.models import ProjectStatusRequest
 
 @login_required
 def chat_room(request, room_id):
@@ -40,20 +39,12 @@ def chat_room(request, room_id):
         created_at__gte=timezone.now() - timezone.timedelta(hours=24)
     ).first()
     
-    project_status_request = None
-    if chat_room.project:
-        project_status_request = ProjectStatusRequest.objects.filter(
-            project=chat_room.project,
-            is_approved=False
-        ).first()
-    
     context = {
         'room': chat_room,
         'messages': messages,
         'project': project,
         'can_request_meeting': can_request_meeting,
-        'active_meeting': active_meeting,
-        'project_status_request': project_status_request
+        'active_meeting': active_meeting
     }
     
     return render(request, 'chat/room.html', context)

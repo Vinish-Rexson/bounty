@@ -6,7 +6,6 @@ from dev.models import Profile
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils import timezone
-from customer.models import ProjectStatusRequest
 
 @login_required
 def chat_room(request, room_id):
@@ -40,20 +39,12 @@ def chat_room(request, room_id):
         created_at__gte=timezone.now() - timezone.timedelta(hours=24)
     ).first()
     
-    project_status_request = None
-    if chat_room.project:
-        project_status_request = ProjectStatusRequest.objects.filter(
-            project=chat_room.project,
-            is_approved=False
-        ).first()
-    
     context = {
         'room': chat_room,
         'messages': messages,
         'project': project,
         'can_request_meeting': can_request_meeting,
-        'active_meeting': active_meeting,
-        'project_status_request': project_status_request
+        'active_meeting': active_meeting
     }
     
     return render(request, 'chat/room.html', context)
@@ -89,61 +80,3 @@ def create_room(request):
         return redirect('chat:room', room_id=room.id)
     
     return redirect('chat:list')
-
-
-
-from django.http import JsonResponse
-from customer.models import ProjectStatusRequest
-import json
-
-@login_required
-def request_project_status(request, project_id):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Invalid method'}, status=405)
-    
-    project = get_object_or_404(Project, id=project_id)
-    data = json.loads(request.body)
-    status = data.get('status')
-    
-    if status not in ['completed', 'cancelled']:
-        return JsonResponse({'error': 'Invalid status'}, status=400)
-    
-    # Check if there's already a pending request
-    existing_request = ProjectStatusRequest.objects.filter(
-        project=project,
-        is_approved=False
-    ).first()
-    
-    if existing_request:
-        return JsonResponse({'error': 'There is already a pending status request'}, status=400)
-    
-    ProjectStatusRequest.objects.create(
-        project=project,
-        requested_by=request.user,
-        requested_status=status
-    )
-    
-    return JsonResponse({'success': True})
-
-@login_required
-def approve_status_request(request, project_id):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Invalid method'}, status=405)
-    
-    project = get_object_or_404(Project, id=project_id)
-    data = json.loads(request.body)
-    request_id = data.get('request_id')
-    
-    status_request = get_object_or_404(ProjectStatusRequest, 
-                                     id=request_id, 
-                                     project=project)
-    
-    # Update project status
-    project.status = status_request.requested_status
-    project.save()
-    
-    # Mark request as approved
-    status_request.is_approved = True
-    status_request.save()
-    
-    return JsonResponse({'success': True})

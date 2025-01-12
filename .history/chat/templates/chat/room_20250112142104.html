@@ -15,51 +15,6 @@
                 </div>
             </div>
 
-            <!-- Add the project actions here, right after the header -->
-            {% if project.status == 'in_progress' %}
-                <div class="project-actions">
-                    {% if request.user.customerprofile %}
-                        <div class="status-buttons">
-                            <button class="btn-status complete" onclick="requestProjectStatus('completed')">
-                                <i class="fas fa-check-circle"></i> Mark as Completed
-                            </button>
-                            <button class="btn-status cancel" onclick="requestProjectStatus('cancelled')">
-                                <i class="fas fa-times-circle"></i> Cancel Project
-                            </button>
-                        </div>
-                    {% endif %}
-                    
-                    {% if request.user.profile and project_status_request and request.user == project.assigned_developer.user %}
-                        <div class="status-request-alert">
-                            <p>
-                                <i class="fas fa-bell"></i>
-                                Status Change Request: {{ project_status_request.requested_by.username }} wants to mark this project as 
-                                <strong>{{ project_status_request.requested_status }}</strong>
-                            </p>
-                            <div class="status-request-actions">
-                                <button class="btn-approve" onclick="approveStatusRequest({{ project_status_request.id }})">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                                <button class="btn-reject" onclick="rejectStatusRequest({{ project_status_request.id }})">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    {% if request.user.customerprofile and project_status_request %}
-                        <div class="status-request-pending">
-                            <p>
-                                <i class="fas fa-clock"></i>
-                                Waiting for developer to approve your request to mark this project as 
-                                <strong>{{ project_status_request.requested_status }}</strong>
-                            </p>
-                        </div>
-                    {% endif %}
-                </div>
-            {% endif %}
-
-            <!-- Rest of your project info -->
             <div class="project-details-grid">
                 <div class="detail-item">
                     <strong><i class="fas fa-user"></i> Client</strong>
@@ -328,54 +283,6 @@
             }
         }
     });
-
-    function requestProjectStatus(status) {
-        if (!confirm(`Are you sure you want to mark this project as ${status}?`)) {
-            return;
-        }
-        
-        fetch('{% url "chat:request_project_status" project.id %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({
-                status: status
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Request sent successfully');
-                location.reload();
-            } else {
-                alert(data.error);
-            }
-        });
-    }
-
-    function approveStatusRequest(requestId) {
-        fetch('{% url "chat:approve_status_request" project.id %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({
-                request_id: requestId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Status request approved');
-                location.reload();
-            } else {
-                alert(data.error);
-            }
-        });
-    }
 </script>
 
 <style>
@@ -809,81 +716,5 @@
 #chat-message-input {
     width: 100%;
 }
-
-/* Add this where you want the buttons to appear */
-{% if project and project.status == 'in_progress' %}
-    <div class="project-actions">
-        {% if request.user.customerprofile %}
-            <!-- Only customer can see these buttons -->
-            <div class="status-buttons">
-                <button class="btn-status complete" onclick="requestProjectStatus('completed')">
-                    <i class="fas fa-check-circle"></i> Mark as Completed
-                </button>
-                <button class="btn-status cancel" onclick="requestProjectStatus('cancelled')">
-                    <i class="fas fa-times-circle"></i> Cancel Project
-                </button>
-            </div>
-        {% endif %}
-        
-        {% if request.user.profile and project_status_request and request.user == project.assigned_developer.user %}
-            <!-- Only the assigned developer can see these buttons -->
-            <div class="status-request-alert">
-                <p>
-                    <i class="fas fa-bell"></i>
-                    Status Change Request: {{ project_status_request.requested_by.username }} wants to mark this project as 
-                    <strong>{{ project_status_request.requested_status }}</strong>
-                </p>
-                <div class="status-request-actions">
-                    <button class="btn-approve" onclick="approveStatusRequest({{ project_status_request.id }})">
-                        <i class="fas fa-check"></i> Approve
-                    </button>
-                    <button class="btn-reject" onclick="rejectStatusRequest({{ project_status_request.id }})">
-                        <i class="fas fa-times"></i> Reject
-                    </button>
-                </div>
-            </div>
-        {% endif %}
-
-        {% if request.user.customerprofile and project_status_request %}
-            <!-- Show pending status to customer -->
-            <div class="status-request-pending">
-                <p>
-                    <i class="fas fa-clock"></i>
-                    Waiting for developer to approve your request to mark this project as 
-                    <strong>{{ project_status_request.requested_status }}</strong>
-                </p>
-            </div>
-        {% endif %}
-    </div>
-{% endif %}
-
-.status-request-pending {
-    background: #f0f9ff;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #bae6fd;
-    margin-top: 1rem;
-}
-
-.status-request-pending p {
-    color: #0369a1;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.status-request-pending i {
-    font-size: 1.1rem;
-}
 </style>
-
-<!-- Add this temporarily for debugging -->
-<div style="display: none;">
-    Project: {{ project }}<br>
-    Status: {{ project.status }}<br>
-    Is Customer: {{ request.user.customerprofile }}<br>
-    Is Developer: {{ request.user.profile }}<br>
-</div>
 {% endblock %}

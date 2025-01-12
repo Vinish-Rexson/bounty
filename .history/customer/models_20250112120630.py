@@ -83,15 +83,3 @@ class MeetingRequest(models.Model):
     scheduled_time = models.DateTimeField(null=True, blank=True)
     room_id = models.CharField(max_length=100, null=True, blank=True)
     meeting_url = models.CharField(max_length=255, null=True, blank=True)
-
-class ProjectStatusRequest(models.Model):
-    STATUS_CHOICES = [
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled')
-    ]
-    
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    requested_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='status_requests')
-    requested_status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    is_approved = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
