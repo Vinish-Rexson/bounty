@@ -19,6 +19,10 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from channels.security.websocket import AllowedHostsOriginValidator
 from chat.routing import websocket_urlpatterns
+from .waker import start_waker  # Add this import
+
+# Start the waker thread
+start_waker()
 
 django_asgi_app = get_asgi_application()
 
