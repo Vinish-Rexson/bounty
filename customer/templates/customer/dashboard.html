@@ -77,10 +77,22 @@
         <div class="content-header">
             <h2>Your Projects</h2>
             <div class="status-filters">
-                <button class="filter-btn active" data-status="all">All</button>
-                {% for status, label in status_choices %}
-                    <button class="filter-btn" data-status="{{ status }}">{{ label }}</button>
-                {% endfor %}
+                <button class="filter-btn active" data-status="all" data-count="{{ total_projects_count }}">
+                    <i class="fas fa-list"></i>
+                    All Projects
+                </button>
+                <button class="filter-btn" data-status="open" data-count="{{ open_projects_count }}">
+                    <i class="fas fa-folder-open"></i>
+                    Open
+                </button>
+                <button class="filter-btn" data-status="in_progress" data-count="{{ in_progress_projects_count }}">
+                    <i class="fas fa-spinner"></i>
+                    In Progress
+                </button>
+                <button class="filter-btn" data-status="completed" data-count="{{ completed_projects_count }}">
+                    <i class="fas fa-check-circle"></i>
+                    Completed
+                </button>
             </div>
         </div>
 
@@ -168,6 +180,10 @@
         {% endif %}
     </main>
 </div>
+
+<button onclick="toggleTheme()" class="theme-toggle">
+    <i class="fas fa-moon"></i>
+</button>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -192,10 +208,223 @@
             });
         });
     });
+
+    function toggleTheme() {
+        const body = document.body;
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+        }
+    });
 </script>
 {% endblock %}
 
 {% block extra_styles %}
+/* Dark Theme Variables */
+:root {
+    /* Light Theme Variables */
+    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --sidebar-width: 340px;
+    --header-height: 60px;
+    --card-border-radius: 12px;
+    
+    /* Dark Theme Colors */
+    --dark-bg: #0f172a;
+    --dark-sidebar: #1e293b;
+    --dark-card: #1e293b;
+    --dark-border: #334155;
+    --dark-text: #e2e8f0;
+    --dark-text-secondary: #94a3b8;
+    --dark-hover: #2d3748;
+}
+
+/* Dark Theme Base */
+[data-theme="dark"] {
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
+}
+
+/* Dashboard Container */
+[data-theme="dark"] .dashboard-container {
+    background: var(--dark-bg);
+}
+
+/* Sidebar */
+[data-theme="dark"] .dashboard-sidebar {
+    background: var(--dark-sidebar);
+}
+
+/* Welcome Section */
+[data-theme="dark"] .welcome-section {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    border: 1px solid var(--dark-border);
+}
+
+/* Stats Cards */
+[data-theme="dark"] .stat-card {
+    background: var(--dark-card);
+    border-color: var(--dark-border);
+    color: var(--dark-text);
+}
+
+[data-theme="dark"] .stat-icon {
+    background: rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="dark"] .stat-info h3 {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .number {
+    color: var(--dark-text);
+}
+
+[data-theme="dark"] .stat-subtitle {
+    color: var(--dark-text-secondary);
+}
+
+/* Project Cards */
+[data-theme="dark"] .project-card {
+    background: var(--dark-card);
+    border-color: var(--dark-border);
+}
+
+[data-theme="dark"] .project-header {
+    background: linear-gradient(to right, rgba(30, 41, 59, 0.8), var(--dark-card));
+    border-bottom: 1px solid var(--dark-border);
+}
+
+[data-theme="dark"] .project-title {
+    color: var(--dark-text);
+}
+
+[data-theme="dark"] .project-description {
+    color: var(--dark-text-secondary);
+}
+
+/* Status Badges */
+[data-theme="dark"] .status-open {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+[data-theme="dark"] .status-in_progress {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .status-completed {
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
+}
+
+/* Meta Items */
+[data-theme="dark"] .meta-item {
+    background: rgba(30, 41, 59, 0.5);
+    color: var(--dark-text-secondary);
+}
+
+/* Skills Tags */
+[data-theme="dark"] .skill-tag {
+    background: rgba(30, 41, 59, 0.5);
+    color: #60a5fa;
+    border-color: var(--dark-border);
+}
+
+[data-theme="dark"] .skill-tag:hover {
+    background: rgba(99, 102, 241, 0.3);
+}
+
+/* Developer Info */
+[data-theme="dark"] .developer-info {
+    background: rgba(30, 41, 59, 0.5);
+    border-color: var(--dark-border);
+}
+
+[data-theme="dark"] .developer-details h4 {
+    color: var(--dark-text);
+}
+
+/* Status Filters */
+[data-theme="dark"] .status-filters {
+    background: var(--dark-card);
+    border-color: var(--dark-border);
+}
+
+[data-theme="dark"] .filter-btn {
+    background: rgba(30, 41, 59, 0.5);
+    color: var(--dark-text-secondary);
+    border-color: var(--dark-border);
+}
+
+[data-theme="dark"] .filter-btn::after {
+    background: rgba(30, 41, 59, 0.8);
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .filter-btn:hover:not(.active) {
+    background: var(--dark-hover);
+}
+
+/* Scrollbars */
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--dark-bg);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+/* Main Content */
+[data-theme="dark"] .main-content {
+    background: var(--dark-card);
+}
+
+[data-theme="dark"] .content-header {
+    background: var(--dark-card);
+    border-color: var(--dark-border);
+}
+
+/* Buttons */
+[data-theme="dark"] .btn-secondary {
+    background: rgba(30, 41, 59, 0.5);
+    border-color: var(--dark-border);
+    color: var(--dark-text);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background: var(--dark-hover);
+}
+
+/* Hover States */
+[data-theme="dark"] .project-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .stat-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Empty State */
+[data-theme="dark"] .empty-state {
+    background: var(--dark-card);
+    color: var(--dark-text);
+}
+
+[data-theme="dark"] .empty-state p {
+    color: var(--dark-text-secondary);
+}
+
 /* Modern Dashboard Layout */
 :root {
     --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
