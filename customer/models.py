@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from dev.models import Profile as DevProfile
 from django.utils import timezone
 from django.db.models import JSONField
+from my_dapp.backend_service import release_funds
 
 class CustomerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -10,6 +11,7 @@ class CustomerProfile(models.Model):
     industry = models.CharField(max_length=100, blank=True)
     website = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    crypto_wallet_address = models.CharField(max_length=42, blank=True, null=True)
     
     def __str__(self):
         return f"{self.user.username}'s Customer Profile"
@@ -186,3 +188,72 @@ class ProjectStatusRequest(models.Model):
     requester_type = models.CharField(max_length=20, choices=REQUESTER_CHOICES, default='developer')
     is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        
+        # If request is approved and status is completed, trigger payment release
+        if self.is_approved and self.requested_status == 'completed':
+            try:
+                print("\n=== Payment Release Process Start ===")
+                
+                # Get addresses first and validate
+                sender = self.project.customer.user.customerprofile.crypto_wallet_address
+                recipient = self.project.assigned_developer.crypto_wallet_address
+                
+                if not sender:
+                    print("Error: Customer wallet address is not set!")
+                    return
+                    
+                if not recipient:
+                    print("Error: Developer wallet address is not set!")
+                    return
+                    
+                print(f"Sender Address: {sender}")
+                print(f"Recipient Address: {recipient}")
+                
+                # Setup Web3
+                w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:7545'))
+                if not w3.is_connected():
+                    print("Error: Cannot connect to Web3!")
+                    return
+                print(f"Web3 Connected: {w3.is_connected()}")
+                
+                # Validate addresses
+                if not w3.is_address(sender):
+                    print(f"Error: Invalid sender address format: {sender}")
+                    return
+                    
+                if not w3.is_address(recipient):
+                    print(f"Error: Invalid recipient address format: {recipient}")
+                    return
+                
+                # Load contract details
+                print("Loading contract details...")
+                with open('my_dapp/contract_abi.json', 'r') as f:
+                    contract_abi = json.load(f)
+                with open('my_dapp/contract_address.txt', 'r') as f:
+                    contract_address = f.read().strip()
+                print(f"Contract Address: {contract_address}")
+                
+                amount = self.project.budget
+                print(f"Amount: {amount}")
+                
+                # Import and call release_funds
+                from my_dapp.backend_service import release_funds
+                print("Calling release_funds...")
+                
+                result = release_funds(
+                    contract_address=contract_address,
+                    sender=sender,
+                    recipient=recipient,
+                    amount=amount
+                )
+                
+                print(f"Payment Release Result: {result}")
+                print("=== Payment Release Process Complete ===\n")
+                
+            except Exception as e:
+                print(f"Error releasing payment: {str(e)}")
+                print(f"Error type: {type(e)}")
+                print("=== Payment Release Process Failed ===\n")

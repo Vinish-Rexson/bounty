@@ -4,38 +4,278 @@
 
 {% block content %}
 <div class="payment-container">
-    <h2>Payment Details</h2>
-    <div class="payment-info">
-        <div class="project-details">
-            <h3>Project: {{ project.title }}</h3>
-            <p>Budget: ${{ project.budget }}</p>
-        </div>
-        
-        <div class="developer-details">
-            <h3>Developer Details</h3>
-            <p>Name: {{ developer.user.get_full_name }}</p>
-            <p>Crypto Wallet: <span id="recipientAddress">{{ developer.crypto_wallet_address }}</span></p>
+    <div class="payment-card">
+        <div class="card-header">
+            <h2>Payment Details</h2>
         </div>
 
-        <!-- Web3 Payment Section -->
-        <div class="web3-payment">
-            <h3>Crypto Payment</h3>
-            <div id="walletStatus" class="alert alert-info">Please connect your wallet</div>
-            
-            <button id="connectWallet" class="btn btn-primary mb-3">Connect Wallet</button>
-            
-            <div id="paymentForm" style="display: none;">
-                <div class="form-group">
-                    <label for="amountToSend">Amount (ETH):</label>
-                    <input type="number" id="amountToSend" class="form-control" step="0.01" required>
+        <div class="payment-info">
+            <div class="info-section project-details">
+                <div class="section-icon">
+                    <i class="fas fa-project-diagram"></i>
                 </div>
-                <button id="sendPayment" class="btn btn-success mt-3">Send Payment</button>
+                <div class="section-content">
+                    <h3>Project Details</h3>
+                    <div class="detail-item">
+                        <span class="label">Project Name:</span>
+                        <span class="value">{{ project.title }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Budget:</span>
+                        <span class="value highlight">${{ project.budget }}</span>
+                    </div>
+                </div>
             </div>
             
-            <div id="transactionStatus" class="alert alert-info mt-3" style="display: none;"></div>
+            <div class="info-section developer-details">
+                <div class="section-icon">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="section-content">
+                    <h3>Developer Details</h3>
+                    <div class="detail-item">
+                        <span class="label">Name:</span>
+                        <span class="value">{{ developer.user.get_full_name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Wallet Address:</span>
+                        <span class="value address" id="recipientAddress">{{ developer.crypto_wallet_address }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-section web3-payment">
+                <div class="section-icon">
+                    <i class="fab fa-ethereum"></i>
+                </div>
+                <div class="section-content">
+                    <h3>Crypto Payment</h3>
+                    <div id="walletStatus" class="wallet-status">Please connect your wallet</div>
+                    
+                    <button id="connectWallet" class="btn btn-connect">
+                        <i class="fas fa-wallet"></i> Connect Wallet
+                    </button>
+                    
+                    <div id="paymentForm" class="payment-form" style="display: none;">
+                        <div class="form-group">
+                            <label for="amountToSend">Amount (ETH):</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="amountToSend" step="0.01" required>
+                                <span class="currency-label">ETH</span>
+                            </div>
+                        </div>
+                        <button id="sendPayment" class="btn btn-send">
+                            <i class="fas fa-paper-plane"></i> Send Payment
+                        </button>
+                    </div>
+                    
+                    <div id="transactionStatus" class="transaction-status" style="display: none;"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    :root {
+        --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        --card-border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .payment-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .payment-card {
+        background: white;
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        background: var(--gradient-primary);
+        color: white;
+    }
+
+    .card-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .payment-info {
+        padding: 1.5rem;
+    }
+
+    .info-section {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        border-radius: var(--card-border-radius);
+        margin-bottom: 1.5rem;
+    }
+
+    .section-icon {
+        font-size: 2rem;
+        color: #6366f1;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 12px;
+    }
+
+    .section-content {
+        flex: 1;
+    }
+
+    .section-content h3 {
+        margin: 0 0 1rem;
+        color: #1e293b;
+        font-size: 1.25rem;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+    }
+
+    .label {
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .value {
+        font-weight: 500;
+        color: #1e293b;
+    }
+
+    .value.highlight {
+        color: #6366f1;
+        font-weight: 600;
+    }
+
+    .value.address {
+        font-family: monospace;
+        font-size: 0.875rem;
+    }
+
+    .wallet-status {
+        padding: 0.75rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        color: #64748b;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .btn-connect {
+        background: var(--gradient-primary);
+        color: white;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .btn-send {
+        background: #22c55e;
+        color: white;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .payment-form {
+        margin-top: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-wrapper input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.2s ease;
+    }
+
+    .input-wrapper input:focus {
+        border-color: #6366f1;
+    }
+
+    .currency-label {
+        position: absolute;
+        right: 1rem;
+        color: #64748b;
+    }
+
+    .transaction-status {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        background: #f8fafc;
+        border-left: 4px solid #6366f1;
+    }
+
+    @media (max-width: 640px) {
+        .info-section {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.5rem;
+        }
+    }
+</style>
 
 <!-- Add Web3 and contract integration -->
 <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>

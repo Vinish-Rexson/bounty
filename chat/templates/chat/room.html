@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<!-- Add back button at the top -->
+<div class="back-nav">
+    <a href="javascript:history.back()" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+
 <div class="chat-layout">
     <!-- Left Side - Project Info -->
     <div class="project-sidebar">
@@ -538,7 +545,7 @@
     gap: 1rem;
     padding: 1rem;
     background: #f0f2f5;
-    height: calc(100vh - 5rem);
+    height: calc(100vh - 8rem);
     margin: 0.5rem auto;
     max-width: 98%;
     width: calc(100% - 2rem);
@@ -919,7 +926,7 @@
     gap: 1rem;
     padding: 1rem;
     background: #f0f2f5;
-    height: calc(100vh - 5rem);
+    height: calc(100vh - 8rem);
     margin: 0.5rem auto;
     max-width: 98%;
     width: calc(100% - 2rem);
@@ -1136,6 +1143,38 @@
 
 .status-icon.off {
     background-color: #94a3b8;
+}
+
+/* Back Button Styles */
+.back-nav {
+    padding: 1rem 1.5rem 0.5rem;
+    max-width: 98%;
+    margin: 0 auto;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #475569;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.back-button:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    transform: translateX(-2px);
+}
+
+.back-button i {
+    font-size: 0.75rem;
 }
 </style>
 

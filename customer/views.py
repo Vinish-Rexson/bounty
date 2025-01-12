@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import DetailView
 from dev.models import Profile, Project as DevProject
-from .models import CustomerProfile, Project, ProjectRequest, DeveloperRequest, MeetingRequest
+from .models import CustomerProfile, Project, ProjectRequest, DeveloperRequest, MeetingRequest, ProjectStatusRequest
 from dev.models import Comment
 from .forms import CustomerProfileForm, ProjectForm
 from django.conf import settings
@@ -249,9 +249,9 @@ def payment_view(request, project_id):
     developer = project.assigned_developer
     
     # Load contract ABI and address
-    with open('my-dapp/contract_abi.json', 'r') as f:
+    with open('my_dapp/contract_abi.json', 'r') as f:
         contract_abi = json.load(f)
-    with open('my-dapp/contract_address.txt', 'r') as f:
+    with open('my_dapp/contract_address.txt', 'r') as f:
         contract_address = f.read().strip()
     
     # Debug information
@@ -301,10 +301,59 @@ def confirm_payment(request, project_id):
 
 def get_contract_address(request):
     try:
-        with open('my-dapp/contract_address.txt', 'r') as f:
+        with open('my_dapp/contract_address.txt', 'r') as f:
             contract_address = f.read().strip()
         print(f"Serving contract address: {contract_address}")  # Debug print
         return JsonResponse({'address': contract_address})
     except Exception as e:
         print(f"Error getting contract address: {str(e)}")  # Debug print
         return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def approve_status_request(request, project_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+    
+    project = get_object_or_404(Project, id=project_id)
+    data = json.loads(request.body)
+    request_id = data.get('request_id')
+    
+    status_request = get_object_or_404(ProjectStatusRequest, 
+                                   id=request_id, 
+                                   project=project)
+    
+    try:
+        # Mark request as approved first
+        status_request.is_approved = True
+        status_request.save()  # This will trigger the payment release if status is 'completed'
+        
+        # Update project status
+        project.status = status_request.requested_status
+        project.save()
+        
+        # If project is completed, create a portfolio project for the developer
+        if status_request.requested_status == 'completed':
+            from dev.models import Project as DevProject
+            
+            DevProject.objects.create(
+                name=project.title,
+                readme=project.description,
+                client=project.customer.company_name or project.customer.user.username,
+                profile=project.assigned_developer,
+                deployed_url='',
+                github_url=None
+            )
+            
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': f'Error processing request: {str(e)}'
+        }, status=500)
+
+@login_required
+def profile(request):
+    customer = request.user.customerprofile
+    if not customer.crypto_wallet_address:
+        messages.warning(request, "Please set your crypto wallet address to enable payments!")
+    # ... rest of the view code

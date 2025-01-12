@@ -66,11 +66,13 @@
 {% block extra_styles %}
 <style>
     :root {
-        --background-color: #000000;
-        --card-background: #111111;
-        --text-primary: #ffffff;
-        --border-color: #333333;
-        --primary-color: #1e90ff;  /* Example primary color */
+        --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        --card-border-radius: 12px;
+        --background-color: #0f172a;
+        --card-background: #1e293b;
+        --text-primary: #e2e8f0;
+        --border-color: #334155;
+        --primary-color: #6366f1;
     }
 
     body {
@@ -81,74 +83,57 @@
     }
 
     .projects-section {
-        padding: 1rem;  /* Reduced padding for minimalism */
+        padding: 2rem;
     }
 
     .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;  /* Reduced margin */
-    }
-
-    .filter-buttons {
-        display: flex;
-        gap: 0.5rem;  /* Reduced gap */
-    }
-
-    .filter-btn {
-        padding: 0.25rem 0.75rem;  /* Smaller buttons */
-        border: 1px solid var(--primary-color);
-        background: transparent;
-        color: var(--text-primary);
-        border-radius: 0.25rem;  /* Smaller radius */
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .filter-btn.active {
-        background: var(--primary-color);
-        color: white;
+        margin-bottom: 2rem;
+        padding: 1rem 1.5rem;
+        background: linear-gradient(to right, rgba(99, 102, 241, 0.05), transparent);
+        border-radius: var(--card-border-radius);
+        border: 1px solid rgba(226, 232, 240, 0.8);
     }
 
     .projects-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));  /* More flexible grid */
-        gap: 1rem;  /* Reduced gap */
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
     }
 
     .project-card {
         background: var(--card-background);
-        border-radius: 8px;  /* Smaller radius */
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);  /* Subtle shadow */
+        border-radius: var(--card-border-radius);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         overflow: hidden;
         transition: transform 0.2s ease;
         border: 1px solid var(--border-color);
     }
 
     .project-card:hover {
-        transform: translateY(-4px);  /* Subtle hover effect */
+        transform: translateY(-4px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
 
     .project-header {
-        padding: 1rem;  /* Reduced padding */
+        padding: 1rem;
         border-bottom: 1px solid var(--border-color);
     }
 
-    .project-details {
-        padding: 1rem;  /* Reduced padding */
+    .project-content {
+        padding: 1.5rem;
     }
 
-    .project-actions {
-        padding: 0.5rem 1rem;  /* Reduced padding */
+    .project-links {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
     }
 
     .link-btn {
-        padding: 0.5rem 1rem;  /* Smaller buttons */
+        padding: 0.5rem 1rem;
         border-radius: 4px;
         text-decoration: none;
         color: var(--text-primary);
@@ -163,17 +148,48 @@
         border-color: var(--primary-color);
     }
 
+    .project-footer {
+        padding: 1rem 1.5rem;
+        background: var(--background-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-secondary {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        background-color: var(--primary-color);
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+        text-align: center;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        border: 1px solid var(--primary-color);
+    }
+
+    .btn-secondary:hover {
+        background-color: #1c7ed6;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary:active {
+        background-color: #1864ab;
+        transform: translateY(0);
+    }
+
     .empty-state {
         grid-column: 1 / -1;
         text-align: center;
-        padding: 2rem 1rem;  /* Reduced padding */
+        padding: 2rem 1rem;
         background: var(--card-background);
-        border-radius: 8px;
+        border-radius: var(--card-border-radius);
         border: 1px solid var(--border-color);
     }
 
     .empty-state i {
-        font-size: 2.5rem;  /* Reduced icon size */
+        font-size: 2.5rem;
         color: var(--primary-color);
         margin-bottom: 1rem;
     }
@@ -192,7 +208,7 @@
     .stat-card {
         background: var(--card-background);
         padding: 1.5rem;
-        border-radius: 8px;
+        border-radius: var(--card-border-radius);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         text-align: center;
     }
@@ -201,47 +217,6 @@
         font-size: 2rem;
         font-weight: bold;
         color: var(--primary-color);
-    }
-
-    .project-content {
-        padding: 1.5rem;
-    }
-
-    .project-links {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .project-footer {
-        padding: 1rem 1.5rem;
-        background: var(--background-color);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .project-footer .btn-secondary {
-        display: inline-block;
-        padding: 0.75rem 1.5rem;
-        border-radius: 6px;
-        background-color: var(--primary-color);
-        color: white;
-        text-decoration: none;
-        font-weight: bold;
-        text-align: center;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        border: 1px solid var(--primary-color);
-    }
-
-    .project-footer .btn-secondary:hover {
-        background-color: #1c7ed6;
-        transform: translateY(-2px);
-    }
-
-    .project-footer .btn-secondary:active {
-        background-color: #1864ab;
-        transform: translateY(0);
     }
 
     @media (max-width: 768px) {
