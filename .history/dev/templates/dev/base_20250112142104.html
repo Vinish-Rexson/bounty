@@ -227,6 +227,12 @@
 <body>
     <nav>
         <div class="nav-container">
+            <div class="logo">
+                <a href="{% url 'dev:dashboard' %}" class="logo-link">
+                    <i class="fas fa-code"></i>
+                    <span>DevMatch</span>
+                </a>
+            </div>
             <ul>
                 <li><a href="{% url 'dev:dashboard' %}"><i class="fas fa-home"></i> Dashboard</a></li>
                 <li><a href="{% url 'dev:browse_projects' %}"><i class="fas fa-search"></i> Browse</a></li>

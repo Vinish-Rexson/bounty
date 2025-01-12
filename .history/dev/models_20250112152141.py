@@ -204,7 +204,7 @@ class Project(models.Model):
     name = models.CharField(max_length=200)
     readme = models.TextField()
     deployed_url = models.URLField(blank=True, max_length=500)
-    github_url = models.URLField(blank=True, null=True, max_length=500)
+    github_url = models.URLField(max_length=500)
     client = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

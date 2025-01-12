@@ -12,12 +12,26 @@ class ProjectForm(forms.ModelForm):
         }
 
     def clean_deployed_url(self):
-        url = self.cleaned_data.get('deployed_url', '')
-        return url
+        url = self.cleaned_data.get('deployed_url')
+        if url:  # Only validate if URL is provided
+            if not url.startswith(('http://', 'https://')):
+                url = 'https://' + url
+            try:
+                URLValidator(schemes=['http', 'https'])(url)
+            except ValidationError:
+                raise ValidationError('Enter a valid URL.')
+        return url or ''  # Return empty string if no URL
 
     def clean_github_url(self):
-        url = self.cleaned_data.get('github_url', '')
-        return url
+        url = self.cleaned_data.get('github_url')
+        if url:  # Only validate if URL is provided
+            if not url.startswith(('http://', 'https://')):
+                url = 'https://' + url
+            try:
+                URLValidator(schemes=['http', 'https'])(url)
+            except ValidationError:
+                raise ValidationError('Enter a valid URL.')
+        return url or ''  # Return empty string if no URL
 
 class ProfileForm(forms.ModelForm):
     display_name = forms.CharField(

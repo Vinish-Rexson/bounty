@@ -146,14 +146,14 @@ def approve_status_request(request, project_id):
     if status_request.requested_status == 'completed':
         from dev.models import Project as DevProject
         
-        # Create the developer's portfolio project with minimal validation
+        # Create the developer's portfolio project
         DevProject.objects.create(
             name=project.title,
             readme=project.description,
             client=project.customer.company_name or project.customer.user.username,
             profile=project.assigned_developer,
             deployed_url='',
-            github_url=None  # Use None instead of empty string
+            github_url=''
         )
     
     # Mark request as approved
