@@ -1,396 +1,898 @@
 {% extends 'customer/base.html' %}
 
-{% block title %}Customer Dashboard{% endblock %}
-
-{% block extra_styles %}
-    .welcome-section {
-        background: var(--card-background);
-        padding: 2rem;
-        border-radius: 0.5rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow);
-    }
-
-    .welcome-section h1 {
-        color: var(--text-primary);
-        font-size: 2rem;
-        margin-bottom: 1rem;
-    }
-
-    .welcome-section p {
-        color: var(--text-secondary);
-        font-size: 1.1rem;
-    }
-
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: var(--card-background);
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        box-shadow: var(--shadow);
-        transition: transform 0.2s;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-2px);
-    }
-
-    .stat-card h3 {
-        color: var(--text-secondary);
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .stat-card .value {
-        color: var(--text-primary);
-        font-size: 2rem;
-        font-weight: 600;
-    }
-
-    .projects-section {
-        background: var(--card-background);
-        padding: 2rem;
-        border-radius: 0.5rem;
-        box-shadow: var(--shadow);
-    }
-
-    .projects-section h2 {
-        color: var(--text-primary);
-        font-size: 1.5rem;
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid var(--primary-color);
-    }
-
-    .project-card {
-        background: var(--background-color);
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: var(--shadow-sm);
-        transition: transform 0.2s;
-    }
-
-    .project-card:hover {
-        transform: translateY(-2px);
-    }
-
-    .project-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .project-title {
-        color: var(--text-primary);
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .project-status {
-        padding: 0.375rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .status-open {
-        background-color: var(--success-color);
-        color: white;
-    }
-
-    .status-in-progress {
-        background-color: var(--warning-color);
-        color: white;
-    }
-
-    .status-completed {
-        background-color: var(--secondary-color);
-        color: white;
-    }
-
-    .project-details {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin: 1rem 0;
-    }
-
-    .project-detail-item {
-        color: var(--text-secondary);
-    }
-
-    .project-detail-item strong {
-        color: var(--text-primary);
-        display: block;
-        margin-bottom: 0.25rem;
-    }
-
-    .skills-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin: 1rem 0;
-    }
-
-    .skill-tag {
-        background: var(--background-color);
-        color: var(--text-primary);
-        padding: 0.375rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .developer-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 1rem;
-        background: var(--card-background);
-        border-radius: 0.5rem;
-        margin: 1rem 0;
-    }
-
-    .developer-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .developer-stats {
-        display: flex;
-        gap: 1rem;
-        margin-top: 0.5rem;
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: var(--text-secondary);
-    }
-
-    .empty-state svg {
-        color: var(--text-secondary);
-        margin-bottom: 1rem;
-    }
-
-    .empty-state p {
-        margin-bottom: 1.5rem;
-    }
-
-    @media (max-width: 640px) {
-        .dashboard-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .action-buttons {
-            flex-direction: column;
-        }
-
-        .welcome-section,
-        .projects-section {
-            padding: 1.5rem;
-            margin: 1rem;
-        }
-    }
-
-    .availability-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border-radius: 0.375rem;
-        font-weight: 500;
-        font-size: 0.875rem;
-        margin-top: 0.5rem;
-    }
-
-    .availability-indicator i {
-        font-size: 0.75rem;
-    }
-
-    .availability-indicator.available {
-        background-color: rgba(34, 197, 94, 0.1);
-        color: var(--success-color);
-    }
-
-    .availability-indicator.unavailable {
-        background-color: rgba(239, 68, 68, 0.1);
-        color: var(--danger-color);
-    }
-{% endblock %}
-
 {% block content %}
-    <div class="welcome-section">
-        <h1>Welcome back, {{ request.user.first_name }}!</h1>
-        <p>Manage your projects and find the perfect developer for your needs.</p>
-    </div>
+<div class="dashboard-container">
+    <!-- Left Sidebar -->
+    <aside class="dashboard-sidebar">
+        <!-- Welcome Card -->
+        <div class="welcome-section">
+            <div class="welcome-avatar">
+                {% if request.user.profile_picture %}
+                    <img src="{{ request.user.profile_picture.url }}" alt="Profile">
+                {% else %}
+                    <div class="avatar-placeholder">{{ request.user.first_name|first }}</div>
+                {% endif %}
+            </div>
+            <h1>Welcome back, {{ request.user.first_name }}!</h1>
+            <p>Manage your projects and connect with developers.</p>
+        </div>
 
-    <div class="dashboard-grid">
-        <div class="stat-card">
-            <h3>Active Projects</h3>
-            <div class="value">{{ active_projects_count }}</div>
+        <!-- Stats Overview -->
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Active Projects</h3>
+                    <div class="value">
+                        <span class="number">12</span>
+                        <span class="trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>8%</span>
+                        </span>
+                    </div>
+                    <div class="stat-subtitle">4 projects this month</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Total Projects</h3>
+                    <div class="value">
+                        <span class="number">47</span>
+                        <span class="trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>12%</span>
+                        </span>
+                    </div>
+                    <div class="stat-subtitle">Since joining</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Pending Requests</h3>
+                    <div class="value">
+                        <span class="number">8</span>
+                        <span class="trend negative">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>3%</span>
+                        </span>
+                    </div>
+                    <div class="stat-subtitle">2 new today</div>
+                </div>
+            </div>
         </div>
-        <div class="stat-card">
-            <h3>Total Projects</h3>
-            <div class="value">{{ total_projects_count }}</div>
-        </div>
-        <div class="stat-card">
-            <h3>Pending Requests</h3>
-            <div class="value">{{ pending_requests_count }}</div>
-        </div>
-    </div>
+    </aside>
 
-    <div class="projects-section">
-        <h2>Your Projects</h2>
-        
-        <div class="status-filters">
-            <button class="filter-btn active" data-status="all">All</button>
-            {% for status, label in status_choices %}
-                <button class="filter-btn" data-status="{{ status }}">{{ label }}</button>
-            {% endfor %}
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="content-header">
+            <h2>Your Projects</h2>
+            <div class="status-filters">
+                <button class="filter-btn active" data-status="all">All</button>
+                {% for status, label in status_choices %}
+                    <button class="filter-btn" data-status="{{ status }}">{{ label }}</button>
+                {% endfor %}
+            </div>
         </div>
 
         {% if projects %}
-            <div class="projects-grid">
-                {% for project in projects|dictsortreversed:"created_at" %}
-                    <div class="project-card" data-status="{{ project.status }}">
-                        <div class="project-header">
-                            <h3 class="project-title">{{ project.title }}</h3>
-                            <span class="project-status status-{{ project.status }}">
-                                {{ project.get_status_display }}
-                            </span>
+        <div class="projects-grid">
+            {% for project in projects|dictsortreversed:"created_at" %}
+            <div class="project-card" data-status="{{ project.status }}">
+                <div class="project-status status-{{ project.status }}">
+                    <span class="status-indicator"></span>
+                    {{ project.get_status_display }}
+                </div>
+                
+                <div class="project-content">
+                    <h3 class="project-title">{{ project.title }}</h3>
+                    <p class="project-description">{{ project.description|truncatechars:150 }}</p>
+                    
+                    <div class="project-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>${{ project.budget }}</span>
                         </div>
-                        
-                        <p class="project-description">{{ project.description }}</p>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>{{ project.duration }} days</span>
+                        </div>
+                    </div>
 
-                        <div class="project-details">
-                            <div class="project-detail-item">
-                                <strong>Title</strong>
-                                {{ project.title }}
-                            </div>
-                            <div class="project-detail-item">
-                                <strong>Description</strong>
-                                {{ project.description|truncatechars:100 }}
-                            </div>
-                            <div class="project-detail-item">
-                                <strong>Budget</strong>
-                                ${{ project.budget }}
-                            </div>
-                            <div class="project-detail-item">
-                                <strong>Duration</strong>
-                                {{ project.duration }} days
-                            </div>
-                        </div>
-
-                        <div class="skills-list">
-                            {% for skill in project.required_skills.all %}
-                                <span class="skill-tag">{{ skill.name }}</span>
-                            {% endfor %}
-                        </div>
-                        
-                        {% if project.assigned_developer %}
-                            <div class="developer-info">
-                                <div class="developer-header">
-                                    {% if project.assigned_developer.profile_picture %}
-                                        <img src="{{ project.assigned_developer.profile_picture.url }}" 
-                                             alt="{{ project.assigned_developer.display_name }}" 
-                                             class="developer-avatar">
-                                    {% endif %}
-                                    <div>
-                                        <h4>{{ project.assigned_developer.display_name }}</h4>
-                                        <div class="developer-stats">
-                                            <span>⭐ {{ project.assigned_developer.rating }}/5</span>
-                                            <span>💼 {{ project.assigned_developer.years_of_experience }} years exp.</span>
-                                            <span>🌍 {{ project.assigned_developer.timezone }}</span>
-                                            <span class="availability-indicator {% if project.assigned_developer.is_currently_available %}available{% else %}unavailable{% endif %}">
-                                                <i class="fas fa-circle"></i>
-                                                {% if project.assigned_developer.is_currently_available %}Available{% else %}Unavailable{% endif %}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-                        
-                        {% if project.status == 'open' %}
-                            <div class="action-buttons">
-                                <a href="{% url 'customer:browse_developers' %}?project_id={{ project.id }}" class="btn">
-                                    <i class="fas fa-search"></i> Find Developers
-                                </a>
-                                {% with request_count=project.requests.all|length %}
-                                    <a href="{% url 'customer:project_requests' project.id %}" class="btn">
-                                        <i class="fas fa-envelope"></i> View Requests ({{ request_count }})
-                                    </a>
-                                {% endwith %}
-                            </div>
-                        {% elif project.status == 'in_progress' %}
-                            <div class="action-buttons">
-                                <a href="{% url 'chat:room' project.id %}" class="btn">
-                                    <i class="fas fa-comments"></i> Chat with Developer
-                                </a>
-                            </div>
+                    <div class="skills-list">
+                        {% for skill in project.required_skills.all|slice:":3" %}
+                            <span class="skill-tag">{{ skill.name }}</span>
+                        {% endfor %}
+                        {% if project.required_skills.all|length > 3 %}
+                            <span class="skill-tag more">+{{ project.required_skills.all|length|add:"-3" }}</span>
                         {% endif %}
                     </div>
-                {% endfor %}
+
+                    {% if project.assigned_developer %}
+                    <div class="developer-info">
+                        <img src="{{ project.assigned_developer.profile_picture.url }}" 
+                             alt="{{ project.assigned_developer.display_name }}" 
+                             class="developer-avatar">
+                        <div class="developer-details">
+                            <h4>{{ project.assigned_developer.display_name }}</h4>
+                            <div class="developer-rating">
+                                <span class="stars">★★★★★</span>
+                                <span class="rating-value">{{ project.assigned_developer.rating }}/5</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="project-actions">
+                        {% if project.status == 'open' %}
+                            <a href="{% url 'customer:browse_developers' %}?project_id={{ project.id }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-search"></i> Find Developers
+                            </a>
+                            <a href="{% url 'customer:project_requests' project.id %}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-envelope"></i> 
+                                Requests ({{ project.requests.all|length }})
+                            </a>
+                        {% elif project.status == 'in_progress' %}
+                            <a href="{% url 'chat:room' project.id %}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-comments"></i> Chat
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
+            {% endfor %}
+        </div>
         {% else %}
-            <div class="empty-state">
-                <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
-                <p>You haven't posted any projects yet.</p>
-                <a href="{% url 'customer:create_project' %}" class="btn">
-                    <i class="fas fa-plus"></i> Create your first project
-                </a>
+        <div class="empty-state">
+            <div class="empty-illustration">
+                <i class="fas fa-clipboard-list"></i>
             </div>
+            <h3>No Projects Yet</h3>
+            <p>Start by creating your first project and find the perfect developer.</p>
+            <a href="{% url 'customer:create_project' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create Project
+            </a>
+        </div>
         {% endif %}
-    </div>
+    </main>
+</div>
+{% endblock %}
 
-    {% block extra_scripts %}
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const filterBtns = document.querySelectorAll('.filter-btn');
-            const projectCards = document.querySelectorAll('.project-card');
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const projectCards = document.querySelectorAll('.project-card');
 
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    // Update active button
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
 
-                    const status = btn.dataset.status;
-
-                    // Filter projects
-                    projectCards.forEach(card => {
-                        if (status === 'all' || card.dataset.status === status) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
+                const status = btn.dataset.status;
+                projectCards.forEach(card => {
+                    if (status === 'all' || card.dataset.status === status) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
                 });
             });
         });
-    </script>
-    {% endblock %}
-{% endblock %} 
+    });
+</script>
+{% endblock %}
+
+{% block extra_styles %}
+/* Modern Dashboard Layout */
+:root {
+    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --sidebar-width: 340px;
+    --header-height: 70px;
+    --card-border-radius: 12px;
+    --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-container {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    gap: 1.5rem;
+    height: 100vh;
+    max-height: 100vh;
+    padding: 1rem;
+    background: #f1f5f9;
+}
+
+/* Sidebar Styling */
+.dashboard-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: 90%;
+    padding: 0.875rem;
+    background: white;
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-section {
+    position: relative;
+    padding: 1.5rem;
+    background: var(--gradient-primary);
+    border-radius: calc(var(--card-border-radius) - 4px);
+    color: white;
+    overflow: hidden;
+}
+
+.welcome-avatar {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1rem;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Enhanced Stats Section */
+.dashboard-stats {
+    display: grid;
+    gap: 0.875rem;
+    padding: 0.25rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -4px rgba(99, 102, 241, 0.12);
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+/* Icon Styling */
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
+    color: #6366f1;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-icon {
+    background: var(--gradient-primary);
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Stat Info */
+.stat-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.stat-info h3 {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.value {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+
+/* Trend Indicators */
+.trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 16px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.trend.positive {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+}
+
+.trend.negative {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+}
+
+.trend i {
+    font-size: 0.65rem;
+}
+
+/* Subtitle */
+.stat-subtitle {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.125rem;
+}
+
+/* Responsive Adjustments */
+@media (min-width: 1400px) {
+    .stat-card {
+        padding: 1.125rem;
+    }
+    
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .number {
+        font-size: 1.6rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .stat-card {
+        padding: 0.875rem;
+    }
+    
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+    
+    .number {
+        font-size: 1.4rem;
+    }
+    
+    .trend {
+        padding: 0.15rem 0.35rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card {
+        padding: 0.75rem;
+    }
+}
+
+/* Main Content Area */
+.main-content {
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.content-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+}
+
+/* Projects Grid */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    height: calc(100vh - var(--header-height) - 2rem);
+}
+
+.project-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.3s ease;
+    position: relative;
+    max-height: 320px;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -4px rgba(99, 102, 241, 0.12);
+}
+
+/* Glass-morphism Header */
+.project-header {
+    padding: 0.875rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    position: relative;
+}
+
+.project-header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, #6366f1, transparent);
+}
+
+.project-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+/* Enhanced Status Badge */
+.project-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.status-open {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    color: #166534;
+}
+
+.status-in_progress {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1e40af;
+}
+
+.status-completed {
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    color: #475569;
+}
+
+/* Content Area */
+.project-content {
+    padding: 0.875rem 1rem;
+    gap: 0.5rem;
+    flex: 1;
+    overflow: hidden;
+}
+
+.project-description {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #64748b;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+/* Meta Information */
+.project-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin: 0.25rem 0;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.625rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    color: #475569;
+    transition: all 0.2s ease;
+}
+
+.meta-item:hover {
+    background: #f1f5f9;
+    transform: translateY(-1px);
+}
+
+.meta-item i {
+    color: #6366f1;
+    font-size: 0.9rem;
+}
+
+/* Skills Section */
+.skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 0.375rem 0;
+}
+
+.skill-tag {
+    padding: 0.25rem 0.625rem;
+    background: #f1f5f9;
+    color: #6366f1;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.skill-tag:hover {
+    background: #6366f1;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Developer Info */
+.developer-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem;
+    background: linear-gradient(to right, #f8fafc, #f1f5f9);
+    border-radius: 12px;
+    margin: 0.25rem 0;
+}
+
+.developer-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.developer-details h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.developer-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.stars {
+    color: #fbbf24;
+    letter-spacing: -1px;
+}
+
+/* Card Footer */
+.project-actions {
+    padding: 0.625rem 0.875rem;
+    background: #f8fafc;
+    border-top: 1px solid rgba(226, 232, 240, 0.8);
+    display: flex;
+    gap: 0.75rem;
+    margin-top: auto;
+}
+
+/* Action Buttons */
+.btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    gap: 0.3rem;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.btn-secondary {
+    background: white;
+    color: #6366f1;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);
+}
+
+/* Empty State Enhancement */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: white;
+    border-radius: var(--card-border-radius);
+}
+
+.empty-illustration {
+    font-size: 3rem;
+    color: #6366f1;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #64748b;
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1400px) {
+    .project-card {
+        max-height: 360px;
+    }
+    .project-content {
+        padding: 0.875rem 1rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .project-card {
+        max-height: 340px;
+    }
+    .meta-item {
+        padding: 0.4rem 0.6rem;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Responsive Adjustments */
+@media (min-width: 1400px) {
+    .projects-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (min-width: 1600px) {
+    .projects-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (min-width: 1800px) {
+    .projects-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+}
+
+/* Ensure content doesn't overflow */
+.project-content > * {
+    margin-bottom: 0.5rem;
+}
+
+.project-content > *:last-child {
+    margin-bottom: 0;
+}
+
+/* Status Filters Container */
+.status-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: var(--header-height);
+    z-index: 9;
+}
+
+/* Filter Button Base */
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Filter Count Badge */
+.filter-btn::after {
+    content: attr(data-count);
+    font-size: 0.75rem;
+    background: #e2e8f0;
+    color: #475569;
+    padding: 0.125rem 0.5rem;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+/* Active State */
+.filter-btn.active {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.filter-btn.active::after {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Status-specific Styles */
+.filter-btn[data-status="open"] {
+    border: 1px solid #22c55e;
+    color: #166534;
+}
+
+.filter-btn[data-status="open"].active {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border-color: transparent;
+    color: white;
+}
+
+.filter-btn[data-status="in_progress"] {
+    border: 1px solid #3b82f6;
+    color: #1e40af;
+}
+
+.filter-btn[data-status="in_progress"].active {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border-color: transparent;
+    color: white;
+}
+
+.filter-btn[data-status="completed"] {
+    border: 1px solid #64748b;
+    color: #475569;
+}
+
+.filter-btn[data-status="completed"].active {
+    background: linear-gradient(135deg, #64748b, #475569);
+    border-color: transparent;
+    color: white;
+}
+
+/* Hover Effects */
+.filter-btn:hover:not(.active) {
+    transform: translateY(-1px);
+    background: #e2e8f0;
+}
+
+/* Filter Button Icons */
+.filter-btn i {
+    font-size: 0.875rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .status-filters {
+        padding: 0.75rem;
+        gap: 0.5rem;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .filter-btn {
+        padding: 0.4rem 0.875rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+}
+
+/* Scrollbar for Filters on Mobile */
+.status-filters::-webkit-scrollbar {
+    height: 4px;
+}
+
+.status-filters::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.status-filters::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+}
+{% endblock %}
