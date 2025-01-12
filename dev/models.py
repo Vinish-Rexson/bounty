@@ -209,6 +209,16 @@ class Project(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     profile = models.ForeignKey('Profile', on_delete=models.CASCADE, related_name='projects')
+    transaction_hash = models.CharField(max_length=66, blank=True, null=True)  # Ethereum tx hash is 66 chars
+    payment_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('completed', 'Completed'),
+            ('failed', 'Failed')
+        ],
+        default='pending'
+    )
 
     def __str__(self):
         return self.name

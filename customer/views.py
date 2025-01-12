@@ -10,6 +10,9 @@ from django.conf import settings
 from django.contrib import messages
 import uuid
 from django.http import JsonResponse
+import json
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 
 def is_customer(user):
     return user.groups.filter(name=settings.CUSTOMER_GROUP).exists()
@@ -245,13 +248,63 @@ def payment_view(request, project_id):
     project = get_object_or_404(Project, id=project_id)
     developer = project.assigned_developer
     
-    if request.method == 'POST':
-        project.status = 'in_progress'
-        project.save()
-        messages.success(request, 'Payment completed successfully!')
-        return redirect('customer:dashboard')
-        
+    # Load contract ABI and address
+    with open('my-dapp/contract_abi.json', 'r') as f:
+        contract_abi = json.load(f)
+    with open('my-dapp/contract_address.txt', 'r') as f:
+        contract_address = f.read().strip()
+    
+    # Debug information
+    print("\n=== Initial Payment View Debug Info ===")
+    print(f"Project ID: {project_id}")
+    print(f"Developer Wallet: {developer.crypto_wallet_address}")
+    print(f"Contract Address: {contract_address}")
+    print(f"Project Status: {project.status}")
+    print("=====================================\n")
+    
     return render(request, 'customer/payment.html', {
         'project': project,
-        'developer': developer
+        'developer': developer,
+        'contract_abi': json.dumps(contract_abi),
+        'contract_address': contract_address
     })
+
+@require_POST
+@csrf_exempt
+@login_required
+def confirm_payment(request, project_id):
+    try:
+        data = json.loads(request.body)
+        project = get_object_or_404(Project, id=project_id)
+        
+        print("\n=== Payment Confirmation Debug Info ===")
+        print(f"Project ID: {project_id}")
+        print(f"Transaction Hash: {data.get('transaction_hash')}")
+        print(f"Amount: {data.get('amount')} ETH")
+        print(f"Developer Address: {project.assigned_developer.crypto_wallet_address}")
+        print(f"Previous Project Status: {project.status}")
+        
+        # Update project status
+        project.status = 'in_progress'
+        project.transaction_hash = data.get('transaction_hash')
+        project.save()
+        
+        print(f"New Project Status: {project.status}")
+        print("=====================================\n")
+        
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        print(f"\n=== Payment Confirmation Error ===")
+        print(f"Error: {str(e)}")
+        print("=====================================\n")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+def get_contract_address(request):
+    try:
+        with open('my-dapp/contract_address.txt', 'r') as f:
+            contract_address = f.read().strip()
+        print(f"Serving contract address: {contract_address}")  # Debug print
+        return JsonResponse({'address': contract_address})
+    except Exception as e:
+        print(f"Error getting contract address: {str(e)}")  # Debug print
+        return JsonResponse({'error': str(e)}, status=500)

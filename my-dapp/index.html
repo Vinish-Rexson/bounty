@@ -46,7 +46,7 @@
 
     <!-- Add your custom JavaScript -->
     <script>
-        const contractAddress = "0x948DC93C6bf568980eBa0db3349fEC64FF5356B4"; // This should match your contract_address.txt
+        const contractAddress = "0x3374B447934Da9Fccd66b435a4bAEEA7FEc0a9cB"; // This should match your contract_address.txt
         const contractABI = [
   {
     "inputs": [
@@ -416,7 +416,7 @@ async function updatePendingTransfers(sender, recipient) {
                 console.log("Before release - checking balances");
                 await checkBalances(currentTransaction.recipient);
 
-                const escrowPrivateKey = "e4858162129857366224abf4283f5d85c1bfb43b744b06f89fa7bc7cf28f2e3a";
+                const escrowPrivateKey = "0x2bc2a58e49df70613fdc19169cc35520b191bf38ed90a3769e7cbdcb4f04a6cd";
                 const escrowWallet = web3.eth.accounts.privateKeyToAccount('0x' + escrowPrivateKey);
                 console.log("Current transaction:", currentTransaction);
 

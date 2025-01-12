@@ -14,13 +14,158 @@
         <div class="developer-details">
             <h3>Developer Details</h3>
             <p>Name: {{ developer.user.get_full_name }}</p>
-            <p>Crypto Wallet: {{ developer.crypto_wallet_address }}</p>
+            <p>Crypto Wallet: <span id="recipientAddress">{{ developer.crypto_wallet_address }}</span></p>
         </div>
-        
-        <form method="post">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary">Complete Payment</button>
-        </form>
+
+        <!-- Web3 Payment Section -->
+        <div class="web3-payment">
+            <h3>Crypto Payment</h3>
+            <div id="walletStatus" class="alert alert-info">Please connect your wallet</div>
+            
+            <button id="connectWallet" class="btn btn-primary mb-3">Connect Wallet</button>
+            
+            <div id="paymentForm" style="display: none;">
+                <div class="form-group">
+                    <label for="amountToSend">Amount (ETH):</label>
+                    <input type="number" id="amountToSend" class="form-control" step="0.01" required>
+                </div>
+                <button id="sendPayment" class="btn btn-success mt-3">Send Payment</button>
+            </div>
+            
+            <div id="transactionStatus" class="alert alert-info mt-3" style="display: none;"></div>
+        </div>
     </div>
 </div>
+
+<!-- Add Web3 and contract integration -->
+<script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+<script>
+    let web3;
+    let contract;
+    let userAccount;
+    let contractAddress;
+
+    const contractABI =[{"inputs": [{"internalType": "string", "name": "_message", "type": "string"}], "stateMutability": "nonpayable", "type": "constructor"}, {"anonymous": false, "inputs": [{"indexed": false, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": false, "internalType": "address", "name": "recipient", "type": "address"}, {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"}], "name": "EtherDeposited", "type": "event"}, {"anonymous": false, "inputs": [{"indexed": false, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": false, "internalType": "address", "name": "recipient", "type": "address"}, {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"}], "name": "EtherReleased", "type": "event"}, {"inputs": [], "name": "ESCROW_WALLET", "outputs": [{"internalType": "address payable", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "recipient", "type": "address"}], "name": "depositEther", "outputs": [], "stateMutability": "payable", "type": "function"}, {"inputs": [{"internalType": "address", "name": "sender", "type": "address"}, {"internalType": "address", "name": "recipient", "type": "address"}], "name": "getPendingTransfer", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "message", "outputs": [{"internalType": "string", "name": "", "type": "string"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "owner", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}], "name": "pendingTransfers", "outputs": [{"internalType": "uint256", "name": "amount", "type": "uint256"}, {"internalType": "bool", "name": "firstApproval", "type": "bool"}, {"internalType": "bool", "name": "secondApproval", "type": "bool"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "sender", "type": "address"}, {"internalType": "address payable", "name": "recipient", "type": "address"}], "name": "releaseEther", "outputs": [], "stateMutability": "nonpayable", "type": "function"}];
+
+    async function init() {
+        try {
+            console.log("\n=== Web3 Initialization ===");
+            
+            if (typeof window.ethereum !== 'undefined') {
+                web3 = new Web3(window.ethereum);
+                
+                // Get contract address from Django backend
+                const response = await fetch('/customer/get-contract-address/');
+                const data = await response.json();
+                contractAddress = data.address;
+                console.log("Contract Address:", contractAddress);
+
+                // Initialize contract
+                contract = new web3.eth.Contract(contractABI, contractAddress);
+                console.log("Contract initialized");
+
+                // Connect wallet
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                userAccount = accounts[0];
+                console.log("User Account:", userAccount);
+
+                document.getElementById('walletStatus').textContent = `Connected: ${userAccount}`;
+                document.getElementById('paymentForm').style.display = 'block';
+                
+                // Add event listener for send payment button
+                document.getElementById('sendPayment').addEventListener('click', sendPayment);
+                console.log("Payment button listener added");
+                
+                // Check balances
+                await checkBalances();
+            }
+        } catch (error) {
+            console.error("Initialization Error:", error);
+            document.getElementById('walletStatus').textContent = "Error: " + error.message;
+        }
+    }
+
+    async function checkBalances() {
+        try {
+            console.log("\n=== Balance Check ===");
+            
+            // Check contract balance
+            const contractBalance = await web3.eth.getBalance(contractAddress);
+            console.log('Contract Balance:', web3.utils.fromWei(contractBalance, 'ether'), 'ETH');
+            console.log('Contract Address:', contractAddress);
+
+            // Check user balance
+            const userBalance = await web3.eth.getBalance(userAccount);
+            console.log('User Balance:', web3.utils.fromWei(userBalance, 'ether'), 'ETH');
+            console.log('User Address:', userAccount);
+
+            // Check escrow balance
+            const escrowAddress = "0x6182E6b60330D64bd74C0aECF13CA966d784701f";
+            const escrowBalance = await web3.eth.getBalance(escrowAddress);
+            console.log('Escrow Balance:', web3.utils.fromWei(escrowBalance, 'ether'), 'ETH');
+            console.log('Escrow Address:', escrowAddress);
+            
+            console.log("===================\n");
+        } catch (error) {
+            console.error("Balance Check Error:", error);
+        }
+    }
+
+    async function sendPayment() {
+        try {
+            console.log("\n=== Payment Initiation ===");
+            const recipientAddress = document.getElementById('recipientAddress').textContent;
+            const amount = document.getElementById('amountToSend').value;
+            
+            console.log("Sender Address:", userAccount);
+            console.log("Recipient Address:", recipientAddress);
+            console.log("Amount:", amount, "ETH");
+            console.log("Contract Address:", contractAddress);
+
+            const amountWei = web3.utils.toWei(amount, 'ether');
+            const tx = await contract.methods.depositEther(recipientAddress)
+                .send({
+                    from: userAccount,
+                    value: amountWei,
+                    gas: 300000
+                });
+
+            console.log("Transaction successful:", tx.transactionHash);
+            await checkBalances();
+            
+            // Notify Django backend
+            await notifyBackend(tx.transactionHash, amount);
+            
+            document.getElementById('transactionStatus').textContent = 
+                `Payment successful! Transaction hash: ${tx.transactionHash}`;
+        } catch (error) {
+            console.error("Payment Error:", error);
+            document.getElementById('transactionStatus').textContent = 
+                `Payment failed: ${error.message}`;
+        }
+    }
+
+    async function notifyBackend(txHash, amount) {
+        try {
+            const response = await fetch('/customer/payment/{{ project.id }}/confirm/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    transaction_hash: txHash,
+                    amount: amount
+                })
+            });
+            const data = await response.json();
+            console.log("Backend notification response:", data);
+        } catch (error) {
+            console.error("Error notifying backend:", error);
+        }
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', init);
+</script>
 {% endblock %}

@@ -18,4 +18,6 @@ urlpatterns = [
     path('dev_project/<int:pk>/', views.ProjectDetailView.as_view(), name='dev_project_detail'),
     path('developer/<int:dev_id>/project/<int:project_id>/', views.developer_project_detail, name='developer_project_detail'),
     path('payment/<int:project_id>/', views.payment_view, name='payment'),
+    path('payment/<int:project_id>/confirm/', views.confirm_payment, name='confirm_payment'),
+    path('get-contract-address/', views.get_contract_address, name='get_contract_address'),
 ] 
