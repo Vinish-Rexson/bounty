@@ -133,8 +133,6 @@ def profile(request):
         'projects': projects
     })
 
-def home(request):
-    return render(request, 'dev/index.html')
 
 @developer_required
 @login_required
@@ -231,7 +229,7 @@ def handle_customer_request(request, request_id):
             
             # Update the project status and assign the developer
             project = developer_request.project
-            project.status = 'in_progress'  # or whatever status you use for active projects
+            project.status = 'payment_processing'  # Changed from 'in_progress'
             project.assigned_developer = request.user.profile
             project.save()
             

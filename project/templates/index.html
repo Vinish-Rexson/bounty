@@ -185,7 +185,7 @@
                 {% if user.is_authenticated %}
                     <a href="#" class="contact-btn">{{ user.username }}</a>
                 {% else %}
-                    <a href="#" class="contact-btn">Login Now</a>
+                    <a href="{% url 'login' %}" class="contact-btn">Login Now</a>
                 {% endif %}
               
             </div>

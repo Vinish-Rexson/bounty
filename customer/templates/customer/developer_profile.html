@@ -4,12 +4,12 @@
 
 {% block extra_styles %}
     .profile-container {
-        max-width: 800px;
-        margin: 2rem auto;
+        max-width: 1000px;
+        margin: 3rem auto;
         background: var(--card-background);
-        padding: 2rem;
-        border-radius: 0.5rem;
-        box-shadow: var(--shadow);
+        padding: 3rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
 
     .profile-header {
@@ -22,11 +22,16 @@
     }
 
     .profile-picture {
-        width: 120px;
-        height: 120px;
+        width: 150px;
+        height: 150px;
         border-radius: 50%;
         object-fit: cover;
         border: 4px solid var(--primary-color);
+        transition: transform 0.3s ease;
+    }
+
+    .profile-picture:hover {
+        transform: scale(1.05);
     }
 
     .profile-info {
@@ -54,9 +59,15 @@
 
     .stat-item {
         background: var(--background-color);
-        padding: 1rem;
-        border-radius: 0.5rem;
+        padding: 1.5rem;
+        border-radius: 1rem;
         text-align: center;
+        border: 1px solid var(--border-color);
+        transition: transform 0.2s ease;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-2px);
     }
 
     .stat-item strong {
@@ -85,12 +96,18 @@
     }
 
     .skill-tag {
-        background: var(--background-color);
-        color: var(--text-primary);
-        padding: 0.5rem 1rem;
+        background: var(--primary-color);
+        color: white;
+        padding: 0.75rem 1.25rem;
         border-radius: 9999px;
-        font-size: 0.875rem;
-        font-weight: 500;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .skill-tag:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
     .profile-links {
@@ -111,17 +128,18 @@
     }
 
     .request-button {
+        background: linear-gradient(45deg, var(--primary-color), var(--primary-hover));
+        padding: 1.25rem;
+        border-radius: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         margin-top: 2rem;
         width: 100%;
-        padding: 1rem;
-        background-color: var(--primary-color);
         color: white;
         border: none;
-        border-radius: 0.5rem;
-        font-size: 1rem;
-        font-weight: 500;
         cursor: pointer;
-        transition: background-color 0.2s;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -130,7 +148,8 @@
     }
 
     .request-button:hover {
-        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
 
     @media (max-width: 640px) {
@@ -147,6 +166,11 @@
 
         .profile-stats {
             grid-template-columns: 1fr;
+        }
+
+        .profile-picture, .profile-initial {
+            width: 120px;
+            height: 120px;
         }
     }
 
@@ -207,9 +231,14 @@
 
     .comment-item {
         background: var(--background-color);
-        padding: 1rem;
-        border-radius: 0.5rem;
+        padding: 1.5rem;
+        border-radius: 1rem;
         border: 1px solid var(--border-color);
+        transition: transform 0.2s ease;
+    }
+
+    .comment-item:hover {
+        transform: translateX(4px);
     }
 
     .comment-header {
@@ -292,15 +321,14 @@
 
     .project-card {
         background: var(--background-color);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 1.25rem;
-        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
     }
 
     .project-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
     .project-card h4 {
@@ -335,11 +363,9 @@
 
     /* Availability Schedule */
     .availability-schedule {
-        background: var(--background-color);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 1.25rem;
-        margin-top: 1rem;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        background: linear-gradient(to right, var(--background-color), var(--card-background));
     }
 
     .schedule-item {
@@ -356,8 +382,8 @@
 
     /* Profile Initial Avatar */
     .profile-initial {
-        width: 120px;
-        height: 120px;
+        width: 150px;
+        height: 150px;
         border-radius: 50%;
         background: var(--primary-color);
         color: white;
@@ -367,6 +393,11 @@
         font-size: 3rem;
         font-weight: bold;
         border: 4px solid var(--primary-color);
+        transition: transform 0.3s ease;
+    }
+
+    .profile-initial:hover {
+        transform: scale(1.05);
     }
 {% endblock %}
 
@@ -503,7 +534,7 @@
             </div>
 
             <!-- Meeting Request Modal -->
-            <div id="meetingModal" class="modal">
+            <div id="meetingModal" class="modal" style="display: none;">
                 <div class="modal-content">
                     <span class="close">&times;</span>
                     <h3>Request Meeting with {{ developer.display_name }}</h3>

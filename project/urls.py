@@ -27,7 +27,7 @@ from chat.routing import websocket_urlpatterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(pattern_name='dev:dashboard')),
+    path('', views.home, name='home'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('signup/dev/', views.dev_signup, name='dev_signup'),
@@ -39,6 +39,7 @@ urlpatterns = [
     path('chat/', include('chat.urls', namespace='chat')),
     path('auth-redirect/', views.auth_redirect, name='auth_redirect'),
     path('general_login/', views.general_login, name='general_login'),
+    path('home/', views.home, name='home'),
 ]
 
 if settings.DEBUG:

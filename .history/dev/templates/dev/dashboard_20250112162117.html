@@ -1,0 +1,934 @@
+{% extends 'dev/base.html' %}
+{% load static %}
+
+{% block title %}Developer Dashboard{% endblock %}
+
+{% block extra_styles %}
+:root {
+    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --sidebar-width: 340px;
+    --header-height: 70px;
+    --card-border-radius: 12px;
+    --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Import all styles from customer dashboard */
+{{ customer_dashboard_styles }}
+
+/* Additional/Override styles for developer dashboard */
+.verification-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.verification-badge.verified {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+}
+
+.verification-badge.unverified {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.meeting-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.meeting-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(99, 102, 241, 0.12);
+}
+
+.meeting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.meeting-header-left {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.company-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.meeting-info h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.timestamp {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.meeting-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin: 0.5rem 0;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.detail-item i {
+    color: #6366f1;
+}
+
+.meeting-message {
+    position: relative;
+    color: #64748b;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    padding: 1rem 1.25rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 3px solid #6366f1;
+}
+
+.meeting-message i {
+    position: absolute;
+    left: -12px;
+    top: -12px;
+    background: #6366f1;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 50%;
+    font-size: 0.75rem;
+}
+
+.meeting-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: auto;
+}
+
+.comment-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.comment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(99, 102, 241, 0.12);
+}
+
+.comment-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.author-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.author-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.comment-date {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.comment-content {
+    color: #1e293b;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* Grid layouts for different sections */
+.meetings-grid,
+.comments-grid,
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+/* Section headers */
+.section-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: linear-gradient(to right, rgba(99, 102, 241, 0.05), transparent);
+}
+
+.section-header h2 {
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] .meeting-card,
+[data-theme="dark"] .comment-card {
+    background: var(--dark-card);
+    border-color: var(--dark-border);
+}
+
+[data-theme="dark"] .meeting-message,
+[data-theme="dark"] .comment-content {
+    color: var(--dark-text);
+}
+
+[data-theme="dark"] .comment-date {
+    color: var(--dark-text-secondary);
+}
+
+/* Dashboard Layout */
+.dashboard-container {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    gap: 1.5rem;
+    height: 100vh;
+    max-height: 100vh;
+    padding: 1rem;
+    background: #f1f5f9;
+}
+
+/* Sidebar Styling */
+.dashboard-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: 90%;
+    padding: 0.875rem;
+    background: white;
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Welcome Section */
+.welcome-section {
+    position: relative;
+    padding: 1.5rem;
+    background: var(--gradient-primary);
+    border-radius: calc(var(--card-border-radius) - 4px);
+    color: white;
+    overflow: hidden;
+}
+
+.welcome-avatar {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1rem;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Stats Cards */
+.dashboard-stats {
+    display: grid;
+    gap: 0.875rem;
+    padding: 0.25rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
+    color: #6366f1;
+    font-size: 1.1rem;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-info h3 {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+}
+
+.value {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* Main Content */
+.main-content {
+    background: white;
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 90%;
+    overflow: hidden;
+}
+
+.content-header {
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Project Cards */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.project-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.project-status {
+    padding: 0.75rem 1rem;
+    background: linear-gradient(to right, rgba(99, 102, 241, 0.1), transparent);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.project-content {
+    padding: 1rem;
+}
+
+.project-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.project-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.625rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+}
+
+.btn-secondary {
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-illustration {
+    font-size: 3.5rem;
+    color: #6366f1;
+    opacity: 0.8;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #64748b;
+    font-size: 0.975rem;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    background: #0f172a;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .dashboard-sidebar,
+[data-theme="dark"] .main-content,
+[data-theme="dark"] .project-card {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .stat-card {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .number {
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .meta-item {
+    background: rgba(30, 41, 59, 0.5);
+    color: #94a3b8;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .dashboard-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-sidebar {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .projects-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .project-meta {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+}
+
+/* Optimized Requests Container */
+.requests-container {
+    height: 80%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    overflow: hidden;
+}
+
+.projects-section,
+.meetings-section {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.section-header {
+    padding: 0.75rem 1rem;
+    flex-shrink: 0;
+}
+
+.meetings-grid,
+.projects-grid {
+    padding: 0.75rem;
+    overflow-y: auto;
+    height: calc(100% - 3rem); /* Adjust based on section header height */
+}
+
+/* Compact Cards */
+.meeting-card,
+.project-card {
+    padding: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Streamlined Comments Section */
+.comments-section {
+    
+    border-top: 1px solid #e2e8f0;
+    overflow: hidden;
+    display: flex;
+    
+}
+
+.comments-section .section-header {
+    padding: 0.5rem 0.75rem;
+}
+
+.comments-grid {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.comment-card {
+    min-width: 300px;
+    max-width: 300px;
+    padding: 0.75rem;
+    margin: 0;
+}
+
+/* Optimize scrollbars */
+.meetings-grid::-webkit-scrollbar,
+.projects-grid::-webkit-scrollbar,
+.comments-grid::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.meetings-grid::-webkit-scrollbar-thumb,
+.projects-grid::-webkit-scrollbar-thumb,
+.comments-grid::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .requests-container {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .comments-section {
+        max-height: 120px;
+    }
+}
+
+@media (max-height: 800px) {
+    .content-header {
+        padding: 0.5rem 1rem;
+    }
+
+    .section-header {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .meeting-card,
+    .project-card {
+        padding: 0.75rem;
+    }
+
+    .comments-section {
+        max-height: 100px;
+    }
+}
+
+.meeting-status {
+    margin-bottom: 1rem;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.pending {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.meeting-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.meeting-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(99, 102, 241, 0.12);
+}
+
+.meeting-message {
+    position: relative;
+    color: #64748b;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    padding: 1rem 1.25rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 3px solid #6366f1;
+}
+
+.meeting-message i {
+    position: absolute;
+    left: -12px;
+    top: -12px;
+    background: #6366f1;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 50%;
+    font-size: 0.75rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.action-buttons button {
+    flex: 1;
+}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Left Sidebar -->
+    <aside class="dashboard-sidebar">
+        <!-- Welcome Card -->
+        <div class="welcome-section">
+            <div class="welcome-avatar">
+                {% if user.profile.profile_picture %}
+                    <img src="{{ user.profile.profile_picture.url }}" alt="Profile">
+                {% else %}
+                    <div class="avatar-placeholder">{{ user.first_name|first }}</div>
+                {% endif %}
+            </div>
+            <h1>Welcome back, {{ user.first_name }}!</h1>
+            <p>Manage your projects and connect with customers.</p>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Availability</h3>
+                    <div class="value">
+                        <span class="status">{{ user.profile.availability_status|default:"Not set" }}</span>
+                    </div>
+                    <div class="stat-subtitle">{{ user.profile.available_from|time:"H:i" }} - {{ user.profile.available_to|time:"H:i" }}</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Hourly Rate</h3>
+                    <div class="value">
+                        <span class="number">${{ user.profile.hourly_rate|default:"0" }}</span>
+                        <span class="trend positive">/hr</span>
+                    </div>
+                    <div class="stat-subtitle">{{ user.profile.title|default:"Not set" }}</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Experience</h3>
+                    <div class="value">
+                        <span class="number">{{ user.profile.years_of_experience|default:"0" }}</span>
+                        <span class="trend">years</span>
+                    </div>
+                    <div class="stat-subtitle">{{ user.profile.timezone|default:"Timezone not set" }}</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Verification Status -->
+        <div class="content-header">
+            <h2>Profile Status</h2>
+            <div class="verification-badge {% if user.profile.is_verified %}verified{% else %}unverified{% endif %}">
+                {% if user.profile.is_verified %}
+                    <i class="fas fa-check-circle"></i> Verified Profile
+                {% else %}
+                    <i class="fas fa-exclamation-circle"></i> Unverified
+                    <a href="{% url 'dev:profile' %}" class="btn btn-primary">Complete Profile</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Requests Container -->
+        <div class="requests-container">
+            <!-- Project Requests Section -->
+            <div class="projects-section">
+                <div class="section-header">
+                    <h2>Project Requests</h2>
+                </div>
+                <div class="projects-grid">
+                    {% for request in customer_requests %}
+                        <div class="project-card">
+                            <div class="project-status status-pending">
+                                <span class="status-indicator"></span>
+                                Customer Request
+                            </div>
+                            
+                            <div class="project-content">
+                                <h3 class="project-title">{{ request.project.title }}</h3>
+                                <p class="project-description">{{ request.message }}</p>
+                                
+                                <div class="project-meta">
+                                    <div class="meta-item">
+                                        <i class="fas fa-user"></i>
+                                        <span>{{ request.project.customer.user.username }}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-dollar-sign"></i>
+                                        <span>${{ request.project.budget }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="project-actions">
+                                    <form method="post" action="{% url 'dev:handle_customer_request' request.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" name="action" value="accept" class="btn btn-primary">
+                                            <i class="fas fa-check"></i> Accept
+                                        </button>
+                                        <button type="submit" name="action" value="reject" class="btn btn-secondary">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="empty-state">
+                            <div class="empty-illustration">
+                                <i class="fas fa-inbox"></i>
+                            </div>
+                            <h3>No New Requests</h3>
+                            <p>You don't have any new project requests from customers.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Meeting Requests Section -->
+            <div class="meetings-section">
+                <div class="section-header">
+                    <h2>Meeting Requests</h2>
+                </div>
+                <div class="meetings-grid">
+                    {% for request in meeting_requests %}
+                        <div class="meeting-card">
+                            <div class="meeting-status">
+                                <span class="status-badge pending">
+                                    <i class="fas fa-clock"></i> Pending Request
+                                </span>
+                            </div>
+
+                            <div class="meeting-header">
+                                <div class="meeting-header-left">
+                                    <div class="company-avatar">
+                                        
+                                    </div>
+                                    <div class="meeting-info">
+                                        <h4></h4>
+                                        <span class="timestamp">Requested {{ request.created_at|timesince }} ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="meeting-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-user"></i>
+                                    <span>{{ request.customer.user.get_full_name }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>{{ request.preferred_time|date:"g:i A" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>{{ request.preferred_date|date:"M j, Y" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-globe"></i>
+                                    <span>{{ request.customer.timezone|default:"UTC" }}</span>
+                                </div>
+                            </div>
+
+                            {% if request.message %}
+                                <div class="meeting-message">
+                                    <i class="fas fa-comment-alt"></i>
+                                    {{ request.message }}
+                                </div>
+                            {% endif %}
+
+                            <div class="meeting-actions">
+                                <form method="post" action="{% url 'dev:handle_meeting' request.id %}" class="action-buttons">
+                                    {% csrf_token %}
+                                    <button type="submit" name="action" value="accept" class="btn btn-primary">
+                                        <i class="fas fa-check"></i> Accept Meeting
+                                    </button>
+                                    <button type="submit" name="action" value="reject" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Decline
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="empty-state">
+                            <div class="empty-illustration">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <h3>No Meeting Requests</h3>
+                            <p>You don't have any pending meeting requests.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<button onclick="toggleTheme()" class="theme-toggle">
+    <i class="fas fa-moon"></i>
+</button>
+{% endblock %}
