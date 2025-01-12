@@ -1,0 +1,1156 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="chat-layout">
+    <!-- Left Side - Project Info -->
+    <div class="project-sidebar">
+        {% if project %}
+        <div class="project-info-banner">
+            <div class="project-info-header">
+                <div class="project-title-status">
+                    <h3>{{ project.title }}</h3>
+                    <span class="status-badge status-{{ project.status|lower }}">
+                        {{ project.get_status_display }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Add the project actions here, right after the header -->
+            {% if project.status == 'in_progress' %}
+                {% if project_status_request %}
+                    <!-- Show pending request -->
+                    <div class="status-request-pending">
+                        <p>Status change request pending: {{ project_status_request.get_requested_status_display }}</p>
+                        {% if can_approve_request %}
+                            <button onclick="approveStatusRequest({{ project_status_request.id }})" class="btn btn-success">
+                                Approve Request
+                            </button>
+                            <button onclick="rejectStatusRequest({{ project_status_request.id }})" class="btn btn-danger">
+                                Reject Request
+                            </button>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <!-- Show request buttons based on user type -->
+                    <div class="status-request-actions">
+                        {% if is_developer %}
+                            <button onclick="requestProjectStatus('completed')" class="btn btn-primary">
+                                Mark as Completed
+                            </button>
+                        {% endif %}
+                        {% if is_customer %}
+                            <button onclick="requestProjectStatus('completed')" class="btn btn-primary">
+                                Request Completion
+                            </button>
+                            <button onclick="requestProjectStatus('cancelled')" class="btn btn-danger">
+                                Request Cancellation
+                            </button>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endif %}
+
+            <!-- Rest of your project info -->
+            <div class="project-details-grid">
+                <div class="detail-item">
+                    <strong><i class="fas fa-user"></i> Client</strong>
+                    <span>{{ project.customer.user.first_name }} {{ project.customer.user.last_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <strong><i class="fas fa-dollar-sign"></i> Budget</strong>
+                    <span>${{ project.budget }}</span>
+                </div>
+                <div class="detail-item">
+                    <strong><i class="fas fa-calendar"></i> Duration</strong>
+                    <span>{{ project.duration }} days</span>
+                </div>
+                <div class="detail-item">
+                    <strong><i class="fas fa-clock"></i> Created</strong>
+                    <span>{{ project.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+
+            <div class="project-description">
+                <strong><i class="fas fa-info-circle"></i> Description</strong>
+                <p>{{ project.description }}</p>
+            </div>
+
+            {% if project.required_skills.all %}
+            <div class="project-skills">
+                <strong><i class="fas fa-code"></i> Required Skills</strong>
+                <div class="skills-list">
+                    {% for skill in project.required_skills.all %}
+                        <span class="skill-tag">{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if project.github_url %}
+            <div class="project-links">
+                <a href="{{ project.github_url }}" target="_blank" class="link-btn">
+                    <i class="fab fa-github"></i> View Code
+                </a>
+            </div>
+            {% endif %}
+
+            {% if active_meeting %}
+            <div class="meeting-info">
+                <h4><i class="fas fa-video"></i> Active Meeting</h4>
+                <div class="meeting-stats">
+                    <!-- Basic Stats -->
+                    <div class="stat-item">
+                        <strong>Duration</strong>
+                        <span id="meeting-duration">0:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>Participants</strong>
+                        <span id="participant-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>Screen Shares</strong>
+                        <span id="screen-share-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>Started At</strong>
+                        <span>{{ active_meeting.created_at|date:"g:i A" }}</span>
+                    </div>
+
+                    <!-- Device Usage Stats -->
+                    <div class="stat-item">
+                        <strong>Mic Toggles</strong>
+                        <span id="mic-toggle-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>Camera Toggles</strong>
+                        <span id="camera-toggle-count">0</span>
+                    </div>
+
+                    <!-- Connection Stats -->
+                    <div class="stat-item">
+                        <strong>Network Quality</strong>
+                        <span id="network-quality">Good</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>Connection Status</strong>
+                        <span id="connection-status">Connected</span>
+                    </div>
+                </div>
+
+                <!-- Participant Details -->
+                <div class="participant-details">
+                    <strong>Active Participants</strong>
+                    <div id="active-participants-list" class="participants-list">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <a href="{% url 'dev:join_meeting' active_meeting.id %}" class="join-meeting-btn" target="_blank">
+                    Join Meeting
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Side - Chat -->
+    <div class="chat-container">
+        <div id="chat-messages" class="messages-container">
+            {% for message in messages %}
+                <div class="message {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                    <span class="sender">{{ message.sender.username }}</span>
+                    <p>{{ message.content }}</p>
+                    <span class="timestamp">{{ message.timestamp|date:"g:i A" }}</span>
+                </div>
+            {% endfor %}
+            
+            {% if active_meeting %}
+                <div class="meeting-alert" id="active-meeting-alert">
+                    <p>Active meeting in progress!</p>
+                    <a href="{% url 'dev:join_meeting' active_meeting.id %}" class="join-meeting-btn" target="_blank">
+                        Join Meeting
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="chat-message-input" placeholder="Type your message...">
+            <button id="chat-message-submit">
+                <i class="fas fa-paper-plane"></i>
+                Send
+            </button>
+            {% if request.user.customerprofile %}
+            <button id="meeting-request-btn" class="meeting-btn">
+                <i class="fas fa-video"></i>
+                Request Meeting
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    const roomName = {{ room.id }};
+    const senderId = {{ request.user.id }};
+
+    function connectWebSocket() {
+        const wsScheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const chatSocket = new WebSocket(
+            `${wsScheme}${window.location.host}/ws/chat/${roomName}/`
+        );
+
+        chatSocket.onopen = function(e) {
+            console.log('WebSocket Connected Successfully');
+        };
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const messagesList = document.querySelector('#chat-messages');
+            
+            if (data.type === 'chat_message') {
+                // Create message element
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(data.sender_id === senderId ? 'sent' : 'received');
+                
+                const messageContent = document.createElement('div');
+                messageContent.classList.add('message-content');
+                
+                messageContent.innerHTML = `
+                    <p>${data.message}</p>
+                    <small>${new Date().toLocaleTimeString()}</small>
+                `;
+                
+                messageDiv.appendChild(messageContent);
+                messagesList.appendChild(messageDiv);
+                messagesList.scrollTop = messagesList.scrollHeight;
+            } else if (data.type === 'meeting_request') {
+                // Create meeting request message
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('meeting-request-message');
+                
+                messageDiv.innerHTML = `
+                    <div class="meeting-content">
+                        <p><strong>Meeting Request</strong></p>
+                        <p>A meeting has been requested by ${data.sender_id === senderId ? 'you' : 'the other participant'}.</p>
+                        ${data.sender_id !== senderId ? `
+                        <div class="meeting-actions">
+                            <button class="btn btn-success" onclick="handleMeeting('accept', ${data.meeting_id})">
+                                <i class="fas fa-check"></i> Accept
+                            </button>
+                            <button class="btn btn-danger" onclick="handleMeeting('reject', ${data.meeting_id})">
+                                <i class="fas fa-times"></i> Decline
+                            </button>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                messagesList.appendChild(messageDiv);
+                messagesList.scrollTop = messagesList.scrollHeight;
+            } else if (data.type === 'meeting_accepted') {
+                // Store meeting data
+                localStorage.setItem('activeMeeting', JSON.stringify({
+                    url: data.join_url,
+                    timestamp: new Date().getTime()
+                }));
+                
+                // Create meeting accepted message
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('system-message');
+                messageDiv.innerHTML = `
+                    <div class="meeting-accepted">
+                        <p>Meeting request accepted!</p>
+                        <a href="${data.join_url}" class="join-meeting-btn" target="_blank">Join Meeting</a>
+                    </div>
+                `;
+                messagesList.appendChild(messageDiv);
+                messagesList.scrollTop = messagesList.scrollHeight;
+            } else if (data.type === 'meeting_declined') {
+                // Create meeting declined message
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('system-message');
+                messageDiv.innerHTML = `
+                    <div class="meeting-declined">
+                        <p>Meeting request was declined.</p>
+                    </div>
+                `;
+                messagesList.appendChild(messageDiv);
+                messagesList.scrollTop = messagesList.scrollHeight;
+            } else if (data.type === 'meeting_stats') {
+                // Update duration
+                const minutes = Math.floor(data.duration / 60);
+                const seconds = data.duration % 60;
+                document.getElementById('meeting-duration').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Update other stats
+                document.getElementById('participant-count').textContent = data.participant_count;
+                document.getElementById('screen-share-count').textContent = data.screen_shares;
+                document.getElementById('mic-toggle-count').textContent = data.mic_toggles;
+                document.getElementById('camera-toggle-count').textContent = data.camera_toggles;
+            }
+        };
+
+        chatSocket.onclose = function(e) {
+            console.log('WebSocket Closed. Attempting to reconnect in 5 seconds...');
+            setTimeout(connectWebSocket, 5000);
+        };
+
+        window.chatSocket = chatSocket;
+    }
+
+    // Initial connection
+    connectWebSocket();
+
+    // Send message when clicking the send button
+    document.querySelector('#chat-message-submit').onclick = function(e) {
+        sendMessage();
+    };
+
+    // Send message when pressing Enter
+    document.querySelector('#chat-message-input').onkeypress = function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    };
+
+    function sendMessage() {
+        const messageInputDom = document.querySelector('#chat-message-input');
+        const message = messageInputDom.value.trim();
+        
+        if (message && window.chatSocket.readyState === WebSocket.OPEN) {
+            window.chatSocket.send(JSON.stringify({
+                'type': 'chat_message',
+                'message': message,
+                'sender_id': senderId
+            }));
+            
+            messageInputDom.value = '';
+        }
+    }
+
+    // Auto-scroll to bottom on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const messagesList = document.querySelector('#chat-messages');
+        messagesList.scrollTop = messagesList.scrollHeight;
+    });
+
+    // Add Meeting Request Handler
+    document.querySelector('#meeting-request-btn')?.addEventListener('click', function() {
+        if (window.chatSocket.readyState === WebSocket.OPEN) {
+            window.chatSocket.send(JSON.stringify({
+                'type': 'meeting_request',
+                'sender_id': senderId
+            }));
+            
+            // Disable button after sending request
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-check"></i> Request Sent';
+        }
+    });
+
+    // Add meeting handling function
+    function handleMeeting(action, meetingId) {
+        if (window.chatSocket.readyState === WebSocket.OPEN) {
+            window.chatSocket.send(JSON.stringify({
+                'type': 'meeting_response',
+                'action': action,
+                'meeting_id': meetingId
+            }));
+        }
+    }
+
+    // Check for active meeting on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const storedMeeting = localStorage.getItem('activeMeeting');
+        if (storedMeeting) {
+            const meetingData = JSON.parse(storedMeeting);
+            const meetingAge = new Date().getTime() - meetingData.timestamp;
+            
+            // Remove meeting if it's older than 2 hours (7200000 ms)
+            if (meetingAge > 7200000) {
+                localStorage.removeItem('activeMeeting');
+            } else if (!document.getElementById('active-meeting-alert')) {
+                // Add meeting alert if it doesn't exist
+                const messagesList = document.querySelector('#chat-messages');
+                const meetingDiv = document.createElement('div');
+                meetingDiv.classList.add('meeting-alert');
+                meetingDiv.id = 'active-meeting-alert';
+                meetingDiv.innerHTML = `
+                    <p>Active meeting in progress!</p>
+                    <a href="${meetingData.url}" class="join-meeting-btn" target="_blank">Join Meeting</a>
+                `;
+                messagesList.appendChild(meetingDiv);
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }
+        }
+    });
+
+    function requestProjectStatus(status) {
+        if (!confirm(`Are you sure you want to mark this project as ${status}?`)) {
+            return;
+        }
+        
+        fetch('{% url "chat:request_project_status" project.id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Request sent successfully');
+                location.reload();
+            } else {
+                alert(data.error);
+            }
+        });
+    }
+
+    function approveStatusRequest(requestId) {
+        fetch('{% url "chat:approve_status_request" project.id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                request_id: requestId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Status request approved');
+                location.reload();
+            } else {
+                alert(data.error);
+            }
+        });
+    }
+
+    function rejectStatusRequest(requestId) {
+        if (!confirm('Are you sure you want to reject this status change request?')) {
+            return;
+        }
+        
+        fetch('{% url "chat:reject_status_request" project.id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                request_id: requestId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Status request rejected');
+                location.reload();
+            } else {
+                alert(data.error);
+            }
+        });
+    }
+
+    let meetingStatsSocket = null;
+
+    function connectMeetingStatsSocket() {
+        if (window.active_meeting_id) {
+            const wsScheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            meetingStatsSocket = new WebSocket(
+                `${wsScheme}${window.location.host}/ws/meeting/${window.active_meeting_id}/`
+            );
+
+            meetingStatsSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                if (data.type === 'meeting_stats') {
+                    updateMeetingStats(data);
+                }
+            };
+
+            meetingStatsSocket.onclose = function() {
+                setTimeout(connectMeetingStatsSocket, 3000);
+            };
+        }
+    }
+
+    function updateMeetingStats(data) {
+        // Update basic stats
+        const duration = Math.floor(data.duration);
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+        
+        document.getElementById('meeting-duration').textContent = 
+            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        document.getElementById('participant-count').textContent = data.participant_count;
+        document.getElementById('screen-share-count').textContent = data.screen_shares;
+        document.getElementById('mic-toggle-count').textContent = data.mic_toggles;
+        document.getElementById('camera-toggle-count').textContent = data.camera_toggles;
+
+        // Update network quality
+        if (data.network_quality) {
+            const quality = data.network_quality.uplink || 'Unknown';
+            document.getElementById('network-quality').textContent = quality;
+        }
+
+        // Update connection status
+        document.getElementById('connection-status').textContent = 
+            data.connection_state || 'Connected';
+
+        // Update participants list
+        if (data.active_participants) {
+            const participantsList = document.getElementById('active-participants-list');
+            participantsList.innerHTML = ''; // Clear existing list
+
+            data.active_participants.forEach(participant => {
+                if (!participant.leaveTime) { // Only show currently active participants
+                    const participantEl = document.createElement('div');
+                    participantEl.className = 'participant-item';
+                    participantEl.innerHTML = `
+                        <span class="name">${participant.userName}</span>
+                        <div class="status">
+                            <span class="status-icon ${data.micStatus[participant.userID] ? 'mic' : 'mic off'}"></span>
+                            <span class="status-icon ${data.cameraStatus[participant.userID] ? 'camera' : 'camera off'}"></span>
+                        </div>
+                    `;
+                    participantsList.appendChild(participantEl);
+                }
+            });
+        }
+    }
+
+    // Initialize if there's an active meeting
+    if (document.querySelector('.meeting-info')) {
+        window.active_meeting_id = '{{ active_meeting.id }}';
+        connectMeetingStatsSocket();
+    }
+</script>
+
+<style>
+/* Modern Chat Layout */
+.chat-layout {
+    display: grid;
+    grid-template-columns: 30% 70%;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f0f2f5;
+    height: calc(100vh - 5rem);
+    margin: 0.5rem auto;
+    max-width: 98%;
+    width: calc(100% - 2rem);
+}
+
+/* Refined Project Sidebar */
+.project-sidebar {
+    background: #ffffff;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+    border-radius: 14px;
+    overflow-y: auto;
+    height: 100%;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 5rem);
+    margin: 0;
+    width: 100%;
+}
+
+.project-info-banner {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.project-title-status {
+    margin-bottom: 0.5rem;
+}
+
+.project-title-status h3 {
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* Symmetrical Project Details */
+.project-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+}
+
+.detail-item {
+    background: #f8fafc;
+    padding: 0.75rem 0.875rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s ease;
+}
+
+.detail-item:hover {
+    transform: translateY(-2px);
+}
+
+.detail-item strong {
+    display: block;
+    color: #94a3b8;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-item span {
+    color: #1e293b;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* Enhanced Chat Container */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+    border: none;
+    height: 100%;
+    max-height: calc(100vh - 5rem);
+    margin: 0;
+    margin-right: 0.5rem;
+    width: calc(100% - 0.5rem);
+}
+
+/* Refined Messages */
+.messages-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1.25rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    background: #ffffff;
+    height: calc(100% - 3.5rem);
+    width: 100%;
+}
+
+.message {
+    max-width: 80%;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03);
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.message.sent {
+    align-self: flex-end;
+    background: #0062ff;
+    color: white;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 98, 255, 0.15);
+}
+
+.message.received {
+    align-self: flex-start;
+    background: #f1f5f9;
+    color: #1e293b;
+    border-bottom-left-radius: 4px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.message .sender {
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+    opacity: 0.8;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.message .timestamp {
+    font-size: 0.688rem;
+    opacity: 0.7;
+    margin-top: 0.5rem;
+    display: block;
+    letter-spacing: 0.02em;
+}
+
+/* Modernized Chat Input */
+.chat-input {
+    padding: 0.75rem 1.75rem;
+    background: #f8fafc;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+#chat-message-input {
+    flex-grow: 1;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+#chat-message-input:focus {
+    outline: none;
+    border-color: #0062ff;
+    box-shadow: 0 0 0 3px rgba(0, 98, 255, 0.1);
+}
+
+#chat-message-submit, 
+#meeting-request-btn {
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    font-size: 0.875rem;
+    letter-spacing: 0.02em;
+    transition: all 0.3s ease;
+}
+
+#chat-message-submit:hover, 
+#meeting-request-btn:hover {
+    background: #0051d6;
+    transform: translateY(-1px);
+}
+
+/* Refined Meeting Elements */
+.meeting-alert {
+    background: #fff8f1;
+    border: 1px solid #ffead7;
+    padding: 1rem;
+    border-radius: 14px;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.join-meeting-btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 10px rgba(234, 88, 12, 0.2);
+}
+
+.join-meeting-btn:hover {
+    background: #e65000;
+}
+
+/* Skills Section Enhancement */
+.project-skills {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f0f2f5;
+}
+
+.project-skills strong {
+    font-size: 0.875rem;
+}
+
+.skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.skill-tag {
+    background: #f0f2f5;
+    padding: 0.25rem 0.625rem;
+    border-radius: 20px;
+    font-size: 0.813rem;
+    color: #334155;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.skill-tag:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+/* Custom Scrollbar */
+.messages-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ... keep existing responsive styles ... */
+
+/* Status Badge Colors */
+.status-badge.status-open {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.status-in-progress {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.status-badge.status-completed {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.status-badge.status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Project Description */
+.project-description {
+    position: relative;
+    min-height: min-content; /* Allow shrinking based on content */
+    max-height: fit-content; /* Expand only as needed */
+    margin: 0.75rem 0;
+    flex: 0 1 auto; /* Don't force flex grow, allow shrinking */
+}
+
+.project-description strong {
+    display: block;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.project-description p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    overflow-y: auto;
+    max-height: 150px; /* Maximum height before scrolling */
+    padding-right: 0.5rem; /* Space for scrollbar */
+}
+
+/* Project Links */
+.project-links {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f0f2f5;
+}
+
+.link-btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+}
+
+/* Remove the fade effect if it's causing issues */
+.project-description::after {
+    display: none;
+}
+
+/* Custom Scrollbar for Description */
+.project-description p::-webkit-scrollbar {
+    width: 4px;
+}
+
+.project-description p::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.project-description p::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+}
+
+.project-description p::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Send Button Styling */
+#chat-message-submit {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: #0062ff;
+    color: white;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+#chat-message-submit i {
+    font-size: 0.875rem;
+}
+
+#chat-message-submit:hover {
+    background: #0051d6;
+    transform: translateY(-1px);
+}
+
+/* Layout Adjustments */
+.chat-layout {
+    grid-template-columns: 30% 70%;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f0f2f5;
+    height: calc(100vh - 5rem);
+    margin: 0.5rem auto;
+    max-width: 98%;
+    width: calc(100% - 2rem);
+}
+
+/* Chat Container */
+.chat-container {
+    margin-right: 0.5rem;
+    width: calc(100% - 0.5rem);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Messages Container */
+.messages-container {
+    width: 100%;
+    padding: 1.25rem 1.75rem;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Message Alignment */
+.message {
+    max-width: 80%;
+    margin-right: 1.75rem; /* Ensure messages don't overflow */
+}
+
+/* Chat Input Area */
+.chat-input {
+    width: calc(100% - 3.5rem); /* Account for padding */
+    margin: 0 auto;
+    padding: 0.75rem 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+#chat-message-input {
+    width: 100%;
+}
+
+/* Add this where you want the buttons to appear */
+{% if project and project.status == 'in_progress' %}
+    <div class="project-actions">
+        {% if request.user.customerprofile %}
+            <!-- Only customer can see these buttons -->
+            <div class="status-buttons">
+                <button class="btn-status complete" onclick="requestProjectStatus('completed')">
+                    <i class="fas fa-check-circle"></i> Mark as Completed
+                </button>
+                <button class="btn-status cancel" onclick="requestProjectStatus('cancelled')">
+                    <i class="fas fa-times-circle"></i> Cancel Project
+                </button>
+            </div>
+        {% endif %}
+        
+        {% if request.user.profile and project_status_request and request.user == project.assigned_developer.user %}
+            <!-- Only the assigned developer can see these buttons -->
+            <div class="status-request-alert">
+                <p>
+                    <i class="fas fa-bell"></i>
+                    Status Change Request: {{ project_status_request.requested_by.username }} wants to mark this project as 
+                    <strong>{{ project_status_request.requested_status }}</strong>
+                </p>
+                <div class="status-request-actions">
+                    <button class="btn-approve" onclick="approveStatusRequest({{ project_status_request.id }})">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button class="btn-reject" onclick="rejectStatusRequest({{ project_status_request.id }})">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if request.user.customerprofile and project_status_request %}
+            <!-- Show pending status to customer -->
+            <div class="status-request-pending">
+                <p>
+                    <i class="fas fa-clock"></i>
+                    Waiting for developer to approve your request to mark this project as 
+                    <strong>{{ project_status_request.requested_status }}</strong>
+                </p>
+            </div>
+        {% endif %}
+    </div>
+{% endif %}
+
+.status-request-pending {
+    background: #f0f9ff;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #bae6fd;
+    margin-top: 1rem;
+}
+
+.status-request-pending p {
+    color: #0369a1;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.status-request-pending i {
+    font-size: 1.1rem;
+}
+
+/* Add these styles */
+.meeting-info {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.meeting-info h4 {
+    font-size: 1rem;
+    color: #0f172a;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.meeting-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-item strong {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.stat-item span {
+    font-size: 0.875rem;
+    color: #0f172a;
+    font-weight: 500;
+}
+
+.participant-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.participant-details strong {
+    font-size: 0.875rem;
+    color: #64748b;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.participants-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.participant-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: #f1f5f9;
+    border-radius: 8px;
+    font-size: 0.875rem;
+}
+
+.participant-item .name {
+    color: #0f172a;
+    font-weight: 500;
+}
+
+.participant-item .status {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.participant-item .status i {
+    font-size: 0.75rem;
+}
+
+.status-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.25rem;
+}
+
+.status-icon.mic {
+    background-color: #22c55e;
+}
+
+.status-icon.camera {
+    background-color: #3b82f6;
+}
+
+.status-icon.off {
+    background-color: #94a3b8;
+}
+</style>
+
+<!-- Add this temporarily for debugging -->
+<div style="display: none;">
+    Project: {{ project }}<br>
+    Status: {{ project.status }}<br>
+    Is Customer: {{ request.user.customerprofile }}<br>
+    Is Developer: {{ request.user.profile }}<br>
+</div>
+{% endblock %}
