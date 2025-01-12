@@ -183,11 +183,18 @@
                 </div>
                 <a href="#">Book Now</a>
                 {% if user.is_authenticated %}
-                    <a href="#" class="contact-btn">{{ user.username }}</a>
+                    {% if user.groups.all|length > 1 %}
+                        <a href="{% url 'choose_role' %}" class="contact-btn">{{ user.username }}</a>
+                    {% else %}
+                        {% if user.groups.all.0.name == 'Developer' %}
+                            <a href="{% url 'dev:dashboard' %}" class="contact-btn">{{ user.username }}</a>
+                        {% else %}
+                            <a href="{% url 'customer:dashboard' %}" class="contact-btn">{{ user.username }}</a>
+                        {% endif %}
+                    {% endif %}
                 {% else %}
                     <a href="{% url 'login' %}" class="contact-btn">Login Now</a>
                 {% endif %}
-              
             </div>
         </div>
     </nav>
