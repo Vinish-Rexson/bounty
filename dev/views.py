@@ -130,8 +130,6 @@ def profile(request):
         'projects': projects
     })
 
-def home(request):
-    return render(request, 'dev/index.html')
 
 @developer_required
 @login_required
