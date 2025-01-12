@@ -205,7 +205,7 @@ XS_SHARING_ALLOWED_METHODS = ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE']
 
 # If you need to allow specific external domains to be loaded in iframes, use:
 CSRF_TRUSTED_ORIGINS = [
-    'https://your-app-name.onrender.com',  # Replace with your Render domain
+    'https://devop-roz8.onrender.com',  # Replace with your Render domain
     'https://github.com',
 ]
 
