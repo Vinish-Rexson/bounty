@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
-# Upgrade pip
-python -m pip install --upgrade pip
+set -o errexit  # exit on error
 
-# Install requirements
+# Upgrade pip
+pip install --upgrade pip
+
+# Install Python dependencies
 pip install -r requirements.txt
 
-# Run Django commands
+# Collect static files
 python manage.py collectstatic --noinput
+
+# Run database migrations
 python manage.py migrate

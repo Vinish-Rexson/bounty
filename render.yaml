@@ -2,7 +2,7 @@ services:
   - type: web
     name: my-dapp
     env: python
-    buildCommand: ./build.sh
+    buildCommand: chmod +x build.sh && ./build.sh
     startCommand: daphne project.asgi:application -b 0.0.0.0 -p $PORT
     envVars:
       - key: PYTHON_VERSION
@@ -20,6 +20,8 @@ services:
           name: my-dapp-redis
           type: redis
           property: connectionString
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
 
   - type: redis
     name: my-dapp-redis
