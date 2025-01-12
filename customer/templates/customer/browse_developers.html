@@ -99,6 +99,39 @@
             grid-template-columns: 1fr;
         }
     }
+
+    .availability-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-top: 1rem;
+    }
+
+    .availability-indicator.available {
+        background-color: rgba(16, 185, 129, 0.1);  /* Light green background */
+        color: #10B981;  /* Green text */
+    }
+
+    .availability-indicator.unavailable {
+        background-color: rgba(239, 68, 68, 0.1);  /* Light red background */
+        color: #EF4444;  /* Red text */
+    }
+
+    .availability-indicator i {
+        font-size: 0.75rem;
+    }
+
+    .availability-indicator.available i {
+        color: #10B981;  /* Green dot */
+    }
+
+    .availability-indicator.unavailable i {
+        color: #EF4444;  /* Red dot */
+    }
 {% endblock %}
 
 {% block content %}
