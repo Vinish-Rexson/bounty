@@ -1,0 +1,407 @@
+{% extends 'customer/base.html' %}
+
+{% block title %}Browse Developers{% endblock %}
+
+{% block extra_styles %}
+/* Container */
+.developers-list {
+    padding: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Header Section */
+.developers-list h2 {
+    color: #1e293b;
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Project Context Card */
+.project-context {
+    background: #ffffff;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.project-context p {
+    color: #64748b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.project-context strong {
+    color: #1e293b;
+}
+
+/* Developer Grid */
+.developer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Developer Card */
+.developer-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.developer-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Developer Info Section */
+.developer-info {
+    padding: 1.75rem;
+    position: relative;
+    background: linear-gradient(to bottom, #ffffff, #f8fafc);
+}
+
+/* Developer Header */
+.developer-info h3 {
+    color: #1e293b;
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    letter-spacing: -0.02em;
+}
+
+/* Developer Stats */
+.developer-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.developer-info p {
+    color: #64748b;
+    margin: 0;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.developer-info i {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.developer-info strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* Availability Badge */
+.availability-indicator {
+    position: absolute;
+    top: 1.75rem;
+    right: 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.availability-indicator.available {
+    background: linear-gradient(135deg, #dcfce7, #f0fdf4);
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+
+.availability-indicator.unavailable {
+    background: linear-gradient(135deg, #fee2e2, #fef2f2);
+    color: #ef4444;
+    border: 1px solid #fecaca;
+}
+
+.availability-indicator i {
+    font-size: 0.75rem;
+    width: auto !important;
+    background: none !important;
+    color: currentColor !important;
+}
+
+/* Request Action Section */
+.request-action {
+    padding: 1.5rem;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Request Message Textarea */
+.request-message {
+    width: 100%;
+    min-height: 100px;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    resize: vertical;
+    background: #f8fafc;
+    color: #1e293b;
+    transition: all 0.2s ease;
+}
+
+.request-message:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    background: #ffffff;
+}
+
+/* Action Button */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transition: 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn i {
+    font-size: 1rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.empty-state p {
+    color: #64748b;
+    font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .developers-list {
+        padding: 1rem;
+    }
+
+    .developer-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .developer-card {
+        margin-bottom: 1rem;
+    }
+
+    .developer-info h3 {
+        font-size: 1.125rem;
+    }
+
+    .developer-info p {
+        font-size: 0.875rem;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px);
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0);
+    }
+}
+
+.developer-card {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+{% endblock %}
+
+{% block content %}
+    <div class="developers-list">
+       
+        {% if project %}
+            <div class="project-context">
+                <p>Requesting developers for: <strong>{{ project.title }}</strong></p>
+            </div>
+        {% endif %}
+
+        <!-- Add Filter Section -->
+        <div class="status-filters">
+            <button class="filter-btn active" data-filter="all">
+                <i class="fas fa-list"></i>
+                All Developers
+            </button>
+            <button class="filter-btn" data-filter="available">
+                <i class="fas fa-circle" style="color: #16a34a;"></i>
+                Available
+            </button>
+            <button class="filter-btn" data-filter="unavailable">
+                <i class="fas fa-circle" style="color: #ef4444;"></i>
+                Unavailable
+            </button>
+        </div>
+
+        <div class="developer-grid">
+            {% for developer in developers %}
+                <div class="developer-card" data-availability="{% if developer.is_currently_available %}available{% else %}unavailable{% endif %}">
+                    <div class="developer-info">
+                        <h3>{{ developer.display_name }}</h3>
+                        <p>
+                            <i class="fas fa-briefcase"></i>
+                            <strong>Title:</strong> {{ developer.title }}
+                        </p>
+                        <p>
+                            <i class="fas fa-clock"></i>
+                            <strong>Experience:</strong> {{ developer.years_of_experience }} years
+                        </p>
+                        <p>
+                            <i class="fas fa-star" style="color: #f59e0b;"></i>
+                            <strong>Rating:</strong> {{ developer.rating }}/5
+                        </p>
+                        <p>
+                            <i class="fas fa-dollar-sign"></i>
+                            <strong>Hourly Rate:</strong> ${{ developer.hourly_rate }}/hr
+                        </p>
+                        <div class="availability-indicator {% if developer.is_currently_available %}available{% else %}unavailable{% endif %}">
+                            <i class="fas fa-circle"></i>
+                            {% if developer.is_currently_available %}Available{% else %}Unavailable{% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if project %}
+                        <div class="request-action">
+                            <form method="post" action="{% url 'customer:request_developer_with_project' developer.id project.id %}">
+                                {% csrf_token %}
+                                <textarea 
+                                    name="message" 
+                                    class="request-message"
+                                    placeholder="Add a message to your request... Explain what you're looking for and why you'd like to work with this developer."
+                                    required
+                                ></textarea>
+                                <button type="submit" class="btn">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Request Developer
+                                </button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="request-action">
+                            <a href="{% url 'customer:developer_profile' developer.id %}" class="btn">
+                                <i class="fas fa-user"></i>
+                                View Profile
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div class="empty-state">
+                    <p>No developers available at the moment.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Add this JavaScript at the bottom of your template -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const developerCards = document.querySelectorAll('.developer-card');
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to clicked button
+                    button.classList.add('active');
+
+                    const filterValue = button.getAttribute('data-filter');
+
+                    developerCards.forEach(card => {
+                        if (filterValue === 'all') {
+                            card.style.display = 'block';
+                        } else {
+                            const availability = card.getAttribute('data-availability');
+                            card.style.display = availability === filterValue ? 'block' : 'none';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+{% endblock %} 
