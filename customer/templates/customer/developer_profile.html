@@ -149,6 +149,225 @@
             grid-template-columns: 1fr;
         }
     }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .status-available {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .status-unavailable {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .availability-status strong {
+        display: inline-block !important;
+    }
+
+    .comment-form {
+        margin-bottom: 2rem;
+    }
+
+    .comment-form textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        background: var(--background-color);
+        color: var(--text-primary);
+    }
+
+    .comment-form button {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .comment-form button:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .comment-item {
+        background: var(--background-color);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .comment-date {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .comment-content {
+        color: var(--text-primary);
+        line-height: 1.5;
+    }
+
+    .no-comments {
+        color: var(--text-secondary);
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .comment-author {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .comment-author-picture {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .comment-author-initial {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .comment-author-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .comment-author-info strong {
+        color: var(--text-primary);
+        font-size: 1rem;
+        line-height: 1.2;
+    }
+
+    .comment-date {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .comment-content {
+        margin-left: 52px; /* 40px (image width) + 12px (gap) */
+        padding-top: 0.5rem;
+    }
+
+    /* Projects Grid */
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .project-card {
+        background: var(--background-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.25rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .project-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .project-card h4 {
+        margin: 0 0 0.5rem 0;
+        color: var(--text-primary);
+    }
+
+    .project-client {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+
+    .project-links {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .project-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary-color);
+        text-decoration: none;
+        font-size: 0.875rem;
+    }
+
+    .project-link:hover {
+        color: var(--primary-hover);
+    }
+
+    /* Availability Schedule */
+    .availability-schedule {
+        background: var(--background-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-top: 1rem;
+    }
+
+    .schedule-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .timezone {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    /* Profile Initial Avatar */
+    .profile-initial {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: bold;
+        border: 4px solid var(--primary-color);
+    }
 {% endblock %}
 
 {% block content %}
@@ -156,6 +375,10 @@
         <div class="profile-header">
             {% if developer.profile_picture %}
                 <img src="{{ developer.profile_picture.url }}" alt="{{ developer.display_name }}" class="profile-picture">
+            {% else %}
+                <div class="profile-initial">
+                    {{ developer.user.get_full_name|default:developer.user.username|make_list|first|upper }}
+                </div>
             {% endif %}
             <div class="profile-info">
                 <h2>{{ developer.display_name }}</h2>
@@ -163,17 +386,76 @@
                 <div class="profile-stats">
                     <div class="stat-item">
                         <strong>{{ developer.years_of_experience }}</strong>
-                        Years Experience
+                        <span>Years Experience</span>
                     </div>
                     <div class="stat-item">
                         <strong>${{ developer.hourly_rate }}</strong>
-                        Per Hour
+                        <span>Per Hour</span>
                     </div>
                     <div class="stat-item">
                         <strong>{{ developer.rating }}/5</strong>
-                        Rating
+                        <span>Rating</span>
+                    </div>
+                    <div class="stat-item availability-status">
+                        <strong>
+                            <span id="availabilityStatus" class="status-badge {% if developer.is_currently_available %}status-available{% else %}status-unavailable{% endif %}">
+                                {% if developer.is_currently_available %}Available{% else %}Unavailable{% endif %}
+                            </span>
+                        </strong>
+                        <span>Status</span>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Regular Availability Schedule -->
+        <div class="profile-section">
+            <h3>Availability Schedule</h3>
+            <div class="availability-schedule">
+                {% if developer.availability_type == 'weekday' %}
+                    <div class="schedule-item">
+                        <strong>Weekdays:</strong>
+                        {{ developer.weekday_from|time:"g:i A" }} - {{ developer.weekday_to|time:"g:i A" }}
+                        <span class="timezone">({{ developer.timezone }})</span>
+                    </div>
+                {% elif developer.availability_type == 'weekend' %}
+                    <div class="schedule-item">
+                        <strong>Weekends:</strong>
+                        {{ developer.weekend_from|time:"g:i A" }} - {{ developer.weekend_to|time:"g:i A" }}
+                        <span class="timezone">({{ developer.timezone }})</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Projects Section -->
+        <div class="profile-section">
+            <h3>Projects</h3>
+            <div class="projects-grid">
+                {% for project in developer.projects.all %}
+                    <div class="project-card">
+                        <a href="{% url 'customer:developer_project_detail' dev_id=developer.id project_id=project.id %}" class="project-card-link">
+                            <h4>{{ project.name }}</h4>
+                            {% if project.client %}
+                                <div class="project-client">{{ project.client }}</div>
+                            {% endif %}
+                        </a>
+                        <div class="project-links">
+                            {% if project.deployed_url %}
+                                <a href="{{ project.deployed_url }}" target="_blank" class="project-link">
+                                    <i class="fas fa-external-link-alt"></i> Live Demo
+                                </a>
+                            {% endif %}
+                            {% if project.github_url %}
+                                <a href="{{ project.github_url }}" target="_blank" class="project-link">
+                                    <i class="fab fa-github"></i> Source Code
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="no-projects">No projects available.</p>
+                {% endfor %}
             </div>
         </div>
 
@@ -246,6 +528,49 @@
                 </button>
             </form>
         </div>
+
+        <div class="profile-section">
+            <h3>Comments</h3>
+            
+            <!-- Comment Form -->
+            <form method="POST" class="comment-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea name="content" class="form-control" rows="3" placeholder="Write a comment..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
+
+            <!-- Comments List -->
+            <div class="comments-list">
+                {% for comment in comments %}
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <div class="comment-author">
+                                {% if comment.author.profile.profile_picture %}
+                                    <img src="{{ comment.author.profile.profile_picture.url }}" 
+                                         alt="{{ comment.author.get_full_name|default:comment.author.username }}" 
+                                         class="comment-author-picture">
+                                {% else %}
+                                    <div class="comment-author-initial">
+                                        {{ comment.author.get_full_name|default:comment.author.username|make_list|first|upper }}
+                                    </div>
+                                {% endif %}
+                                <div class="comment-author-info">
+                                    <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+                                    <span class="comment-date">{{ comment.created_at|date:"M d, Y" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="comment-content">
+                            {{ comment.content }}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="no-comments">No comments yet.</p>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 
     <script>
@@ -265,5 +590,34 @@
             meetingModal.style.display = 'none';
         }
     }
+    </script>
+
+    <script>
+        function updateAvailabilityStatus(available) {
+            const statusBadge = document.getElementById('availabilityStatus');
+            if (statusBadge) {
+                statusBadge.textContent = available ? 'Available' : 'Unavailable';
+                statusBadge.className = `status-badge status-${available ? 'available' : 'unavailable'}`;
+            }
+        }
+
+        async function checkAvailability() {
+            try {
+                const response = await fetch(`{% url 'customer:check_developer_availability' developer.id %}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    updateAvailabilityStatus(data.available);
+                }
+            } catch (error) {
+                console.error('Error checking availability:', error);
+            }
+        }
+
+        // Check availability every 30 seconds
+        setInterval(checkAvailability, 30000);
+
+        // Initial check
+        checkAvailability();
     </script>
 {% endblock %} 

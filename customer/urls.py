@@ -14,4 +14,7 @@ urlpatterns = [
     path('request-developer/<int:dev_id>/<int:project_id>/', views.request_developer, name='request_developer_with_project'),
     path('request-meeting/<int:dev_id>/', views.request_meeting, name='request_meeting'),
     path('meeting/<int:meeting_id>/join/', views.join_meeting, name='join_meeting'),
+    path('developer/<int:dev_id>/check-availability/', views.check_developer_availability, name='check_developer_availability'),
+    path('dev_project/<int:pk>/', views.ProjectDetailView.as_view(), name='dev_project_detail'),
+    path('developer/<int:dev_id>/project/<int:project_id>/', views.developer_project_detail, name='developer_project_detail'),
 ] 
