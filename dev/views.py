@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ValidationError
 from .forms import ProfileForm, ProjectForm
@@ -17,6 +18,8 @@ from hashlib import sha256
 from django.contrib.auth.models import User
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.utils import timezone
+from django.urls import reverse
 
 
 
@@ -465,17 +468,42 @@ def handle_meeting(request, meeting_id):
             
     return redirect('dev:meeting_requests')
 
-@login_required
 def join_meeting(request, meeting_id):
     meeting = get_object_or_404(MeetingRequest, id=meeting_id)
+    
+    # Get user info, handle anonymous users
     user = request.user
+    user_id = str(user.id) if user.is_authenticated else f"anonymous_{int(time.time())}"
+    user_name = user.get_full_name() or user.username if user.is_authenticated else f"Guest_{user_id}"
+    
+    # For authenticated users, check their role
+    is_customer = False
+    is_developer = False
+    if user.is_authenticated:
+        is_customer = hasattr(user, 'customerprofile') and user.customerprofile == meeting.customer
+        is_developer = hasattr(user, 'profile') and user.profile == meeting.developer
+    
+    # Add debug logging
+    print("DEBUG: User ID:", user_id)
+    print("DEBUG: Is Authenticated:", user.is_authenticated)
+    print("DEBUG: Has CustomerProfile:", hasattr(user, 'customerprofile'))
+    if hasattr(user, 'customerprofile'):
+        print("DEBUG: User CustomerProfile ID:", user.customerprofile.id)
+        print("DEBUG: Meeting Customer ID:", meeting.customer.id)
+    print("DEBUG: Has DevProfile:", hasattr(user, 'profile'))
+    if hasattr(user, 'profile'):
+        print("DEBUG: User DevProfile ID:", user.profile.id)
+        print("DEBUG: Meeting Developer ID:", meeting.developer.id)
     
     context = {
+        'room_id': meeting.room_id,
+        'meeting_id': meeting_id,
+        'user_id': user_id,
+        'user_name': user_name,
         'zego_app_id': settings.ZEGO_APP_ID,
         'zego_server_secret': settings.ZEGO_SERVER_SECRET,
-        'room_id': meeting.room_id,
-        'user_id': str(user.id),
-        'user_name': user.get_full_name() or user.username,
+        'is_developer': is_developer,
+        'is_customer': is_customer,
     }
     
     return render(request, 'dev/meeting_room.html', context)
@@ -512,3 +540,83 @@ def handle_meeting(request, meeting_id):
         meeting.save()
         
     return redirect('dev:meeting_requests')
+
+@require_http_methods(["POST"])
+def end_meeting(request, meeting_id):
+    try:
+        meeting = get_object_or_404(MeetingRequest, id=meeting_id)
+        
+        # Parse the request data
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid JSON data'
+            }, status=400)
+        
+        # Update meeting status
+        meeting.status = 'ended'
+        meeting.ended_at = timezone.now()
+        meeting.ended_by = data.get('ended_by', 'anonymous')
+        
+        # Update meeting stats
+        meeting.stats = {
+            'duration': data.get('duration', 0),
+            'participant_count': data.get('participant_count', 0),
+            'screen_shares': data.get('screen_shares', 0),
+            'mic_toggles': data.get('mic_toggles', 0),
+            'camera_toggles': data.get('camera_toggles', 0),
+            'chat_messages': data.get('chat_messages', 0),
+            'final_stats': data.get('final_stats', {})
+        }
+        
+        meeting.save()
+        
+        # Send WebSocket notification
+        try:
+            channel_layer = get_channel_layer()
+            room_group_name = f'meeting_{meeting_id}'
+            async_to_sync(channel_layer.group_send)(
+                room_group_name,
+                {
+                    'type': 'meeting_ended',
+                    'meeting_id': meeting.id,
+                    'ended_by': meeting.ended_by,
+                    'redirect_url': reverse('dev:meeting_stats', kwargs={'meeting_id': meeting_id})
+                }
+            )
+        except Exception as e:
+            print(f"WebSocket notification failed: {str(e)}")
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Meeting ended successfully',
+            'redirect_url': reverse('dev:meeting_stats', kwargs={'meeting_id': meeting_id})
+        })
+        
+    except MeetingRequest.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Meeting not found'
+        }, status=404)
+    except Exception as e:
+        print(f"Error ending meeting: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+
+def meeting_stats(request, meeting_id):
+    meeting = get_object_or_404(MeetingRequest, id=meeting_id)
+    
+    context = {
+        'meeting': meeting,
+        'duration_formatted': str(timedelta(seconds=int(meeting.stats.get('duration', 0)))) if meeting.stats else '0:00:00',
+        'ended_at_formatted': meeting.ended_at.strftime("%B %d, %Y %I:%M %p") if meeting.ended_at else '',
+        'stats': meeting.stats or {},
+    }
+    
+    return render(request, 'dev/meeting_stats.html', context)
+

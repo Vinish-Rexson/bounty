@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="meeting-stats-container">
+    <h2>Meeting Summary</h2>
+    <div class="meeting-info">
+        <div class="stat-grid">
+            <div class="stat-item">
+                <strong>Duration</strong>
+                <span>{{ duration_formatted }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Participants</strong>
+                <span>{{ meeting.participant_count }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Screen Shares</strong>
+                <span>{{ meeting.screen_shares }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Mic Toggles</strong>
+                <span>{{ meeting.mic_toggles }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Camera Toggles</strong>
+                <span>{{ meeting.camera_toggles }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Chat Messages</strong>
+                <span>{{ meeting.chat_messages }}</span>
+            </div>
+        </div>
+        
+        <div class="meeting-details">
+            <p><strong>Ended by:</strong> {{ meeting.ended_by|title }}</p>
+            <p><strong>Ended at:</strong> {{ ended_at_formatted }}</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.meeting-stats-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1rem;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-item {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-item strong {
+    display: block;
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.stat-item span {
+    font-size: 1.25rem;
+    color: #0f172a;
+    font-weight: 500;
+}
+
+.meeting-details {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %} 

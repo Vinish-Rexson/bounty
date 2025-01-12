@@ -4,68 +4,757 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Meeting</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 </head>
 <body>
+    <div id="user-type" 
+         data-is-customer="{{ is_customer|lower }}" 
+         data-is-developer="{{ is_developer|lower }}"
+         style="display: none;">
+    </div>
     <div class="meeting-container">
+        <div class="meeting-controls">
+            <button id="return-to-chat" class="return-btn" onclick="window.returnToChat()">
+                <i class="fas fa-arrow-left"></i> Return to Chat
+            </button>
+        </div>
         <div id="meeting-area"></div>
+        
+        <!-- Add modal for confirmation -->
+        <div id="confirmModal" class="modal">
+            <div class="modal-content">
+                <h3>Return to Chat</h3>
+                <p id="confirmMessage"></p>
+                <div class="modal-buttons">
+                    <button onclick="handleModalResponse(true)" class="btn-confirm">Yes</button>
+                    <button onclick="handleModalResponse(false)" class="btn-cancel">No</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                try {
-                    // Get credentials from Django template
-                    const appID = {{ zego_app_id }};  // Remove quotes, keep as integer
-                    const serverSecret = "{{ zego_server_secret }}";  // Keep quotes for string
-                    const roomID = "{{ room_id }}";
-                    const userID = "{{ user_id }}";
-                    const userName = "{{ user_name }}";
+        // Store these variables in window object for global access
+        window.roomID = "{{ room_id }}";
+        window.userID = "{{ user_id }}";
+        window.userName = "{{ user_name }}";
+        window.meetingID = "{{ meeting_id }}";
+        window.isCustomer = {{ request.user.customerprofile|yesno:"true,false" }};
+        window.isDeveloper = {{ request.user.profile|yesno:"true,false" }};
+        window.appID = parseInt("{{ zego_app_id }}");
+        window.serverSecret = "{{ zego_server_secret }}";
+        
+        let meetingSocket = null;
+        let isWebSocketConnected = false;
+        const modal = document.getElementById('confirmModal');
 
-                    console.log("Initializing with:", {
-                        appID,
-                        serverSecret: serverSecret.slice(0, 4) + "...", // Log partial secret for debugging
-                        roomID,
-                        userID,
-                        userName
-                    });
+        // Initialize toastr first
+        $(document).ready(function() {
+            toastr.options = {
+                "closeButton": true,
+                "debug": false,
+                "newestOnTop": false,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "preventDuplicates": false,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+            };
+        });
 
-                    const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
-                        appID,
-                        serverSecret,
-                        roomID,
-                        userID,
-                        userName
-                    );
+        function showModal(message, callback) {
+            console.log('Showing modal with message:', message);
+            
+            const modal = document.getElementById('confirmModal');
+            if (!modal) {
+                console.error('Modal element not found');
+                return;
+            }
 
-                    console.log("Token generated successfully");
+            // Set the message
+            const messageElement = modal.querySelector('#confirmMessage');
+            if (messageElement) {
+                messageElement.textContent = message;
+            }
 
-                    const zp = ZegoUIKitPrebuilt.create(kitToken);
-                    
-                    console.log("ZegoUIKitPrebuilt created successfully");
+            // Show the modal
+            modal.style.display = 'block';
 
-                    zp.joinRoom({
-                        container: document.querySelector("#meeting-area"),
-                        scenario: {
-                            mode: ZegoUIKitPrebuilt.OneONoneCall
-                        },
-                        showScreenSharingButton: true,
-                        showTurnOffRemoteCameraButton: true,
-                        showTurnOffRemoteMicrophoneButton: true,
-                        showRemoveUserButton: true
-                    });
+            // Update the button handlers
+            const confirmButton = modal.querySelector('.btn-confirm');
+            const cancelButton = modal.querySelector('.btn-cancel');
 
-                    console.log("Room joined successfully");
+            if (confirmButton) {
+                confirmButton.onclick = function() {
+                    modal.style.display = 'none';
+                    if (callback) callback(true);
+                };
+            }
 
-                } catch (error) {
-                    console.error('Error initializing ZegoCloud:', error);
-                    console.error('Error details:', {
-                        message: error.message,
-                        stack: error.stack
-                    });
+            if (cancelButton) {
+                cancelButton.onclick = function() {
+                    modal.style.display = 'none';
+                    if (callback) callback(false);
+                };
+            }
+
+            // Prevent modal from being closed by clicking outside
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    // Do nothing - force user to use buttons
+                    event.stopPropagation();
                 }
+            };
+
+            console.log('Modal displayed');
+        }
+
+        function handleModalResponse(confirmed) {
+            modal.style.display = 'none';
+            if (confirmed) {
+                endMeeting();
+            }
+        }
+
+        // Define returnToChat function in global scope
+        window.returnToChat = function() {
+            const message = window.isCustomer ? 
+                'Are you sure you want to return to chat? The developer will be notified.' :
+                'Are you sure you want to return to chat? The customer will be notified.';
+
+            showModal(message, function(confirmed) {
+                if (confirmed) {
+                    endMeeting();
+                }
+            });
+        };
+
+        // Add CSRF token helper function
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function setupWebSocket() {
+            const wsScheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const wsUrl = `${wsScheme}${window.location.host}/ws/meeting/${window.meetingID}/`;
+            console.log('Setting up WebSocket connection to:', wsUrl);
+            
+            window.meetingSocket = new WebSocket(wsUrl);
+
+            window.meetingSocket.onopen = function() {
+                console.log('WebSocket connection established');
+                isWebSocketConnected = true;
+            };
+
+            window.meetingSocket.onmessage = handleWebSocketMessage;
+
+            window.meetingSocket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                isWebSocketConnected = false;
+            };
+
+            window.meetingSocket.onclose = function(event) {
+                console.log('WebSocket connection closed:', event);
+                isWebSocketConnected = false;
+            };
+
+            return window.meetingSocket;
+        }
+
+        function handleWebSocketMessage(event) {
+            const data = JSON.parse(event.data);
+            console.log('WebSocket message received:', data);
+
+            if (data.type === 'meeting_ended') {
+                console.log('Meeting end notification received');
+                
+                // Get user roles from window object
+                const isCustomer = window.isCustomer === true;  // Force boolean evaluation
+                const isDeveloper = window.isDeveloper === true;  // Force boolean evaluation
+                const endedByType = data.ended_by;
+                
+                // Debug logging
+                console.log('User role check:', {
+                    isCustomer: isCustomer,
+                    isDeveloper: isDeveloper,
+                    endedByType: endedByType,
+                    windowIsCustomer: window.isCustomer,
+                    windowIsDeveloper: window.isDeveloper
+                });
+                
+                // Determine if the current user initiated the end request
+                const isEndedByMe = (isCustomer && endedByType === 'customer') || 
+                                   (isDeveloper && endedByType === 'developer');
+                
+                console.log('End request analysis:', {
+                    isEndedByMe: isEndedByMe,
+                    condition1: (isCustomer && endedByType === 'customer'),
+                    condition2: (isDeveloper && endedByType === 'developer')
+                });
+
+                if (isEndedByMe) {
+                    // If the current user initiated the end request, wait for confirmation
+                    console.log('Current user initiated end request');
+                    toastr.info('Waiting for other participant to confirm...');
+                } else {
+                    // Verify the correct participant gets the confirmation dialog
+                    const shouldShowDialog = (endedByType === 'customer' && isDeveloper) || 
+                                               (endedByType === 'developer' && isCustomer);
+                    
+                    console.log('Dialog display check:', {
+                        shouldShowDialog: shouldShowDialog,
+                        condition1: (endedByType === 'customer' && isDeveloper),
+                        condition2: (endedByType === 'developer' && isCustomer)
+                    });
+
+                    if (shouldShowDialog) {
+                        console.log('Showing confirmation dialog to other participant');
+                        const userType = endedByType === 'customer' ? 'Customer' : 'Developer';
+                        const message = `${userType} ${data.user_name} wants to end the meeting. Do you agree?`;
+                        
+                        const modal = document.getElementById('confirmModal');
+                        if (!modal) {
+                            console.error('Modal element not found!');
+                            return;
+                        }
+
+                        const messageElement = modal.querySelector('#confirmMessage');
+                        if (!messageElement) {
+                            console.error('Message element not found in modal!');
+                            return;
+                        }
+
+                        // Update modal content and show it
+                        messageElement.textContent = message;
+                        modal.style.display = 'block';
+                        modal.style.zIndex = '10000';
+                        
+                        const confirmButton = modal.querySelector('.btn-confirm');
+                        const cancelButton = modal.querySelector('.btn-cancel');
+                        
+                        if (confirmButton) {
+                            confirmButton.onclick = async function() {
+                                console.log('Confirmation button clicked');
+                                modal.style.display = 'none';
+                                if (window.meetingSocket && window.meetingSocket.readyState === WebSocket.OPEN) {
+                                    window.meetingSocket.send(JSON.stringify({
+                                        type: 'meeting_end_confirmed',
+                                        meeting_id: window.meetingID,
+                                        confirmed_by: isCustomer ? 'customer' : 'developer',
+                                        user_name: window.userName
+                                    }));
+                                }
+                                cleanupAndRedirect(data.redirect_url);
+                            };
+                        }
+                        
+                        if (cancelButton) {
+                            cancelButton.onclick = function() {
+                                console.log('Rejection button clicked');
+                                modal.style.display = 'none';
+                                if (window.meetingSocket && window.meetingSocket.readyState === WebSocket.OPEN) {
+                                    window.meetingSocket.send(JSON.stringify({
+                                        type: 'meeting_end_rejected',
+                                        meeting_id: window.meetingID,
+                                        rejected_by: isCustomer ? 'customer' : 'developer',
+                                        user_name: window.userName
+                                    }));
+                                }
+                            };
+                        }
+                    } else {
+                        console.log('Not showing dialog to this user');
+                    }
+                }
+            } else if (data.type === 'meeting_end_confirmed') {
+                toastr.success(`${data.user_name} agreed to end the meeting`);
+                cleanupAndRedirect(data.redirect_url);
+            } else if (data.type === 'meeting_end_rejected') {
+                toastr.error(`${data.user_name} wants to continue the meeting`);
+            }
+        }
+
+        // Add helper function for cleanup and redirect
+        function cleanupAndRedirect(redirectUrl) {
+            console.log('Cleaning up and redirecting to:', redirectUrl);
+            
+            // Clean up Zego instance
+            if (window.zegoInstance) {
+                try {
+                    window.zegoInstance.leaveRoom();
+                    window.zegoInstance.destroy();
+                    window.zegoInstance = null;
+                } catch (error) {
+                    console.error('Error destroying Zego instance:', error);
+                }
+            }
+
+            // Close WebSocket connection
+            if (window.meetingSocket) {
+                window.meetingSocket.close();
+            }
+
+            // Redirect to stats page
+            window.location.href = `/dev/meeting/${window.meetingID}/stats/`;
+        }
+
+        const meetingStats = {
+            duration: 0,
+            participant_count: 0,
+            screen_shares: 0,
+            mic_toggles: 0,
+            camera_toggles: 0,
+            chat_messages: 0
+        };
+
+        // Add this function to collect meeting stats
+        function collectMeetingStats() {
+            return {
+                duration: Math.floor((new Date() - window.meetingMetrics.startTime) / 1000),
+                participant_count: window.meetingMetrics.participants.length,
+                screen_shares: window.meetingMetrics.screenShareCount,
+                mic_toggles: window.meetingMetrics.micToggleCount,
+                camera_toggles: window.meetingMetrics.cameraToggleCount,
+                chat_messages: window.meetingMetrics.totalMessages,
+                final_stats: {
+                    network_quality: window.meetingMetrics.networkQuality,
+                    connection_events: window.meetingMetrics.connectionEvents
+                }
+            };
+        }
+
+        // Update the endMeeting function
+        async function endMeeting() {
+            try {
+                console.log('Initiating meeting end request');
+                
+                // Collect meeting stats
+                const meetingStats = collectMeetingStats();
+                console.log('Collected meeting stats:', meetingStats);
+                
+                // Send request to end the meeting with stats
+                if (window.meetingSocket && window.meetingSocket.readyState === WebSocket.OPEN) {
+                    window.meetingSocket.send(JSON.stringify({
+                        type: 'meeting_ended',
+                        meeting_id: window.meetingID,
+                        ended_by: window.isCustomer ? 'customer' : 'developer',
+                        user_name: window.userName,
+                        stats: meetingStats
+                    }));
+                    
+                    // Also send stats to backend
+                    const response = await fetch(`/dev/meeting/${window.meetingID}/end/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({
+                            ended_by: window.isCustomer ? 'customer' : 'developer',
+                            ...meetingStats
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        console.log('Meeting ended successfully with stats');
+                    } else {
+                        console.error('Error ending meeting:', data.message);
+                    }
+                    
+                    // Show waiting message
+                    toastr.info('Waiting for other participant to confirm...');
+                } else {
+                    throw new Error('WebSocket connection not available');
+                }
+            } catch (error) {
+                console.error('Error ending meeting:', error);
+                toastr.error('Failed to end meeting. Please try again.');
+            }
+        }
+
+        // Add meeting metrics tracking with comprehensive data
+        window.meetingMetrics = {
+            startTime: new Date(),
+            endTime: null,
+            duration: 0,
+            participants: [],
+            screenShareCount: 0,
+            micToggleCount: 0,
+            cameraToggleCount: 0,
+            activeParticipants: [],
+            micStatus: {},
+            cameraStatus: {},
+            networkQuality: {},
+            totalMessages: 0,
+            connectionEvents: []
+        };
+
+        // Log initial meeting setup
+        console.log('Meeting Started:', {
+            meetingID: window.meetingID,
+            startTime: window.meetingMetrics.startTime,
+            userID: window.userID,
+            userName: window.userName,
+            isCustomer: window.isCustomer,
+            isDeveloper: window.isDeveloper,
+            roomID: window.roomID,
+            appID: window.appID
+        });
+
+        // Add this function to handle Zego initialization
+        async function initializeZegoCloud() {
+            try {
+                const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+                    window.appID,
+                    window.serverSecret,
+                    window.roomID,
+                    window.userID,
+                    window.userName
+                );
+
+                const zp = ZegoUIKitPrebuilt.create(kitToken);
+                
+                // Configure session timeout and reconnection
+                const zpConfig = {
+                    container: document.querySelector("#meeting-area"),
+                    scenario: {
+                        mode: ZegoUIKitPrebuilt.OneONoneCall,
+                    },
+                    turnOnMicrophoneWhenJoining: true,
+                    turnOnCameraWhenJoining: true,
+                    showMyCameraToggleButton: true,
+                    showMyMicrophoneToggleButton: true,
+                    showAudioVideoSettingsButton: true,
+                    showScreenSharingButton: true,
+                    showTextChat: true,
+                    showUserList: true,
+                    maxUsers: 2,
+                    layout: "Auto",
+                    showLayoutButton: false,
+                    showPreJoinView: false,
+                    preJoinViewConfig: {
+                        title: "Video Meeting",
+                    },
+                    onJoinRoom: () => {
+                        console.log("Successfully joined room");
+                        startMeetingMetrics();
+                    },
+                    onLeaveRoom: () => {
+                        console.log("Left room");
+                        updateMeetingStats(true);
+                    },
+                    onError: (error) => {
+                        console.error("Zego error:", error);
+                        toastr.error('Connection error. Please try refreshing the page.');
+                    },
+                    // Add session configuration
+                    session: {
+                        timeout: 60, // seconds
+                        reconnect: true,
+                        reconnectTimeout: 120, // seconds
+                        reconnectRetry: 5
+                    }
+                };
+
+                // Join the room and assign the instance to window.zegoInstance
+                window.zegoInstance = await zp.joinRoom(zpConfig);
+                
+                // Ensure window.zegoInstance is defined before adding event listeners
+                if (window.zegoInstance) {
+                    window.zegoInstance.on('error', (error) => {
+                        console.error('Zego instance error:', error);
+                        if (error.code === 1104036) {
+                            // Handle session timeout
+                            toastr.warning('Session timeout. Attempting to reconnect...');
+                            reconnectZegoInstance();
+                        }
+                    });
+                } else {
+                    throw new Error('Failed to create Zego instance');
+                }
+
+            } catch (error) {
+                console.error("Error initializing Zego:", error);
+                toastr.error('Failed to initialize video call. Please try refreshing the page.');
+            }
+        }
+
+        // Add reconnection function
+        async function reconnectZegoInstance() {
+            try {
+                if (window.zegoInstance) {
+                    await window.zegoInstance.destroy();
+                }
+                await initializeZegoCloud();
+            } catch (error) {
+                console.error("Error reconnecting to Zego:", error);
+                toastr.error('Failed to reconnect. Please refresh the page.');
+            }
+        }
+
+        function setupEventListeners(zp) {
+            if (!zp) {
+                console.error('Invalid Zego instance');
+                return;
+            }
+
+            try {
+                // Get the room instance
+                const room = zp.getRoomInstance();
+                if (!room) {
+                    console.error('Unable to get room instance');
+                    return;
+                }
+
+                // Listen for user updates
+                room.on('userJoin', (users) => {
+                    console.log('Users joined:', users);
+                    window.meetingMetrics.participants = [
+                        ...window.meetingMetrics.participants,
+                        ...users.map(u => ({ id: u.userID, joinTime: new Date() }))
+                    ];
+                });
+
+                // Listen for device changes
+                room.on('cameraStateChanged', (state) => {
+                    console.log('Camera state changed:', state);
+                    window.meetingMetrics.cameraToggleCount++;
+                });
+
+                room.on('microphoneStateChanged', (state) => {
+                    console.log('Microphone state changed:', state);
+                    window.meetingMetrics.micToggleCount++;
+                });
+
+                // Listen for screen sharing
+                room.on('screenSharingStarted', () => {
+                    console.log('Screen sharing started');
+                    window.meetingMetrics.screenShareCount++;
+                });
+
+                console.log('Event listeners set up successfully');
+            } catch (error) {
+                console.error('Error setting up event listeners:', error);
+            }
+        }
+
+        // Update the document ready function
+        $(document).ready(function() {
+            // Initialize toastr
+            toastr.options = {
+                // ... existing toastr options ...
+            };
+
+            // Initialize Zego
+            initializeZegoCloud().catch(error => {
+                console.error("Failed to initialize Zego:", error);
+                toastr.error('Failed to start video call. Please refresh the page.');
+            });
+        });
+
+        window.addEventListener('beforeunload', function() {
+            if (meetingSocket) {
+                meetingSocket.close();
+            }
+        });
+
+        function logDetailedStats(isFinal = false) {
+            const currentTime = new Date();
+            const stats = {
+                meetingID: window.meetingID,
+                duration: Math.floor((currentTime - window.meetingMetrics.startTime) / 1000),
+                participants: {
+                    total: window.meetingMetrics.participants.length,
+                    active: window.meetingMetrics.activeParticipants.filter(p => !p.leaveTime).length,
+                    history: window.meetingMetrics.activeParticipants
+                },
+                interactions: {
+                    screenShares: window.meetingMetrics.screenShareCount,
+                    micToggles: window.meetingMetrics.micToggleCount,
+                    cameraToggles: window.meetingMetrics.cameraToggleCount
+                },
+                deviceStatus: {
+                    microphones: window.meetingMetrics.micStatus,
+                    cameras: window.meetingMetrics.cameraStatus
+                },
+                network: window.meetingMetrics.networkQuality,
+                connectionEvents: window.meetingMetrics.connectionEvents,
+                isFinalLog: isFinal
+            };
+
+            console.log('Detailed Meeting Statistics:', stats);
+            return stats;
+        }
+
+        // Enhanced updateMeetingStats function
+        function updateMeetingStats(isFinal = false) {
+            const currentTime = new Date();
+            const durationMs = currentTime - window.meetingMetrics.startTime;
+            window.meetingMetrics.duration = Math.floor(durationMs / 1000);
+
+            const stats = {
+                type: 'meeting_stats',
+                meeting_id: window.meetingID,
+                duration: window.meetingMetrics.duration,
+                participant_count: window.meetingMetrics.participants.length,
+                screen_shares: window.meetingMetrics.screenShareCount,
+                mic_toggles: window.meetingMetrics.micToggleCount,
+                camera_toggles: window.meetingMetrics.cameraToggleCount,
+                is_final: isFinal
+            };
+
+            console.log('Meeting Stats Update:', stats);
+
+            if (meetingSocket && meetingSocket.readyState === WebSocket.OPEN) {
+                meetingSocket.send(JSON.stringify(stats));
+            }
+        }
+
+        // Add this to initialize user type
+        window.userType = window.isDeveloper ? 'developer' : 'customer';
+
+        // Define the startMeetingMetrics function
+        function startMeetingMetrics() {
+            // Initialize or reset meeting metrics
+            window.meetingMetrics = {
+                startTime: new Date(),
+                endTime: null,
+                duration: 0,
+                participants: [],
+                screenShareCount: 0,
+                micToggleCount: 0,
+                cameraToggleCount: 0,
+                activeParticipants: [],
+                micStatus: {},
+                cameraStatus: {},
+                networkQuality: {},
+                totalMessages: 0,
+                connectionEvents: []
+            };
+
+            // Log initial meeting setup
+            console.log('Meeting Started:', {
+                meetingID: window.meetingID,
+                startTime: window.meetingMetrics.startTime,
+                userID: window.userID,
+                userName: window.userName,
+                isCustomer: window.isCustomer,
+                isDeveloper: window.isDeveloper,
+                roomID: window.roomID,
+                appID: window.appID
+            });
+
+            // Start tracking duration
+            setInterval(() => {
+                window.meetingMetrics.duration++;
             }, 1000);
+
+            console.log('Meeting metrics tracking started');
+        }
+
+        // Add this combined style block after line 622
+        const styles = `
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 10000;
+            }
+            .modal-content {
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                min-width: 300px;
+                max-width: 80%;
+                z-index: 10001;
+            }
+            .modal-buttons {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 20px;
+            }
+            .btn-confirm, .btn-cancel {
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                border: none;
+            }
+            .btn-confirm {
+                background-color: #4CAF50;
+                color: white;
+            }
+            .btn-cancel {
+                background-color: #f44336;
+                color: white;
+            }
+        `;
+
+        // Add styles to the document
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = styles;
+        document.head.appendChild(styleSheet);
+
+        // Make sure to call setupWebSocket when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Setting up WebSocket connection');
+            window.meetingSocket = setupWebSocket();
+        });
+
+        // Add this helper function to ensure toastr is properly configured
+        function configureToastr() {
+            toastr.options = {
+                closeButton: true,
+                progressBar: true,
+                positionClass: "toast-top-right",
+                timeOut: 3000
+            };
+        }
+
+        // Call this when the page loads
+        configureToastr();
+
+        // Make sure to initialize window.isCustomer and window.isDeveloper correctly
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the user type from the hidden div
+            const userTypeDiv = document.getElementById('user-type');
+            if (userTypeDiv) {
+                window.isCustomer = userTypeDiv.dataset.isCustomer === 'true';
+                window.isDeveloper = userTypeDiv.dataset.isDeveloper === 'true';
+                console.log('User type initialized:', { isCustomer: window.isCustomer, isDeveloper: window.isDeveloper });
+            }
         });
     </script>
 
@@ -84,6 +773,75 @@
         #meeting-area {
             width: 100%;
             height: 100%;
+        }
+
+        .meeting-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .return-btn {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .return-btn:hover {
+            background: #f5f5f5;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 300px;
+            max-width: 80%;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-confirm, .btn-cancel {
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-confirm {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
         }
     </style>
 </body>

@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from dev.models import Profile as DevProfile
+from django.utils import timezone
+from django.db.models import JSONField
 
 class CustomerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -83,6 +85,36 @@ class MeetingRequest(models.Model):
     scheduled_time = models.DateTimeField(null=True, blank=True)
     room_id = models.CharField(max_length=100, null=True, blank=True)
     meeting_url = models.CharField(max_length=255, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+    ended_by = models.CharField(max_length=20, choices=[
+        ('customer', 'Customer'),
+        ('developer', 'Developer')
+    ], null=True, blank=True)
+    end_reason = models.CharField(max_length=50, null=True, blank=True)
+    duration = models.IntegerField(default=0)  # Duration in seconds
+    participant_count = models.IntegerField(default=0)
+    screen_shares = models.IntegerField(default=0)
+    mic_toggles = models.IntegerField(default=0)
+    camera_toggles = models.IntegerField(default=0)
+    chat_messages = models.IntegerField(default=0)
+    stats = JSONField(null=True, blank=True)
+    
+    def end_meeting(self, ended_by, stats=None):
+        self.is_active = False
+        self.ended_at = timezone.now()
+        self.ended_by = ended_by
+        
+        # Update meeting statistics if provided
+        if stats:
+            self.duration = stats.get('duration', 0)
+            self.participant_count = stats.get('participant_count', 0)
+            self.screen_shares = stats.get('screen_shares', 0)
+            self.mic_toggles = stats.get('mic_toggles', 0)
+            self.camera_toggles = stats.get('camera_toggles', 0)
+            self.chat_messages = stats.get('chat_messages', 0)
+        
+        self.save()
 
 class ProjectStatusRequest(models.Model):
     STATUS_CHOICES = [

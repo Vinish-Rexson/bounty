@@ -102,6 +102,63 @@
                 </a>
             </div>
             {% endif %}
+
+            {% if active_meeting %}
+            <div class="meeting-info">
+                <h4><i class="fas fa-video"></i> Active Meeting</h4>
+                <div class="meeting-stats">
+                    <!-- Basic Stats -->
+                    <div class="stat-item">
+                        <strong>Duration</strong>
+                        <span id="meeting-duration">0:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>Participants</strong>
+                        <span id="participant-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>Screen Shares</strong>
+                        <span id="screen-share-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>Started At</strong>
+                        <span>{{ active_meeting.created_at|date:"g:i A" }}</span>
+                    </div>
+
+                    <!-- Device Usage Stats -->
+                    <div class="stat-item">
+                        <strong>Mic Toggles</strong>
+                        <span id="mic-toggle-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>Camera Toggles</strong>
+                        <span id="camera-toggle-count">0</span>
+                    </div>
+
+                    <!-- Connection Stats -->
+                    <div class="stat-item">
+                        <strong>Network Quality</strong>
+                        <span id="network-quality">Good</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>Connection Status</strong>
+                        <span id="connection-status">Connected</span>
+                    </div>
+                </div>
+
+                <!-- Participant Details -->
+                <div class="participant-details">
+                    <strong>Active Participants</strong>
+                    <div id="active-participants-list" class="participants-list">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <a href="{% url 'dev:join_meeting' active_meeting.id %}" class="join-meeting-btn" target="_blank">
+                    Join Meeting
+                </a>
+            </div>
+            {% endif %}
         </div>
         {% endif %}
     </div>
@@ -231,6 +288,18 @@
                 `;
                 messagesList.appendChild(messageDiv);
                 messagesList.scrollTop = messagesList.scrollHeight;
+            } else if (data.type === 'meeting_stats') {
+                // Update duration
+                const minutes = Math.floor(data.duration / 60);
+                const seconds = data.duration % 60;
+                document.getElementById('meeting-duration').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Update other stats
+                document.getElementById('participant-count').textContent = data.participant_count;
+                document.getElementById('screen-share-count').textContent = data.screen_shares;
+                document.getElementById('mic-toggle-count').textContent = data.mic_toggles;
+                document.getElementById('camera-toggle-count').textContent = data.camera_toggles;
             }
         };
 
@@ -401,6 +470,79 @@
                 alert(data.error);
             }
         });
+    }
+
+    let meetingStatsSocket = null;
+
+    function connectMeetingStatsSocket() {
+        if (window.active_meeting_id) {
+            const wsScheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            meetingStatsSocket = new WebSocket(
+                `${wsScheme}${window.location.host}/ws/meeting/${window.active_meeting_id}/`
+            );
+
+            meetingStatsSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                if (data.type === 'meeting_stats') {
+                    updateMeetingStats(data);
+                }
+            };
+
+            meetingStatsSocket.onclose = function() {
+                setTimeout(connectMeetingStatsSocket, 3000);
+            };
+        }
+    }
+
+    function updateMeetingStats(data) {
+        // Update basic stats
+        const duration = Math.floor(data.duration);
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+        
+        document.getElementById('meeting-duration').textContent = 
+            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        document.getElementById('participant-count').textContent = data.participant_count;
+        document.getElementById('screen-share-count').textContent = data.screen_shares;
+        document.getElementById('mic-toggle-count').textContent = data.mic_toggles;
+        document.getElementById('camera-toggle-count').textContent = data.camera_toggles;
+
+        // Update network quality
+        if (data.network_quality) {
+            const quality = data.network_quality.uplink || 'Unknown';
+            document.getElementById('network-quality').textContent = quality;
+        }
+
+        // Update connection status
+        document.getElementById('connection-status').textContent = 
+            data.connection_state || 'Connected';
+
+        // Update participants list
+        if (data.active_participants) {
+            const participantsList = document.getElementById('active-participants-list');
+            participantsList.innerHTML = ''; // Clear existing list
+
+            data.active_participants.forEach(participant => {
+                if (!participant.leaveTime) { // Only show currently active participants
+                    const participantEl = document.createElement('div');
+                    participantEl.className = 'participant-item';
+                    participantEl.innerHTML = `
+                        <span class="name">${participant.userName}</span>
+                        <div class="status">
+                            <span class="status-icon ${data.micStatus[participant.userID] ? 'mic' : 'mic off'}"></span>
+                            <span class="status-icon ${data.cameraStatus[participant.userID] ? 'camera' : 'camera off'}"></span>
+                        </div>
+                    `;
+                    participantsList.appendChild(participantEl);
+                }
+            });
+        }
+    }
+
+    // Initialize if there's an active meeting
+    if (document.querySelector('.meeting-info')) {
+        window.active_meeting_id = '{{ active_meeting.id }}';
+        connectMeetingStatsSocket();
     }
 </script>
 
@@ -902,6 +1044,114 @@
 
 .status-request-pending i {
     font-size: 1.1rem;
+}
+
+/* Add these styles */
+.meeting-info {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.meeting-info h4 {
+    font-size: 1rem;
+    color: #0f172a;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.meeting-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-item strong {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.stat-item span {
+    font-size: 0.875rem;
+    color: #0f172a;
+    font-weight: 500;
+}
+
+.participant-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.participant-details strong {
+    font-size: 0.875rem;
+    color: #64748b;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.participants-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.participant-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: #f1f5f9;
+    border-radius: 8px;
+    font-size: 0.875rem;
+}
+
+.participant-item .name {
+    color: #0f172a;
+    font-weight: 500;
+}
+
+.participant-item .status {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.participant-item .status i {
+    font-size: 0.75rem;
+}
+
+.status-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.25rem;
+}
+
+.status-icon.mic {
+    background-color: #22c55e;
+}
+
+.status-icon.camera {
+    background-color: #3b82f6;
+}
+
+.status-icon.off {
+    background-color: #94a3b8;
 }
 </style>
 
