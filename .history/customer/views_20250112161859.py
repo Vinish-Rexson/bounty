@@ -105,7 +105,6 @@ def handle_request(request, request_id):
         action = request.POST.get('action')
         
         if action == 'accept':
-            project_request.project.assigned_developer = project_request.developer
             project_request.status = 'accepted'
             project_request.project.status = 'payment_processing'
             project_request.project.save()
@@ -119,7 +118,7 @@ def handle_request(request, request_id):
         project_request.save()
         messages.success(request, f'Request {action}ed successfully!')
         
-    return redirect('customer:dashboard')
+    return redirect('customer:project_requests', project_id=project_request.project.id)
 
 @customer_required
 @login_required
@@ -235,23 +234,6 @@ def developer_project_detail(request, dev_id, project_id):
     project = get_object_or_404(DevProject, id=project_id, profile=developer)
     
     return render(request, 'customer/project_detail.html', {
-        'project': project,
-        'developer': developer
-    })
-
-@login_required
-@customer_required
-def payment_view(request, project_id):
-    project = get_object_or_404(Project, id=project_id)
-    developer = project.assigned_developer
-    
-    if request.method == 'POST':
-        project.status = 'in_progress'
-        project.save()
-        messages.success(request, 'Payment completed successfully!')
-        return redirect('customer:dashboard')
-        
-    return render(request, 'customer/payment.html', {
         'project': project,
         'developer': developer
     })

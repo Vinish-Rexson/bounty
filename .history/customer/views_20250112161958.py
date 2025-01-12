@@ -119,7 +119,7 @@ def handle_request(request, request_id):
         project_request.save()
         messages.success(request, f'Request {action}ed successfully!')
         
-    return redirect('customer:dashboard')
+    return redirect('customer:project_requests', project_id=project_request.project.id)
 
 @customer_required
 @login_required
@@ -243,7 +243,7 @@ def developer_project_detail(request, dev_id, project_id):
 @customer_required
 def payment_view(request, project_id):
     project = get_object_or_404(Project, id=project_id)
-    developer = project.assigned_developer
+    developer = project.developer
     
     if request.method == 'POST':
         project.status = 'in_progress'

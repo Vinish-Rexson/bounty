@@ -17,5 +17,4 @@ urlpatterns = [
     path('developer/<int:dev_id>/check-availability/', views.check_developer_availability, name='check_developer_availability'),
     path('dev_project/<int:pk>/', views.ProjectDetailView.as_view(), name='dev_project_detail'),
     path('developer/<int:dev_id>/project/<int:project_id>/', views.developer_project_detail, name='developer_project_detail'),
-    path('payment/<int:project_id>/', views.payment_view, name='payment'),
 ] 

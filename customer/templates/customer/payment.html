@@ -1,0 +1,26 @@
+{% extends 'customer/base.html' %}
+
+{% block title %}Process Payment{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <h2>Payment Details</h2>
+    <div class="payment-info">
+        <div class="project-details">
+            <h3>Project: {{ project.title }}</h3>
+            <p>Budget: ${{ project.budget }}</p>
+        </div>
+        
+        <div class="developer-details">
+            <h3>Developer Details</h3>
+            <p>Name: {{ developer.user.get_full_name }}</p>
+            <p>Crypto Wallet: {{ developer.crypto_wallet_address }}</p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Complete Payment</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

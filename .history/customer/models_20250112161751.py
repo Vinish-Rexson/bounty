@@ -39,11 +39,7 @@ class ProjectRequest(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('accepted', 'Accepted'),
-        ('rejected', 'Rejected'),
-        ('payment_pending', 'Payment Pending'),
-        ('in_progress', 'In Progress'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled')
+        ('rejected', 'Rejected')
     ]
     
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='requests')
@@ -51,31 +47,9 @@ class ProjectRequest(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     message = models.TextField(help_text="Message to the customer")
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         unique_together = ('project', 'developer')
-    
-    def save(self, *args, **kwargs):
-        # Update project status based on request status
-        if self.status == 'accepted':
-            self.project.status = 'payment_processing'
-            self.project.assigned_developer = self.developer
-            self.project.save()
-        elif self.status == 'payment_pending':
-            self.project.status = 'payment_processing'
-            self.project.save()
-        elif self.status == 'in_progress':
-            self.project.status = 'in_progress'
-            self.project.save()
-        elif self.status == 'completed':
-            self.project.status = 'completed'
-            self.project.save()
-        elif self.status == 'cancelled':
-            self.project.status = 'cancelled'
-            self.project.save()
-            
-        super().save(*args, **kwargs)
 
 class DeveloperRequest(models.Model):
     STATUS_CHOICES = [

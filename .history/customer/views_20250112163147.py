@@ -119,7 +119,7 @@ def handle_request(request, request_id):
         project_request.save()
         messages.success(request, f'Request {action}ed successfully!')
         
-    return redirect('customer:dashboard')
+    return redirect('customer:project_requests', project_id=project_request.project.id)
 
 @customer_required
 @login_required

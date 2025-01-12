@@ -158,9 +158,9 @@
                         {% elif project.status == 'payment_processing' %}
                             <a href="{% url 'customer:payment' project.id %}" class="btn btn-primary">Complete Payment</a>
                         {% elif project.status == 'in_progress' %}
-                            <a href="{% url 'chat:room' project.id %}" class="btn btn-primary">
-                                <i class="fas fa-comment"></i> Open Chat
-                            </a>
+                            <button class="btn btn-primary" disabled>
+                                <i class="fas fa-comment"></i> Chat Coming Soon
+                            </button>
                         {% endif %}
                     </div>
                 </div>
