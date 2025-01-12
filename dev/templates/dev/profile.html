@@ -11,85 +11,173 @@
         }
 
         .profile-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
+            max-width: 1200px;
+            gap: 3rem;
+            padding: 2rem;
         }
 
         .profile-left,
         .profile-right {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
         .profile-header {
-            grid-column: 1 / -1;
-            text-align: center;
-            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
         }
 
-        @media (max-width: 1024px) {
-            .profile-form {
-                grid-template-columns: 1fr;
-            }
+        .profile-header h2 {
+            font-size: 2.2rem;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .profile-picture, .profile-initial {
+            width: 150px;
+            height: 150px;
+            border: 4px solid #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-picture:hover, .profile-initial:hover {
+            transform: scale(1.05);
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
+            font-size: 0.95rem;
+            color: #34495e;
+            margin-bottom: 0.75rem;
         }
 
         input[type="text"],
         input[type="number"],
         input[type="url"],
+        input[type="time"],
         select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
         }
 
         .skills-section {
-            border: 1px solid #ddd;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
+            
+            border: 2px solid #e9ecef;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
         }
 
         .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
+            gap: 15px;
         }
 
         .skill-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
         }
 
-        button[type="submit"] {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
+        .skill-item:hover {
+            background: #e9ecef;
         }
 
-        button[type="submit"]:hover {
-            background-color: #0056b3;
+        .availability-section {
+           
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .time-card {
+            padding: 1.5rem;
+        }
+
+        .availability-tabs {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            gap: 2rem;
+        }
+
+        .availability-tabs label {
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .availability-tabs label:hover {
+            background: #e9ecef;
+        }
+
+        .projects-section {
+            background: #fff;
+         
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .project-item {
+            padding: 1.2rem;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+
+        button[type="submit"], 
+        .btn-primary {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1.5rem;
+        }
+
+        button[type="submit"]:hover,
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52,152,219,0.3);
+            background: linear-gradient(45deg, #2980b9, #3498db);
+        }
+
+        /* Modal improvements */
+        .modal-content {
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .modal-form-group input,
+        .modal-form-group textarea {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .btn-modal {
+            padding: 12px 24px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
 
         .help-text {
@@ -126,7 +214,7 @@
             background: #f9f9f9;
             padding: 20px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            
         }
         
         .time-group {
@@ -317,8 +405,8 @@
         }
 
         .projects-section {
-            margin: 2rem 0;
-            padding: 1.5rem;
+          
+          
             background: #f8f9fa;
             border-radius: 8px;
         }
@@ -386,7 +474,7 @@
         }
 
         .availability-section {
-            margin-top: 2rem;
+            
             padding: 1rem;
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -430,153 +518,600 @@
             border: 3px solid #fff;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .profile-form {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            max-width: 100%;
+            padding: 0;
+        }
+
+        .profile-column {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2rem;
+            height: fit-content;
+            min-height: 600px; /* Set equal minimum height */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* First column */
+        .profile-column:first-child {
+            overflow: visible !important;
+        }
+
+        /* Second column (skills) */
+        .profile-column:nth-child(2) {
+            overflow-y: auto;
+        }
+
+        .skills-container {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        /* Third column */
+        .profile-column:last-child {
+            overflow: visible;
+        }
+
+        .profile-header {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .profile-header-content {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        .profile-picture-container {
+            flex-shrink: 0;
+        }
+
+        .profile-info {
+            flex-grow: 1;
+        }
+
+        .profile-picture, .profile-initial {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-initial {
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .profile-header h2 {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .profile-subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* Update form group spacing */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .profile-form {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .profile-column {
+                min-height: auto;
+            }
+        }
+
+        /* Skills section styles */
+        .skills-section {
+            
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .skills-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 1rem;
+            margin-top: 1rem;
+            max-height: calc(90vh - 500px);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Custom scrollbar */
+        .skills-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .skills-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .skills-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .skills-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Additional Info section */
+        .additional-info {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Update spacing for all columns */
+        .profile-column > div:not(:last-child) {
+            margin-bottom: 1.25rem;
+        }
+
+        /* Ensure content doesn't overflow */
+        .profile-column > * {
+            max-width: 100%;
+        }
+
+        /* Make form groups more compact */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Adjust input sizes */
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            padding: 0.75rem;
+        }
+
+        /* Make headings more compact */
+        h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+        }
+
+        /* Update profile header to be more compact */
+        .profile-header {
+            margin-bottom: 1.25rem;
+            padding-bottom: 1.25rem;
+        }
+
+        .profile-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .profile-subtitle {
+            font-size: 0.9rem;
+        }
+
+        /* Ensure third column sections fit */
+        .profile-column:last-child {
+            gap: 1.25rem;
+        }
+
+        .availability-section,
+        .projects-section {
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Make form groups more compact in first column */
+        .profile-column:first-child .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .profile-column:first-child .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Adjust input sizes for better fit */
+        .profile-column:first-child input[type="text"],
+        .profile-column:first-child input[type="file"] {
+            padding: 0.5rem 0.75rem;
+        }
+
+        /* Adjust bio input field size */
+        .form-group textarea[name="bio"] {
+            height: 50px;  /* Reduce height */
+            min-height: 50px;  /* Set minimum height */
+            max-height: 50px; /* Set maximum height */
+            resize: vertical;  /* Allow vertical resizing within limits */
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        /* Make the container more compact */
+        .additional-info {
+            margin-bottom: 1rem;
+        }
+
+        .additional-info .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        /* Adjust spacing after bio field */
+        .form-group textarea[name="bio"] + .help-text {
+            margin-top: 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        /* Consistent column sizing */
+        .profile-column:last-child {
+            height: calc(100vh - 100px); /* Match second column height */
+            gap: 1rem;
+            overflow-y: auto;
+        }
+
+        /* Adjust sections in third column */
+        .availability-section,
+        .projects-section {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Make time card more compact */
+        .time-card {
+            padding: 1rem;
+        }
+
+        /* Adjust projects list */
+        .projects-list {
+            max-height: 200px; /* Limit height */
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .project-item {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Adjust button spacing */
+        button[type="submit"], 
+        .btn-primary {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+        }
+
+        /* Custom scrollbar for projects list */
+        .projects-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .projects-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .projects-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .projects-list::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Third column adjustments */
+        .profile-column:last-child {
+            height: fit-content;
+            gap: 1rem;
+            overflow-y: visible;
+        }
+
+        /* Compact availability section */
+        .availability-section {
+            margin-top: 0;
+            padding: 1rem;
+            
+        }
+
+        .time-card {
+            padding: 0.75rem;
+        }
+
+        .availability-tabs {
+            gap: 1rem;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .time-range {
+            gap: 1rem;
+        }
+
+        /* Compact projects section */
+        .projects-section {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .projects-list {
+            max-height: none;
+            overflow: visible;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .project-item {
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Adjust button sizes */
+        button[type="submit"], 
+        .btn-primary {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+        }
+
+        /* Remove scrollbars */
+        .projects-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .profile-column:last-child::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Make headings more compact */
+        .profile-column:last-child h3 {
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        /* Adjust spacing between sections */
+        .profile-column:last-child > div:not(:last-child) {
+            margin-bottom: 0.75rem;
+        }
+
+        /* Style for the save button in header */
+        .header-save-btn {
+            margin: 0 !important;
+            padding: 0.6rem 1.2rem !important;
+            width: auto !important;
+            white-space: nowrap;
+            font-size: 0.9rem;
+            height: fit-content;
+        }
+
+        /* Remove old save button styles */
+        .profile-column:last-child > button:last-child {
+            display: none;
+        }
+
+        /* Ensure all columns have same height */
+        .profile-column {
+            height: fit-content;
+        }
+
+        /* Make sections fill available space */
+        .skills-section,
+        .projects-section {
+            flex-grow: 1;
+        }
     </style>
     {% endblock %}
 
 {% block content %}
-    
-
-    <div class="profile-header">
-        {% if profile.profile_picture %}
-            <img src="{{ profile.profile_picture.url }}" alt="{{ profile.display_name }}" class="profile-picture">
-        {% else %}
-            <div class="profile-initial">
-                {{ profile.user.get_full_name|default:profile.user.username|make_list|first|upper }}
-            </div>
-        {% endif %}
-        <h2>Complete Your Profile</h2>
-    </div>
-
-    <form method="post" enctype="multipart/form-data" class="profile-form">
-        {% csrf_token %}
-        
-        <div class="profile-left">
-            <!-- Basic Info Fields -->
-            {% for field in form %}
-                {% if field.name != 'weekday_from' and field.name != 'weekday_to' and field.name != 'weekend_from' and field.name != 'weekend_to' and field.name != 'temp_from' and field.name != 'temp_to' and field.name != 'availability_type' and field.name != 'skills' %}
-                    <div class="form-group">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.help_text %}
-                            <p class="help-text">{{ field.help_text }}</p>
-                        {% endif %}
-                        {% if field.errors %}
-                            <ul class="errorlist">
-                                {% for error in field.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-
-        <div class="profile-right">
-            <!-- Skills Section -->
-            <div class="skills-section">
-                <label>{{ form.skills.label }}</label>
-                <div class="skills-grid">
-                    {{ form.skills }}
-                </div>
-            </div>
-
-            <!-- Availability Section -->
-            <div class="availability-section">
-                <h3>Availability</h3>
-                <div class="time-card">
-                    <div class="availability-tabs">
-                        <label>
-                            <input type="radio" name="{{ form.availability_type.name }}" value="weekday" checked>
-                            <span>Weekday</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="{{ form.availability_type.name }}" value="weekend">
-                            <span>Weekend</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="{{ form.availability_type.name }}" value="temporary">
-                            <span>Just for Today</span>
-                        </label>
-                    </div>
-                    
-                    <div class="time-range">
-                        <div class="time-field">
-                            <label>From</label>
-                            {{ form.weekday_from }}
-                            {{ form.weekend_from }}
-                            {{ form.temp_from }}
+    <div class="container">
+        <form method="post" enctype="multipart/form-data" class="profile-form">
+            {% csrf_token %}
+            
+            <!-- Column 1: Profile Header + Essential Info -->
+            <div class="profile-column">
+                <!-- Merged Header -->
+                <div class="profile-header">
+                    <div class="profile-header-content">
+                        <div class="profile-picture-container">
+                            {% if profile.profile_picture %}
+                                <img src="{{ profile.profile_picture.url }}" alt="{{ profile.display_name }}" class="profile-picture">
+                            {% else %}
+                                <div class="profile-initial">
+                                    {{ profile.user.get_full_name|default:profile.user.username|make_list|first|upper }}
+                                </div>
+                            {% endif %}
                         </div>
-                        <div class="time-field">
-                            <label>To</label>
-                            {{ form.weekday_to }}
-                            {{ form.weekend_to }}
-                            {{ form.temp_to }}
+                        <div class="profile-info">
+                            <h2>{{ profile.display_name|default:"Complete Your Profile" }}</h2>
+                            <p class="profile-subtitle">{{ profile.title|default:"Add your professional title" }}</p>
                         </div>
+                        <button type="submit" class="btn btn-primary header-save-btn">Save Profile</button>
                     </div>
-                    <p class="help-text" id="availability-help">Set your weekday availability hours</p>
                 </div>
+
+                <!-- Essential Information -->
+                {% for field in form %}
+                    {% if field.name in 'display_name,title,profile_picture' %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <p class="help-text">{{ field.help_text }}</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
             </div>
 
-            <!-- Projects Section -->
-            <div class="projects-section">
-                <label>Projects</label>
-                <div class="projects-list">
-                    {% for project in projects %}
-                        <div class="project-item">
-                            <a href="{% url 'dev:dev_project_detail' pk=project.id %}" class="project-link">
-                                {{ project.name }}
-                                {% if project.client %}
-                                    <span class="project-client">({{ project.client }})</span>
+            <!-- Column 2: Additional Info + Skills -->
+            <div class="profile-column">
+                <!-- Additional Information -->
+                <div class="additional-info">
+                    <h3>Additional Information</h3>
+                    {% for field in form %}
+                        {% if field.name in 'bio,hourly_rate' %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="help-text">{{ field.help_text }}</p>
                                 {% endif %}
-                            </a>
-                        </div>
-                    {% empty %}
-                        <div class="no-projects">No projects yet</div>
+                            </div>
+                        {% endif %}
                     {% endfor %}
                 </div>
-                <button type="button" class="btn btn-primary" onclick="openProjectModal()">Add New Project</button>
+
+                <!-- Skills Section with Scroll -->
+                <div class="skills-section">
+                    <h3>Skills</h3>
+                    <div class="skills-container">
+                        <div class="skills-grid">
+                            {{ form.skills }}
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <button type="submit">Save Profile</button>
-        </div>
-    </form>
+            <!-- Column 3: Availability + Projects -->
+            <div class="profile-column">
+                <!-- Availability Section -->
+                <div class="availability-section">
+                    <h3>Availability</h3>
+                    <div class="time-card">
+                        <div class="availability-tabs">
+                            <label>
+                                <input type="radio" name="{{ form.availability_type.name }}" value="weekday" checked>
+                                <span>Weekday</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="{{ form.availability_type.name }}" value="weekend">
+                                <span>Weekend</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="{{ form.availability_type.name }}" value="temporary">
+                                <span>Just for Today</span>
+                            </label>
+                        </div>
+                        
+                        <div class="time-range">
+                            <div class="time-field">
+                                <label>From</label>
+                                {{ form.weekday_from }}
+                                {{ form.weekend_from }}
+                                {{ form.temp_from }}
+                            </div>
+                            <div class="time-field">
+                                <label>To</label>
+                                {{ form.weekday_to }}
+                                {{ form.weekend_to }}
+                                {{ form.temp_to }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <div id="projectModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Add New Project</h3>
-            <form id="projectForm">
-                <div class="modal-form-group">
-                    <label for="projectName">Project Name*</label>
-                    <input type="text" id="projectName" required 
-                           placeholder="Enter project name">
+                <!-- Projects Section -->
+                <div class="projects-section">
+                    <h3>Projects</h3>
+                    <div class="projects-list">
+                        {% for project in projects %}
+                            <div class="project-item">
+                                <a href="{% url 'dev:dev_project_detail' pk=project.id %}" class="project-link">
+                                    {{ project.name }}
+                                    {% if project.client %}
+                                        <span class="project-client">({{ project.client }})</span>
+                                    {% endif %}
+                                </a>
+                            </div>
+                        {% empty %}
+                            <div class="no-projects">No projects yet</div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="openProjectModal()">Add New Project</button>
                 </div>
-                <div class="modal-form-group">
-                    <label for="projectReadme">Project Description*</label>
-                    <textarea id="projectReadme" required 
-                             placeholder="Describe your project..."></textarea>
-                </div>
-                <div class="modal-form-group">
-                    <label for="deployedUrl">Deployed URL</label>
-                    <input type="url" id="deployedUrl" 
-                           placeholder="https://...">
-                </div>
-                <div class="modal-form-group">
-                    <label for="githubUrl">GitHub URL*</label>
-                    <input type="url" id="githubUrl" required 
-                           placeholder="https://github.com/...">
-                </div>
-                <div class="modal-form-group">
-                    <label for="projectClient">Client</label>
-                    <input type="text" id="projectClient" 
-                           placeholder="Client name or organization">
-                </div>
-                <div class="modal-buttons">
-                    <button type="button" class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn-modal btn-save">Save Project</button>
-                </div>
-            </form>
+                
+                <button type="submit" class="btn btn-primary">Save Profile</button>
+            </div>
+        </form>
+
+        <!-- Modal remains unchanged -->
+        <div id="projectModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Add New Project</h3>
+                <form id="projectForm">
+                    <div class="modal-form-group">
+                        <label for="projectName">Project Name*</label>
+                        <input type="text" id="projectName" required 
+                               placeholder="Enter project name">
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="projectReadme">Project Description*</label>
+                        <textarea id="projectReadme" required 
+                                 placeholder="Describe your project..."></textarea>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="deployedUrl">Deployed URL</label>
+                        <input type="url" id="deployedUrl" 
+                               placeholder="https://...">
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="githubUrl">GitHub URL*</label>
+                        <input type="url" id="githubUrl" required 
+                               placeholder="https://github.com/...">
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="projectClient">Client</label>
+                        <input type="text" id="projectClient" 
+                               placeholder="Client name or organization">
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn-modal btn-save">Save Project</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
