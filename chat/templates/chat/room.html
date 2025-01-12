@@ -86,6 +86,7 @@
             <input type="text" id="chat-message-input" placeholder="Type your message...">
             <button id="chat-message-submit">
                 <i class="fas fa-paper-plane"></i>
+                Send
             </button>
             {% if request.user.customerprofile %}
             <button id="meeting-request-btn" class="meeting-btn">
@@ -285,75 +286,435 @@
 </script>
 
 <style>
-/* Add these new layout styles at the top */
+/* Modern Chat Layout */
 .chat-layout {
     display: grid;
-    grid-template-columns: 350px 1fr;
+    grid-template-columns: 30% 70%;
     gap: 1rem;
-    height: calc(100vh - 4rem);
-    max-width: 1600px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+    padding: 1rem;
+    background: #f0f2f5;
+    height: calc(100vh - 5rem);
+    margin: 0.5rem auto;
+    max-width: 98%;
+    width: calc(100% - 2rem);
 }
 
+/* Refined Project Sidebar */
 .project-sidebar {
-    background: var(--card-background);
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+    border-radius: 14px;
     overflow-y: auto;
     height: 100%;
-}
-
-.chat-container {
+    border: none;
     display: flex;
     flex-direction: column;
-    background: var(--card-background);
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    max-height: calc(100vh - 5rem);
+    margin: 0;
+    width: 100%;
 }
 
 .project-info-banner {
-    padding: 1.5rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
-/* Update existing styles */
+.project-title-status {
+    margin-bottom: 0.5rem;
+}
+
+.project-title-status h3 {
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* Symmetrical Project Details */
+.project-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+}
+
+.detail-item {
+    background: #f8fafc;
+    padding: 0.75rem 0.875rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s ease;
+}
+
+.detail-item:hover {
+    transform: translateY(-2px);
+}
+
+.detail-item strong {
+    display: block;
+    color: #94a3b8;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-item span {
+    color: #1e293b;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* Enhanced Chat Container */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+    border: none;
+    height: 100%;
+    max-height: calc(100vh - 5rem);
+    margin: 0;
+    margin-right: 0.5rem;
+    width: calc(100% - 0.5rem);
+}
+
+/* Refined Messages */
 .messages-container {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 1.5rem;
+    padding: 1.25rem 1.75rem;
     display: flex;
     flex-direction: column;
+    gap: 1.5rem;
+    background: #ffffff;
+    height: calc(100% - 3.5rem);
+    width: 100%;
+}
+
+.message {
+    max-width: 80%;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03);
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.message.sent {
+    align-self: flex-end;
+    background: #0062ff;
+    color: white;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 98, 255, 0.15);
+}
+
+.message.received {
+    align-self: flex-start;
+    background: #f1f5f9;
+    color: #1e293b;
+    border-bottom-left-radius: 4px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.message .sender {
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+    opacity: 0.8;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.message .timestamp {
+    font-size: 0.688rem;
+    opacity: 0.7;
+    margin-top: 0.5rem;
+    display: block;
+    letter-spacing: 0.02em;
+}
+
+/* Modernized Chat Input */
+.chat-input {
+    padding: 0.75rem 1.75rem;
+    background: #f8fafc;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+#chat-message-input {
+    flex-grow: 1;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+#chat-message-input:focus {
+    outline: none;
+    border-color: #0062ff;
+    box-shadow: 0 0 0 3px rgba(0, 98, 255, 0.1);
+}
+
+#chat-message-submit, 
+#meeting-request-btn {
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    font-size: 0.875rem;
+    letter-spacing: 0.02em;
+    transition: all 0.3s ease;
+}
+
+#chat-message-submit:hover, 
+#meeting-request-btn:hover {
+    background: #0051d6;
+    transform: translateY(-1px);
+}
+
+/* Refined Meeting Elements */
+.meeting-alert {
+    background: #fff8f1;
+    border: 1px solid #ffead7;
+    padding: 1rem;
+    border-radius: 14px;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.join-meeting-btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 10px rgba(234, 88, 12, 0.2);
+}
+
+.join-meeting-btn:hover {
+    background: #e65000;
+}
+
+/* Skills Section Enhancement */
+.project-skills {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f0f2f5;
+}
+
+.project-skills strong {
+    font-size: 0.875rem;
+}
+
+.skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.skill-tag {
+    background: #f0f2f5;
+    padding: 0.25rem 0.625rem;
+    border-radius: 20px;
+    font-size: 0.813rem;
+    color: #334155;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.skill-tag:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+/* Custom Scrollbar */
+.messages-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ... keep existing responsive styles ... */
+
+/* Status Badge Colors */
+.status-badge.status-open {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.status-in-progress {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.status-badge.status-completed {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.status-badge.status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Project Description */
+.project-description {
+    position: relative;
+    min-height: min-content; /* Allow shrinking based on content */
+    max-height: fit-content; /* Expand only as needed */
+    margin: 0.75rem 0;
+    flex: 0 1 auto; /* Don't force flex grow, allow shrinking */
+}
+
+.project-description strong {
+    display: block;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.project-description p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    overflow-y: auto;
+    max-height: 150px; /* Maximum height before scrolling */
+    padding-right: 0.5rem; /* Space for scrollbar */
+}
+
+/* Project Links */
+.project-links {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f0f2f5;
+}
+
+.link-btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+}
+
+/* Remove the fade effect if it's causing issues */
+.project-description::after {
+    display: none;
+}
+
+/* Custom Scrollbar for Description */
+.project-description p::-webkit-scrollbar {
+    width: 4px;
+}
+
+.project-description p::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.project-description p::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+}
+
+.project-description p::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Send Button Styling */
+#chat-message-submit {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: #0062ff;
+    color: white;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+#chat-message-submit i {
+    font-size: 0.875rem;
+}
+
+#chat-message-submit:hover {
+    background: #0051d6;
+    transform: translateY(-1px);
+}
+
+/* Layout Adjustments */
+.chat-layout {
+    grid-template-columns: 30% 70%;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f0f2f5;
+    height: calc(100vh - 5rem);
+    margin: 0.5rem auto;
+    max-width: 98%;
+    width: calc(100% - 2rem);
+}
+
+/* Chat Container */
+.chat-container {
+    margin-right: 0.5rem;
+    width: calc(100% - 0.5rem);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Messages Container */
+.messages-container {
+    width: 100%;
+    padding: 1.25rem 1.75rem;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Message Alignment */
+.message {
+    max-width: 80%;
+    margin-right: 1.75rem; /* Ensure messages don't overflow */
+}
+
+/* Chat Input Area */
+.chat-input {
+    width: calc(100% - 3.5rem); /* Account for padding */
+    margin: 0 auto;
+    padding: 0.75rem 1.75rem;
+    display: flex;
+    align-items: center;
     gap: 1rem;
 }
 
-/* Responsive design */
-@media (max-width: 1024px) {
-    .chat-layout {
-        grid-template-columns: 300px 1fr;
-    }
+#chat-message-input {
+    width: 100%;
 }
-
-@media (max-width: 768px) {
-    .chat-layout {
-        grid-template-columns: 1fr;
-        height: 100vh;
-        margin: 0;
-        padding: 0;
-    }
-
-    .project-sidebar {
-        display: none;
-    }
-
-    .chat-container {
-        border-radius: 0;
-    }
-}
-
-/* Keep your existing styles below */
-.project-info-header { /* ... */ }
-.project-title-status { /* ... */ }
-/* ... rest of your existing styles ... */
 </style>
 {% endblock %}
