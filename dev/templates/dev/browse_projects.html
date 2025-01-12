@@ -3,91 +3,312 @@
 {% block title %}Browse Projects{% endblock %}
 
 {% block content %}
-    <div class="projects-container">
-        <h2>Available Projects</h2>
-        
+<div class="browse-container">
+    <div class="section-header">
+        <h2><i class="fas fa-briefcase"></i> Available Projects</h2>
+        <p>Browse and request projects that match your skills</p>
+    </div>
+
+    <div class="projects-grid">
         {% for project in projects %}
             <div class="project-card">
-                <h3>{{ project.title }}</h3>
-                <p>{{ project.description }}</p>
-                
-                <div class="project-details">
-                    <span>Budget: ${{ project.budget }}</span>
-                    <span>Duration: {{ project.duration }} hours</span>
+                <div class="project-header">
+                    <div class="project-status">
+                        {% if project.request_status == 'pending' %}
+                            <span class="status-badge pending">
+                                <i class="fas fa-clock"></i> Request Pending
+                            </span>
+                        {% elif project.request_status == 'accepted' %}
+                            <span class="status-badge accepted">
+                                <i class="fas fa-check"></i> Request Accepted
+                            </span>
+                        {% elif project.request_status == 'rejected' %}
+                            <span class="status-badge rejected">
+                                <i class="fas fa-times"></i> Request Rejected
+                            </span>
+                        {% else %}
+                            <span class="status-badge available">
+                                <i class="fas fa-bolt"></i> Available
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="project-budget">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span>{{ project.budget }}</span>
+                    </div>
                 </div>
-                
-                <div class="required-skills">
-                    <h4>Required Skills:</h4>
-                    {% for skill in project.required_skills.all %}
-                        <span class="skill-tag">{{ skill.name }}</span>
-                    {% endfor %}
-                </div>
-                
-                <div class="project-actions">
-                    {% if project.request_status == 'pending' %}
-                        <button class="btn btn-secondary" disabled>Request Pending</button>
-                    {% elif project.request_status == 'accepted' %}
-                        <button class="btn btn-success" disabled>Request Accepted</button>
-                    {% elif project.request_status == 'rejected' %}
-                        <button class="btn btn-danger" disabled>Request Rejected</button>
-                    {% else %}
-                        <a href="{% url 'dev:request_project' project.id %}" class="btn btn-primary">Request to Work</a>
-                    {% endif %}
+
+                <div class="project-content">
+                    <h3>{{ project.title }}</h3>
+                    <p class="project-description">{{ project.description|truncatechars:150 }}</p>
+                    
+                    <div class="project-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>{{ project.duration }} hours</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-user"></i>
+                            <span>{{ project.customer.user.get_full_name }}</span>
+                        </div>
+                    </div>
+
+                    <div class="skills-container">
+                        {% for skill in project.required_skills.all %}
+                            <span class="skill-tag">{{ skill.name }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <div class="project-actions">
+                        {% if project.request_status == 'pending' %}
+                            <button class="btn btn-secondary" disabled>
+                                <i class="fas fa-clock"></i> Request Pending
+                            </button>
+                        {% elif project.request_status == 'accepted' %}
+                            <button class="btn btn-success" disabled>
+                                <i class="fas fa-check"></i> Request Accepted
+                            </button>
+                        {% elif project.request_status == 'rejected' %}
+                            <button class="btn btn-danger" disabled>
+                                <i class="fas fa-times"></i> Request Rejected
+                            </button>
+                        {% else %}
+                            <a href="{% url 'dev:request_project' project.id %}" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Request to Work
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         {% empty %}
-            <p>No projects available at the moment.</p>
+            <div class="empty-state">
+                <div class="empty-illustration">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <h3>No Projects Available</h3>
+                <p>Check back later for new opportunities</p>
+            </div>
         {% endfor %}
     </div>
+</div>
 
 <style>
-    .projects-container {
-        padding: 20px;
-    }
+:root {
+    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --gradient-secondary: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
 
-    .project-card {
-        background-color: white;
-        padding: 20px;
-        margin-bottom: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+.browse-container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
 
-    .project-actions {
-        margin-top: 1rem;
-    }
+.section-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
 
-    .btn {
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        font-weight: 500;
-        text-decoration: none;
-        display: inline-block;
-    }
+.section-header h2 {
+    font-size: 2rem;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
 
-    .btn-primary {
-        background-color: var(--primary-color);
-        color: white;
-    }
+.section-header p {
+    color: #64748b;
+    font-size: 1.1rem;
+}
 
-    .btn-secondary {
-        background-color: var(--secondary-color);
-        color: white;
-    }
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.5rem;
+}
 
-    .btn-success {
-        background-color: var(--success-color);
-        color: white;
-    }
+.project-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
 
-    .btn-danger {
-        background-color: var(--danger-color);
-        color: white;
-    }
+.project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px rgba(99, 102, 241, 0.25);
+}
 
-    .btn[disabled] {
-        opacity: 0.7;
-        cursor: not-allowed;
+.project-header {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.pending { background: var(--gradient-secondary); color: white; }
+.status-badge.accepted { background: var(--gradient-success); color: white; }
+.status-badge.rejected { background: var(--gradient-danger); color: white; }
+.status-badge.available { background: var(--gradient-primary); color: white; }
+
+.project-budget {
+    background: #f8fafc;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    color: #1e293b;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.project-content {
+    padding: 1.5rem;
+}
+
+.project-content h3 {
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+}
+
+.project-description {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.project-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.skill-tag {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.project-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+}
+
+.btn-secondary { background: var(--gradient-secondary); color: white; }
+.btn-success { background: var(--gradient-success); color: white; }
+.btn-danger { background: var(--gradient-danger); color: white; }
+
+.btn[disabled] {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    grid-column: 1 / -1;
+}
+
+.empty-illustration {
+    font-size: 3.5rem;
+    color: #6366f1;
+    opacity: 0.8;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #64748b;
+    font-size: 0.975rem;
+}
+
+@media (max-width: 768px) {
+    .browse-container {
+        padding: 1rem;
     }
+    
+    .projects-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .project-meta {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 {% endblock %}
