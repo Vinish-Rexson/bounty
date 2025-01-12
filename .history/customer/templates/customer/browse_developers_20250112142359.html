@@ -443,9 +443,7 @@
     .messages-container {
         top: 10px;
         right: 10px;
-        left: 10px;
-        max-width: none;
-    }
+        
 }
 {% endblock %}
 
@@ -574,22 +572,6 @@
                         }
                     });
                 });
-            });
-        });
-    </script>
-
-    <!-- Add this JavaScript for auto-hiding messages -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Auto-hide messages after 5 seconds
-            const messages = document.querySelectorAll('.message');
-            messages.forEach(message => {
-                setTimeout(() => {
-                    message.style.animation = 'slideOut 0.3s ease-in forwards';
-                    setTimeout(() => {
-                        message.remove();
-                    }, 300);
-                }, 5000);
             });
         });
     </script>
