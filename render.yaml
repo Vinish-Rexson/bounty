@@ -1,27 +1,14 @@
 services:
   - type: web
-    name: my-dapp
+    name: your-app-name
     env: python
-    buildCommand: chmod +x build.sh && ./build.sh
+    buildCommand: pip install -r requirements.txt
     startCommand: daphne project.asgi:application -b 0.0.0.0 -p $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: DATABASE_URL
-        fromDatabase:
-          name: my-dapp-db
-          property: connectionString
-      - key: DJANGO_SECRET_KEY
-        generateValue: true
-      - key: DJANGO_DEBUG
-        value: false
-      - key: REDIS_URL
-        fromService:
-          name: my-dapp-redis
-          type: redis
-          property: connectionString
-      - key: ALLOWED_HOSTS
-        value: ".onrender.com"
+        value: 3.9.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: project.settings
 
   - type: redis
     name: my-dapp-redis
