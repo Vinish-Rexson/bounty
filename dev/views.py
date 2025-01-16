@@ -95,6 +95,22 @@ def profile(request):
     
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
+        
+        # Check if there's a profile picture in the request
+        if 'profile_picture' in request.FILES:
+            try:
+                # Validate image
+                image = request.FILES['profile_picture']
+                # If image validation fails, remove it from request.FILES
+                if not image.content_type.startswith('image/'):
+                    del request.FILES['profile_picture']
+                    form.add_error('profile_picture', 'Please upload a valid image file.')
+            except Exception as e:
+                form.add_error('profile_picture', str(e))
+        print("="*50)
+        print("Form is valid:", form.is_valid())
+        print("Form errors:", form.errors)
+        print("="*50)
         if form.is_valid():
             profile = form.save(commit=False)
             

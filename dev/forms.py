@@ -25,6 +25,10 @@ class ProfileForm(forms.ModelForm):
         required=True,
         help_text="Name that will be shown to others"
     )
+    profile_picture = forms.ImageField(
+        required=False,  # Make it optional
+        widget=forms.FileInput(attrs={'accept': 'image/*'})
+    )
     skills = forms.ModelMultipleChoiceField(
         queryset=Skill.objects.all(),
         widget=forms.CheckboxSelectMultiple,

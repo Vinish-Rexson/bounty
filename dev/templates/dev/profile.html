@@ -940,6 +940,63 @@
         .projects-section {
             flex-grow: 1;
         }
+
+        /* Add these styles to your existing CSS */
+        select#id_timezone {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background-color: white;
+            font-size: 1rem;
+        }
+
+        select#id_timezone:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+            outline: none;
+        }
+
+        input#id_github_url {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        input#id_github_url:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+            outline: none;
+        }
+
+        /* Add these to your existing styles */
+        .errorlist {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 0.75rem 1.25rem;
+            margin-top: 0.5rem;
+            list-style: none;
+        }
+
+        .errorlist ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .text-muted {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
     </style>
     {% endblock %}
 
@@ -990,16 +1047,62 @@
                 <div class="additional-info">
                     <h3>Additional Information</h3>
                     {% for field in form %}
-                        {% if field.name in 'bio,hourly_rate' %}
+                        {% if field.name in 'bio,hourly_rate,years_of_experience,preferred_contact_method,min_project_duration,preferred_project_size' %}
                             <div class="form-group">
-                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}*{% endif %}</label>
                                 {{ field }}
                                 {% if field.help_text %}
                                     <p class="help-text">{{ field.help_text }}</p>
                                 {% endif %}
+                                {% if field.errors %}
+                                    <div class="errorlist">
+                                        {{ field.errors }}
+                                    </div>
+                                {% endif %}
                             </div>
                         {% endif %}
                     {% endfor %}
+
+                    <!-- GitHub URL Field -->
+                    <div class="form-group">
+                        <label for="id_github_url">GitHub URL*</label>
+                        {{ form.github_url }}
+                        {% if form.github_url.help_text %}
+                            <p class="help-text">{{ form.github_url.help_text }}</p>
+                        {% endif %}
+                        {% if form.github_url.errors %}
+                            <div class="errorlist">
+                                {{ form.github_url.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Timezone Dropdown -->
+                    <div class="form-group">
+                        <label for="id_timezone">Timezone*</label>
+                        <select name="timezone" id="id_timezone" required>
+                            <option value="">Select a timezone</option>
+                            <option value="UTC">UTC</option>
+                            <option value="America/New_York">Eastern Time (ET)</option>
+                            <option value="America/Chicago">Central Time (CT)</option>
+                            <option value="America/Denver">Mountain Time (MT)</option>
+                            <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                            <option value="Asia/Kolkata">India Standard Time (IST)</option>
+                            <option value="Asia/Dubai">Gulf Standard Time (GST)</option>
+                            <option value="Europe/London">British Time (GMT/BST)</option>
+                            <option value="Europe/Paris">Central European Time (CET)</option>
+                            <option value="Asia/Tokyo">Japan Standard Time (JST)</option>
+                            <option value="Australia/Sydney">Australian Eastern Time (AET)</option>
+                        </select>
+                        {% if form.timezone.help_text %}
+                            <p class="help-text">{{ form.timezone.help_text }}</p>
+                        {% endif %}
+                        {% if form.timezone.errors %}
+                            <div class="errorlist">
+                                {{ form.timezone.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <!-- Skills Section with Scroll -->
