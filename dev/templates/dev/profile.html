@@ -1047,7 +1047,7 @@
                 <div class="additional-info">
                     <h3>Additional Information</h3>
                     {% for field in form %}
-                        {% if field.name in 'bio,hourly_rate,years_of_experience,preferred_contact_method,min_project_duration,preferred_project_size' %}
+                        {% if field.name in 'bio,hourly_rate,years_of_experience,preferred_contact_method,min_project_duration,preferred_project_size,crypto_wallet_address' %}
                             <div class="form-group">
                                 <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}*{% endif %}</label>
                                 {{ field }}
